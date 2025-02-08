@@ -1,1 +1,1 @@
-My name is diego and i like coding
+echo "My name is Aashishpal Reddy Kandala. This is my fourth semester in UNT." 
