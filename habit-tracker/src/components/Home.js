@@ -1,3 +1,24 @@
+/**
+ * Home Component
+ *
+ * This file implements the Home component for the LevelUp application.
+ * It serves as the landing page, introducing users to the platform's features.
+ *
+ * Features included:
+ *  - A hero section with a title, description, and a call-to-action button.
+ *  - A grid layout displaying key features of the application.
+ *  - Responsive design ensuring a seamless experience across devices.
+ *
+ * The component utilizes:
+ *  - styled-components for CSS-in-JS styling.
+ *  - React Router's Link component for navigation.
+ *  - Theme-based colors and styles for consistency.
+ *  - Grid and flexbox techniques for an adaptive layout.
+ *
+ * The goal of this component is to engage users, encourage sign-ups,
+ * and provide an overview of how the platform gamifies habit tracking.
+ */
+
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';

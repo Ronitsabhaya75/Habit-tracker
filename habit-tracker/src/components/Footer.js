@@ -1,3 +1,21 @@
+/**
+ * Footer Component
+ *
+ * This file implements the Footer component for the LevelUp application.
+ * It displays a footer section that includes:
+ *  - A gradient background using the theme's primary colors.
+ *  - A list of group members' names displayed in a responsive layout.
+ *  - A copyright notice indicating the year 2025.
+ *
+ * The component utilizes:
+ *  - styled-components for CSS-in-JS styling.
+ *  - Flexbox for organizing member names in a responsive format.
+ *  - Theme-based colors to maintain design consistency.
+ *
+ * This footer is intended to appear at the bottom of the application and
+ * dynamically adjust its spacing using `margin-top: auto` to ensure proper layout.
+ */
+
 import styled from 'styled-components';
 import { theme } from '../theme';
 

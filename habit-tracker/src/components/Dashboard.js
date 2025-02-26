@@ -181,10 +181,6 @@ const UserScore = styled.span`
   color: ${theme.colors.secondary};
 `;
 
-/* ================================
-   Dashboard Component Implementation
-   ================================ */
-
 const Dashboard = () => {
   const { user } = useAuth();
   const [data, setData] = useState([]);
@@ -231,7 +227,6 @@ const Dashboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      // Call a fake asynchronous function to simulate fetching leaderboard data.
       const leaderboardData = await fakeFetchLeaderboardData();
       setLeaderboard(leaderboardData);
     } catch (error) {
@@ -258,7 +253,6 @@ const Dashboard = () => {
           { name: 'Priya', xp: 320 },
           { name: 'Vikram', xp: 290 },
           { name: 'Anika', xp: 250 },
-          // Additional users can be added here as needed.
         ]);
       }, 1000);
     });
@@ -282,9 +276,6 @@ const Dashboard = () => {
     return 'lightgreen';
   };
 
-  /* ================================
-     Component Rendering
-     ================================ */
   return (
     <DashboardContainer>
       <Sidebar>
