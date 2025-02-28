@@ -1,3 +1,29 @@
+/**
+ * Game Context Component
+ *
+ * This file implements a React Context for managing game mechanics in the Habit-tracker application.
+ * It provides state management and functions related to:
+ *  - User level progression and experience points (XP)
+ *  - Achievement tracking and rewards
+ *  - Habit creation and completion
+ *  - Streak tracking and milestone rewards
+ *
+ * The module uses React Context API for state management across components,
+ * localStorage for persistent data storage, and custom hooks for easy access.
+ * It also integrates with the authentication context (useAuth) to identify users and store data per user.
+ *
+ * Core functionality includes:
+ *  - Loading and saving game data to localStorage
+ *  - Adding XP and handling level progression (with increasing difficulty)
+ *  - Managing achievements with timestamps and XP rewards
+ *  - Creating and tracking habits with completion dates
+ *  - Tracking streaks and awarding streak-based achievements
+ *
+ * This context serves as the backbone for the gamification features of the application,
+ * providing motivation and rewards for consistent habit formation.
+ */
+
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useAuth } from './AuthContext';
 
