@@ -1,6 +1,9 @@
-import { useTheme } from './context/ThemeContext';
+// src/theme.js
+import { useContext } from 'react';
+import ThemeContext from './context/ThemeContext';
 
-// For components that can't use hooks
+// Static theme export for components that can't use hooks
+// This should match the defaultTheme in ThemeContext.js
 export const theme = {
   colors: {
     primaryGradient: 'linear-gradient(135deg, #4F46E5 0%, #8B5CF6 100%)',
@@ -15,8 +18,8 @@ export const theme = {
   }
 };
 
-// For components using hooks
+// Hook for dynamic theme access
 export const useAppTheme = () => {
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useContext(ThemeContext);
   return currentTheme.colors;
 };
