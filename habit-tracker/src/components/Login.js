@@ -1,3 +1,21 @@
+/**
+ * Login Component
+ *
+ * This file implements the Login component for the application.
+ * It provides a user authentication interface that includes:
+ * - A login form with email and password fields.
+ * - A "Remember Me" checkbox for session persistence.
+ * - A "Forgot Password" link for password recovery.
+ * - A submit button to authenticate users.
+ *
+ * The component utilizes React hooks (useState) for managing form state
+ * and integrates with authentication context (useAuth) to handle login requests.
+ *
+ * 🔍 Simulated asynchronous functions (e.g., handleLogin) are used to mimic API requests.
+ *
+ * It follows a modular structure, ensuring readability and maintainability.
+ */
+
 import React, { useState, useContext } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
