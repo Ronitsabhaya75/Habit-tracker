@@ -1,3 +1,25 @@
+/**
+ * Login Component
+ *
+ * This file implements the Login component for the HabitQuest application.
+ * It provides a user authentication interface that includes:
+ *  - A login form with input fields for email and password.
+ *  - A "Remember Me" checkbox for persistent authentication.
+ *  - A submit button to authenticate the user.
+ *  - A link to reset the password.
+ *  - A link to navigate to the registration page.
+ *
+ * The component uses React hooks (useState, useEffect) for form state management and validation.
+ * Styled-components are used for CSS-in-JS styling, ensuring a clean and modular design.
+ * 
+ * It integrates with a custom authentication context (useAuth) to handle user login,
+ * managing authentication state across the application.
+ *
+ * Simulated asynchronous functions (fakeLogin) are used to mimic API calls for user authentication.
+ * The component is designed with accessibility and responsiveness in mind.
+ */
+
+
 import React, { useState, useContext } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';

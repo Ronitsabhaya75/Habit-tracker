@@ -1,3 +1,30 @@
+/**
+ * Navbar Component
+ *
+ * This file implements the Navbar component for the HabitQuest application.
+ * It provides a visually engaging navigation bar with:
+ *  - A background featuring a dynamic starry night effect.
+ *  - A brand logo that links to the homepage.
+ *  - Navigation links that dynamically update based on authentication status.
+ *  - A logout button for authenticated users.
+ *
+ * The component utilizes:
+ *  - React Router's `useNavigate` for navigation.
+ *  - React Context (`useContext`) for authentication state management.
+ *  - Styled-components for CSS-in-JS styling, including animated stars.
+ *  - Keyframe animations (`starGlow`) for a glowing star effect.
+ * 
+ * The Navbar dynamically updates to show:
+ *  - "Login" and "Home" links when the user is not authenticated.
+ *  - A "Logout" button when the user is authenticated, which logs the user out and redirects them to the login page.
+ *
+ * The background consists of:
+ *  - A gradient overlay for aesthetic enhancement.
+ *  - Multiple animated stars, positioned dynamically with different sizes, durations, and delays.
+ *
+ * The component is structured for maintainability and a seamless user experience.
+ */
+
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';

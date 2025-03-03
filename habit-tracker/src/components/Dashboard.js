@@ -1,8 +1,32 @@
+/**
+ * Dashboard Component
+ *
+ * This file implements the Dashboard component for the HabitQuest application.
+ * It displays an interactive dashboard including:
+ *  - A sidebar with navigation items.
+ *  - A header that welcomes the user and shows their level.
+ *  - Multiple cards that render:
+ *      • A progress overview using a responsive line chart.
+ *      • A leaderboard showing users ranked by XP.
+ *      • A placeholder for achievements.
+ *      • A task list where users can add new habits.
+ *
+ * The component uses React hooks (useState, useEffect, useRef) for state management and side effects,
+ * styled-components for CSS-in-JS styling, and recharts for data visualization.
+ * It also integrates with a custom authentication context (useAuth) to obtain the current user's information.
+ *
+ * Simulated asynchronous functions (fakeFetchUserData and fakeFetchLeaderboardData) are used to mimic API calls.
+ * This code is organized in a modular way, where each styled component and function is clearly documented.
+ */
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
 import { useAuth } from '../context/AuthContext';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 
 // **ANIMATIONS**
 const floatAnimation = keyframes`
@@ -300,6 +324,7 @@ const Card = styled.div`
   border-radius: 16px;
   border: 1px solid ${theme.colors.borderWhite};
   backdrop-filter: blur(8px);
+  position: relative;
 `;
 
 // Progress Bar Container
@@ -364,6 +389,24 @@ const LeaderboardItem = styled.li`
   }
 `;
 
+// Chart Switcher Button placed in corner
+const ChartSwitcherButton = styled.button`
+  background: ${theme.colors.accent};
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  &:hover {
+    background: ${theme.colors.secondary};
+  }
+`;
+
 // User Rank
 const UserRank = styled.span`
   color: ${theme.colors.accent};
@@ -375,6 +418,79 @@ const UserScore = styled.span`
   color: ${theme.colors.secondary};
 `;
 
+// Styled Calendar
+const StyledCalendarContainer = styled.div`
+  width: 100%;
+  height: 100%;
+  margin-top: 1rem;
+  
+  .react-calendar {
+    width: 100%;
+    background: ${theme.colors.glassWhite};
+    border: 1px solid ${theme.colors.borderWhite};
+    border-radius: 8px;
+    font-family: inherit;
+    line-height: 1.125em;
+  }
+  
+  .react-calendar__navigation {
+    display: flex;
+    height: 44px;
+    margin-bottom: 1em;
+  }
+  
+  .react-calendar__navigation button {
+    min-width: 44px;
+    background: none;
+    border: 0;
+    color: ${theme.colors.text};
+  }
+  
+  .react-calendar__navigation button:enabled:hover,
+  .react-calendar__navigation button:enabled:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+  }
+  
+  .react-calendar__month-view__weekdays {
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 0.8em;
+  }
+  
+  .react-calendar__month-view__days__day {
+    color: ${theme.colors.text};
+  }
+  
+  .react-calendar__tile {
+    max-width: 100%;
+    padding: 10px 6.6667px;
+    background: none;
+    text-align: center;
+    line-height: 16px;
+    border: 0;
+    color: ${theme.colors.text};
+  }
+  
+  .react-calendar__tile:enabled:hover,
+  .react-calendar__tile:enabled:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+  }
+  
+  .react-calendar__tile--now {
+    background: ${theme.colors.secondary}40;
+    border-radius: 5px;
+  }
+  
+  .react-calendar__tile--active {
+    background: ${theme.colors.accent};
+    color: white;
+    border-radius: 5px;
+  }
+`;
+
 // Dashboard Component
 const Dashboard = () => {
   const { user } = useAuth();
@@ -384,6 +500,7 @@ const Dashboard = () => {
   const [newHabit, setNewHabit] = useState("");
   const [showInput, setShowInput] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [chartType, setChartType] = useState('line');
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -471,6 +588,13 @@ const Dashboard = () => {
     return 'lightgreen';
   };
 
+  const switchChartType = () => {
+    const chartTypes = ['line', 'bar', 'regression', 'calendar'];
+    const currentIndex = chartTypes.indexOf(chartType);
+    const nextIndex = (currentIndex + 1) % chartTypes.length;
+    setChartType(chartTypes[nextIndex]);
+  };
+
   return (
     <DashboardContainer>
       <Background>
@@ -511,18 +635,59 @@ const Dashboard = () => {
         <GridContainer>
           <Card>
             <h1>Progress Overview</h1>
+            <ChartSwitcherButton onClick={switchChartType}>Switch Chart</ChartSwitcherButton>
             <ResponsiveContainer width="100%" height={150}>
-              <LineChart data={data}>
-                <XAxis dataKey="day" stroke={theme.colors.text} />
-                <YAxis hide />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="progress" 
-                  stroke={data.length ? getLineColor(data[data.length - 1].progress) : theme.colors.accent} 
-                  strokeWidth={2} 
-                />
-              </LineChart>
+              {chartType === 'line' && (
+                <LineChart data={data}>
+                  <XAxis dataKey="day" stroke={theme.colors.text} />
+                  <YAxis hide />
+                  <Tooltip contentStyle={{ backgroundColor: theme.colors.glassWhite, borderColor: theme.colors.borderWhite }} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="progress" 
+                    stroke={data.length ? getLineColor(data[data.length - 1].progress) : theme.colors.accent} 
+                    strokeWidth={2} 
+                  />
+                </LineChart>
+              )}
+              {chartType === 'bar' && (
+                <BarChart data={data}>
+                  <XAxis dataKey="day" stroke={theme.colors.text} />
+                  <YAxis hide />
+                  <Tooltip contentStyle={{ backgroundColor: theme.colors.glassWhite, borderColor: theme.colors.borderWhite }} />
+                  <Bar 
+                    dataKey="progress" 
+                    fill={data.length ? getLineColor(data[data.length - 1].progress) : theme.colors.accent} 
+                  />
+                </BarChart>
+              )}
+              {chartType === 'regression' && (
+                <LineChart data={data}>
+                  <XAxis dataKey="day" stroke={theme.colors.text} />
+                  <YAxis hide />
+                  <Tooltip contentStyle={{ backgroundColor: theme.colors.glassWhite, borderColor: theme.colors.borderWhite }} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="progress" 
+                    stroke={data.length ? getLineColor(data[data.length - 1].progress) : theme.colors.accent} 
+                    strokeWidth={2} 
+                    dot={false}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="progress" 
+                    stroke="blue" 
+                    strokeWidth={2} 
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              )}
+              {chartType === 'calendar' && (
+                <StyledCalendarContainer>
+                  <Calendar />
+                </StyledCalendarContainer>
+              )}
             </ResponsiveContainer>
           </Card>
 
