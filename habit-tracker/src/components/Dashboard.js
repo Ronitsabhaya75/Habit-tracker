@@ -1,3 +1,29 @@
+/**
+ * Dashboard Component
+ *
+ * This file implements the Dashboard component for the application.
+ * It provides an interactive dashboard that includes:
+ * - A sidebar with navigation options.
+ * - A header displaying user information.
+ * - Various cards that display key metrics:
+ *    • A progress overview using a responsive chart.
+ *    • A leaderboard ranking users based on performance.
+ *    • A section for achievements and milestones.
+ *    • A task list for managing activities.
+ *
+ * The component utilizes React hooks (useState, useEffect, useRef) for state management
+ * and side effects. It employs styled-components for CSS-in-JS styling and 
+ * integrates with Recharts for data visualization.
+ *
+ * It also interacts with authentication context (useAuth) to fetch the current user's details.
+ *
+ * 🔍 Simulated asynchronous functions (e.g., fetchUserData, fetchLeaderboardData) 
+ * are used to mimic API requests.
+ *
+ * The code follows a modular structure, ensuring readability and maintainability.
+ */
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
