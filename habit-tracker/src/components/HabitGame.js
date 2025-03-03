@@ -1,147 +1,159 @@
-import React, { useState } from 'react';
+// src/components/BreakthroughGame.js
+import React, { useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import styled from 'styled-components';
 import { theme } from '../theme';
 
 // Predefined Habit Categories
-const PREDEFINED_HABITS = [
+const HABIT_CATEGORIES = [
   { 
-    id: 'smoking', 
-    name: 'Smoking Reduction', 
-    icon: '🚬',
-    description: 'Track and reduce smoking habit',
-    levels: [
-      { level: 1, goal: 'Reduce cigarettes per day', points: 50 },
-      { level: 2, goal: 'Create smoke-free hours', points: 100 },
-      { level: 3, goal: 'Complete a smoke-free week', points: 250 }
+    id: 'addiction', 
+    name: 'Addiction Recovery', 
+    icon: '🚭',
+    description: 'Break free from harmful dependencies',
+    stages: [
+      { level: 1, goal: 'First Week Clean', points: 50, reward: 'Self-Care Package' },
+      { level: 2, goal: 'One Month Milestone', points: 200, reward: 'Wellness Session' },
+      { level: 3, goal: 'Quarterly Achievement', points: 500, reward: 'Personal Experience Gift' }
     ]
   },
-  // ... (rest of the PREDEFINED_HABITS from previous implementation)
+  { 
+    id: 'fitness', 
+    name: 'Fitness Transformation', 
+    icon: '💪',
+    description: 'Build a healthier, stronger you',
+    stages: [
+      { level: 1, goal: 'Consistent Workouts', points: 75, reward: 'Healthy Meal Coupon' },
+      { level: 2, goal: 'Nutrition Tracking', points: 250, reward: 'Fitness Gear' },
+      { level: 3, goal: 'Body Composition Change', points: 600, reward: 'Personal Training' }
+    ]
+  }
 ];
 
-// Styled Components (keep all the styled components from previous implementation)
+// Styled Components
+const GameContainer = styled.div`
+  background: ${theme.colors.background};
+  color: ${theme.colors.text};
+  min-height: 100vh;
+  padding: 2rem;
+`;
 
-const HabitGame = () => {
-  const [habits, setHabits] = useState([]);
-  const [selectedHabit, setSelectedHabit] = useState(null);
-  const [customHabit, setCustomHabit] = useState('');
-  const [habitProgress, setHabitProgress] = useState({});
+const CategoryGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 2rem;
+`;
 
-  const addPredefinedHabit = (habit) => {
-    if (!habits.some(h => h.id === habit.id)) {
-      setHabits([...habits, {
-        ...habit,
-        currentLevel: 1,
-        totalPoints: 0
-      }]);
-    }
-    setSelectedHabit(habit);
-  };
+const CategoryList = styled.div`
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 1rem;
+`;
 
-  const addCustomHabit = () => {
-    if (customHabit.trim()) {
-      const newHabit = {
-        id: Date.now().toString(),
-        name: customHabit,
-        icon: '✨',
-        description: 'Custom habit tracking',
-        levels: [
-          { level: 1, goal: 'Start tracking', points: 50 },
-          { level: 2, goal: 'Make progress', points: 100 },
-          { level: 3, goal: 'Master the habit', points: 250 }
-        ],
-        currentLevel: 1,
-        totalPoints: 0
-      };
-      setHabits([...habits, newHabit]);
-      setSelectedHabit(newHabit);
-      setCustomHabit('');
-    }
-  };
+const CategoryItem = styled.div`
+  cursor: pointer;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  background: ${props => props.active ? theme.colors.accent : 'transparent'};
+  
+  &:hover {
+    background: rgba(255,255,255,0.2);
+  }
+`;
 
-  const updateHabitProgress = (points) => {
-    if (selectedHabit) {
-      const currentHabitProgress = habitProgress[selectedHabit.id] || 0;
-      const newTotalPoints = currentHabitProgress + points;
-      
-      setHabitProgress(prev => ({
-        ...prev,
-        [selectedHabit.id]: newTotalPoints
-      }));
-    }
+const BreakthroughGame = () => {
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [progress, setProgress] = useState({});
+  const [progressHistory, setProgressHistory] = useState([]);
+
+  const updateProgress = (points) => {
+    if (!selectedCategory) return;
+
+    const currentProgress = progress[selectedCategory.id] || 0;
+    const newProgress = currentProgress + points;
+
+    setProgress(prev => ({
+      ...prev,
+      [selectedCategory.id]: newProgress
+    }));
+
+    setProgressHistory(prev => [
+      ...prev, 
+      { 
+        category: selectedCategory.name, 
+        points: points, 
+        date: new Date().toLocaleDateString() 
+      }
+    ]);
   };
 
   return (
     <GameContainer>
-      <SidebarContainer>
-        <h2>Habit Tracking Game</h2>
-        
-        <HabitList>
-          {PREDEFINED_HABITS.map(habit => (
-            <HabitItem 
-              key={habit.id} 
-              onClick={() => addPredefinedHabit(habit)}
+      <h1>BreakThrough: Your Transformation Journey</h1>
+      
+      <CategoryGrid>
+        {/* Category Selection */}
+        <CategoryList>
+          {HABIT_CATEGORIES.map(category => (
+            <CategoryItem 
+              key={category.id}
+              active={selectedCategory?.id === category.id}
+              onClick={() => setSelectedCategory(category)}
             >
-              <HabitIcon>{habit.icon}</HabitIcon>
-              <span>{habit.name}</span>
-            </HabitItem>
+              <span>{category.icon}</span>
+              <span>{category.name}</span>
+            </CategoryItem>
           ))}
-        </HabitList>
+        </CategoryList>
 
-        <CustomHabitInput 
-          placeholder="Create custom habit"
-          value={customHabit}
-          onChange={(e) => setCustomHabit(e.target.value)}
-        />
-        <AddHabitButton onClick={addCustomHabit}>
-          Add Custom Habit
-        </AddHabitButton>
-      </SidebarContainer>
-
-      <MainContent>
-        {selectedHabit ? (
-          <GameCard>
-            <h2>
-              {selectedHabit.icon} {selectedHabit.name}
-            </h2>
-            <p>{selectedHabit.description}</p>
-            
-            <h3>Current Progress</h3>
-            <ProgressBar>
-              <Progress 
-                progress={
-                  (habitProgress[selectedHabit.id] || 0) / 
-                  (selectedHabit.levels[2]?.points || 250) * 100
-                } 
-              />
-            </ProgressBar>
-            
+        {/* Main Content */}
+        <div>
+          {selectedCategory ? (
             <div>
-              <h3>Level Challenges</h3>
-              {selectedHabit.levels.map((level) => (
-                <div key={level.level}>
-                  <p>
-                    Level {level.level}: {level.goal} 
-                    {habitProgress[selectedHabit.id] >= level.points && ' ✅'}
-                  </p>
-                </div>
-              ))}
-            </div>
+              <h2>{selectedCategory.name}</h2>
+              <p>{selectedCategory.description}</p>
 
-            <div>
-              <button onClick={() => updateHabitProgress(10)}>
-                Log Progress (+10 pts)
-              </button>
-              <button onClick={() => updateHabitProgress(25)}>
-                Log Major Achievement (+25 pts)
-              </button>
+              {/* Progress Tracking Section */}
+              <div>
+                <h3>Your Progress</h3>
+                {selectedCategory.stages.map(stage => (
+                  <div key={stage.level}>
+                    <h4>Level {stage.level}: {stage.goal}</h4>
+                    <p>Reward: {stage.reward}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Progress Actions */}
+              <div>
+                <button onClick={() => updateProgress(10)}>
+                  Small Achievement (+10 pts)
+                </button>
+                <button onClick={() => updateProgress(50)}>
+                  Major Milestone (+50 pts)
+                </button>
+              </div>
+
+              {/* Progress Chart */}
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={progressHistory}>
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="points" stroke={theme.colors.accent} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-          </GameCard>
-        ) : (
-          <p>Select or create a habit to start tracking</p>
-        )}
-      </MainContent>
+          ) : (
+            <p>Select a habit category to begin your transformation journey</p>
+          )}
+        </div>
+      </CategoryGrid>
     </GameContainer>
   );
 };
 
-export default HabitGame;
+export default BreakthroughGame;
