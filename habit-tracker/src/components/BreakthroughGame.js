@@ -5,7 +5,6 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import styled from 'styled-components';
 import { theme } from '../theme';
 import { useHabit } from '../context/HabitContext';
-import Confetti from 'react-confetti';
 
 // Predefined Habit Categories
 const HABIT_CATEGORIES = [
@@ -127,7 +126,7 @@ const StageCard = styled.div`
 `;
 
 const ActionButton = styled.button`
-  background: ${theme.colors.accent};
+  background: ${props => props.color || theme.colors.accent};
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -201,13 +200,20 @@ const ActionButtons = styled.div`
   margin-top: 1rem;
 `;
 
+const LastActionBox = styled.div`
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+`;
+
 const BreakthroughGame = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { progress, updateProgress, getCategoryProgress, getCategoryHistory } = useHabit();
+  const { progress, updateProgress, getCategoryProgress, getCategoryHistory, lastAction } = useHabit();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [lastAction, setLastAction] = useState(null);
+  const [localLastAction, setLocalLastAction] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -221,6 +227,13 @@ const BreakthroughGame = () => {
       navigate(`/breakthrough-game?category=${HABIT_CATEGORIES[0].id}`);
     }
   }, [location, navigate]);
+
+  // Track local last action or use context's last action
+  useEffect(() => {
+    if (lastAction && (!localLastAction || lastAction.timestamp > localLastAction.timestamp)) {
+      setLocalLastAction(lastAction);
+    }
+  }, [lastAction]);
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
@@ -258,10 +271,12 @@ const BreakthroughGame = () => {
     if (!selectedCategory) return;
     
     updateProgress(selectedCategory.id, points);
-    setLastAction({
+    
+    setLocalLastAction({
       type: actionType,
       points: points,
-      timestamp: new Date().toLocaleTimeString()
+      timestamp: new Date().toLocaleTimeString(),
+      categoryId: selectedCategory.id
     });
     
     // Show confetti animation for major achievements
@@ -292,7 +307,24 @@ const BreakthroughGame = () => {
 
   return (
     <GameContainer>
-      {showConfetti && <Confetti />}
+      {showConfetti && <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 100 }}>
+        {/* Simple confetti effect */}
+        {Array.from({ length: 50 }).map((_, i) => (
+          <div 
+            key={i}
+            style={{
+              position: 'absolute',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              width: '10px',
+              height: '10px',
+              background: `hsl(${Math.random() * 360}, 100%, 50%)`,
+              borderRadius: '50%',
+              animation: `fall 3s linear`
+            }}
+          />
+        ))}
+      </div>}
       
       <GameHeader>
         <h1>Breakthrough: Your Transformation Journey</h1>
@@ -353,7 +385,7 @@ const BreakthroughGame = () => {
               <ActionButtons>
                 <ActionButton 
                   onClick={() => handleProgressUpdate(5, 'Small Win')}
-                  style={{ background: '#4CAF50' }}
+                  color="#4CAF50"
                 >
                   Small Win (+5 pts)
                   <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
@@ -362,7 +394,7 @@ const BreakthroughGame = () => {
                 </ActionButton>
                 <ActionButton 
                   onClick={() => handleProgressUpdate(10, 'Daily Goal')}
-                  style={{ background: '#2196F3' }}
+                  color="#2196F3"
                 >
                   Daily Goal (+10 pts)
                   <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
@@ -371,7 +403,7 @@ const BreakthroughGame = () => {
                 </ActionButton>
                 <ActionButton 
                   onClick={() => handleProgressUpdate(25, 'Major Achievement')}
-                  style={{ background: '#9C27B0' }}
+                  color="#9C27B0"
                 >
                   Major Achievement (+25 pts)
                   <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
@@ -380,16 +412,11 @@ const BreakthroughGame = () => {
                 </ActionButton>
               </ActionButtons>
 
-              {lastAction && (
-                <div style={{ 
-                  margin: '1rem 0',
-                  padding: '1rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px'
-                }}>
+              {localLastAction && (
+                <LastActionBox>
                   <h4>Last Action</h4>
-                  <p>{lastAction.type} completed at {lastAction.timestamp} (+{lastAction.points} points)</p>
-                </div>
+                  <p>{localLastAction.type} completed at {localLastAction.timestamp} (+{localLastAction.points} points)</p>
+                </LastActionBox>
               )}
 
               <StageGrid>
@@ -430,19 +457,25 @@ const BreakthroughGame = () => {
 
               <ProgressChart>
                 <h3>Progress History</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={getCategoryHistory(selectedCategory.id)}>
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line 
-                      type="monotone" 
-                      dataKey="points" 
-                      stroke={theme.colors.accent}
-                      strokeWidth={2}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                {getCategoryHistory(selectedCategory.id).length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={getCategoryHistory(selectedCategory.id)}>
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line 
+                        type="monotone" 
+                        dataKey="points" 
+                        stroke={theme.colors.accent}
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p style={{ textAlign: 'center', padding: '2rem' }}>
+                    No progress history yet. Start adding achievements!
+                  </p>
+                )}
               </ProgressChart>
             </>
           ) : (
