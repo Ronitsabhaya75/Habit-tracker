@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
 import { useAuth } from '../context/AuthContext';
+<<<<<<< HEAD
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+=======
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
 
 // **ANIMATIONS**
 const floatAnimation = keyframes`
@@ -302,6 +306,7 @@ const Card = styled.div`
   backdrop-filter: blur(8px);
 `;
 
+<<<<<<< HEAD
 // Chart Controls
 const ChartControls = styled.div`
   display: flex;
@@ -325,6 +330,8 @@ const ChartTypeButton = styled.button`
   }
 `;
 
+=======
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
 // Progress Bar Container
 const ProgressBarContainer = styled.div`
   width: 100%;
@@ -573,6 +580,7 @@ const Dashboard = () => {
   const [events, setEvents] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [newEvent, setNewEvent] = useState("");
+<<<<<<< HEAD
   
   // Chart state
   const [chartType, setChartType] = useState('line'); // 'line', 'bar', or 'pie'
@@ -581,6 +589,11 @@ const Dashboard = () => {
   useEffect(() => {
     fetchLeaderboard();
     fetchCategoryData();
+=======
+
+  useEffect(() => {
+    fetchLeaderboard();
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
   }, []);
 
   useEffect(() => {
@@ -639,6 +652,7 @@ const Dashboard = () => {
     }
   };
 
+<<<<<<< HEAD
   const fetchCategoryData = async () => {
     // Simulate fetching category data
     const categories = [
@@ -650,14 +664,20 @@ const Dashboard = () => {
     setCategoryData(categories);
   };
 
+=======
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
   const fakeFetchUserData = async () => {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(
+<<<<<<< HEAD
           Array.from({ length: 7 }, (_, i) => ({ 
             day: `Day ${i+1}`,
             progress: Math.floor(Math.random() * 100) 
           }))
+=======
+          Array.from({ length: 5 }, (_, i) => ({ progress: Math.floor(Math.random() * 100) }))
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
         );
       }, 1000);
     });
@@ -689,6 +709,7 @@ const Dashboard = () => {
     }
   };
 
+<<<<<<< HEAD
   // Function to cycle through chart types
   const cycleChartType = () => {
     if (chartType === 'line') setChartType('bar');
@@ -703,14 +724,19 @@ const Dashboard = () => {
     setChartType(types[randomIndex]);
   };
 
+=======
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
   const getLineColor = (progress) => {
     if (progress < 30) return 'red';
     if (progress < 60) return 'lightcoral';
     return 'lightgreen';
   };
+<<<<<<< HEAD
 
   // Custom colors for pie chart
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#a64af5'];
+=======
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
   
   // Calendar functions
   const formatDate = (date) => {
@@ -848,6 +874,7 @@ const Dashboard = () => {
     );
   };
 
+<<<<<<< HEAD
   // Render chart based on type
   const renderChart = () => {
     switch(chartType) {
@@ -910,11 +937,22 @@ const Dashboard = () => {
         <Star size="8px" style={{ top: '60%', left: '70%' }} duration="2.5s" delay="0.2s" />
         <Star size="6px" style={{ top: '20%', left: '55%' }} duration="2s" delay="0.8s" />
         <Star size="10px" style={{ top: '70%', left: '30%' }} duration="3.2s" delay="1.2s" />
+=======
+  return (
+    <DashboardContainer>
+      <Background>
+        <GradientOverlay />
+        <Scenery />
+        <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
+        <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
+        <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
         <Rocket>
           <RocketTrail />
         </Rocket>
         <AchievementBadge />
         <ProgressCircle />
+<<<<<<< HEAD
         <XPOrb style={{ top: '40%', left: '35%' }} duration="5s" />
         <XPOrb style={{ top: '25%', left: '65%' }} duration="6s" delay="0.5s" />
         <XPOrb style={{ top: '65%', left: '20%' }} duration="4s" delay="0.3s" />
@@ -993,16 +1031,87 @@ const Dashboard = () => {
           </Card>
 
           {/* Calendar Card */}
+=======
+        <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
+        <XPOrb style={{ top: '30%', right: '25%' }} duration="5s" delay="1.2s" />
+        <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
+        <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
+      </Background>
+
+      <Sidebar>
+        <h2>HabitQuest</h2>
+        <NavList>
+          <NavItem className="active">📊 Dashboard</NavItem>
+          <NavItem>📅 Calendar</NavItem>
+          <NavItem>🏆 Achievements</NavItem>
+          <NavItem>📈 Statistics</NavItem>
+          <NavItem>⚙️ Settings</NavItem>
+        </NavList>
+      </Sidebar>
+
+      <MainContent>
+        <Header>
+          <UserGreeting>
+            <h1>Welcome{user?.name ? `, ${user.name}` : ''}! 👋</h1>
+            <LevelBadge>Level 1 - 0 XP</LevelBadge>
+          </UserGreeting>
+        </Header>
+
+        <GridContainer>
+          <Card>
+            <h1>Progress Overview</h1>
+            <ResponsiveContainer width="100%" height={150}>
+              <LineChart data={data}>
+                <XAxis dataKey="day" stroke={theme.colors.text} />
+                <YAxis hide />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="progress" 
+                  stroke={data.length ? getLineColor(data[data.length - 1].progress) : theme.colors.accent} 
+                  strokeWidth={2} 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </Card>
+
+          <Card>
+            <h2>Leaderboard</h2>
+            <EventsList>
+              {sortedLeaderboard.map((leaderboardUser, index) => (
+                <EventItem key={leaderboardUser.name}>
+                  <div>
+                    #{index + 1} {leaderboardUser.name}
+                  </div>
+                  <span>{leaderboardUser.xp} XP</span>
+                </EventItem>
+              ))}
+            </EventsList>
+          </Card>
+
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
           <Card>
             <h2>Calendar</h2>
             <CalendarWrapper>
               <CalendarContainer>
                 <CalendarHeader>
+<<<<<<< HEAD
                   <Button onClick={() => changeMonth(-1)}>←</Button>
                   <MonthTitle>
                     {currentDate.toLocaleDateString('default', { month: 'long', year: 'numeric' })}
                   </MonthTitle>
                   <Button onClick={() => changeMonth(1)}>→</Button>
+=======
+                  <Button onClick={() => changeMonth(-1)}>
+                    ◀ Prev
+                  </Button>
+                  <MonthTitle>
+                    {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                    </MonthTitle>
+                  <Button onClick={() => changeMonth(1)}>
+                    Next ▶
+                  </Button>
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
                 </CalendarHeader>
                 
                 {renderDayNames()}
@@ -1011,6 +1120,7 @@ const Dashboard = () => {
                 </CalendarGrid>
                 
                 <SelectedDateInfo>
+<<<<<<< HEAD
                   <DateTitle>
                     {formatDisplayDate(selectedDate)}
                     <Button 
@@ -1022,11 +1132,19 @@ const Dashboard = () => {
                   </DateTitle>
                   
                   {renderEvents()}
+=======
+                  <DateTitle>{formatDisplayDate(selectedDate)}</DateTitle>
+                  {renderEvents()}
+                  <Button primary onClick={openAddEventModal}>
+                    Add Event
+                  </Button>
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
                 </SelectedDateInfo>
               </CalendarContainer>
             </CalendarWrapper>
           </Card>
 
+<<<<<<< HEAD
           {/* Habits Card */}
           <Card>
             <h2>Your Habits</h2>
@@ -1073,15 +1191,55 @@ const Dashboard = () => {
                 </EventItem>
               ))}
             </EventsList>
+=======
+          <Card>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2>Habits</h2>
+              <Button primary onClick={addHabit}>
+                Add Habit
+              </Button>
+            </div>
+            
+            <div>
+              {tasks.map((task, index) => (
+                <EventItem key={index}>
+                  {task}
+                  <ProgressBarContainer>
+                    <div></div>
+                  </ProgressBarContainer>
+                </EventItem>
+              ))}
+              
+              {showInput && (
+                <InputField
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Enter a new habit..."
+                  value={newHabit}
+                  onChange={(e) => setNewHabit(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  onBlur={() => setShowInput(false)}
+                />
+              )}
+              
+              {tasks.length === 0 && !showInput && (
+                <p>No habits added yet. Click "Add Habit" to get started!</p>
+              )}
+            </div>
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
           </Card>
         </GridContainer>
       </MainContent>
 
+<<<<<<< HEAD
       {/* Add Event Modal */}
+=======
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
       {showModal && (
         <ModalOverlay>
           <ModalContent>
             <ModalHeader>
+<<<<<<< HEAD
               <h2>Add Event</h2>
               <CloseButton onClick={closeModal}>×</CloseButton>
             </ModalHeader>
@@ -1091,14 +1249,29 @@ const Dashboard = () => {
             <InputField
               type="text"
               placeholder="Event description..."
+=======
+              <h2>Add Event for {formatDisplayDate(selectedDate)}</h2>
+              <CloseButton onClick={closeModal}>×</CloseButton>
+            </ModalHeader>
+            
+            <InputField
+              type="text"
+              placeholder="Enter event description..."
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
               value={newEvent}
               onChange={(e) => setNewEvent(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && addEvent()}
             />
             
+<<<<<<< HEAD
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
               <Button onClick={closeModal}>Cancel</Button>
               <Button primary onClick={addEvent}>Add Event</Button>
+=======
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <Button onClick={closeModal}>Cancel</Button>
+              <Button primary onClick={addEvent}>Add</Button>
+>>>>>>> 2e0f76ccae73d42eb5f182615256275260503bfd
             </div>
           </ModalContent>
         </ModalOverlay>
