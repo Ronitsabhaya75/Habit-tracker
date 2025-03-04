@@ -2,27 +2,29 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { HabitProvider } from './context/HabitContext';
-import Navbar from './components/Navbar';
-import Home from './components/Home';
+import Dashboard from './components/Dashboard';
+import BreakthroughGame from './components/BreakthroughGame';
 import Login from './components/Login';
 import Register from './components/Register';
-import Dashboard from './components/Dashboard';
-import BreakthroughGame from './components/BreakthroughGame'; // New import
+import Home from './components/Home';
+import { ThemeProvider } from 'styled-components';
+import { theme } from './theme';
 
 function App() {
   return (
-    <AuthProvider>
-      <HabitProvider>
-        <Navbar /> {/* Navbar component */}
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/breakthrough-game" element={<BreakthroughGame />} /> {/* New Route */}
-        </Routes>
-      </HabitProvider>
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+      <AuthProvider>
+        <HabitProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/breakthrough-game" element={<BreakthroughGame />} />
+          </Routes>
+        </HabitProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

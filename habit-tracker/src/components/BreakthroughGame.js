@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import styled from 'styled-components';
 import { theme } from '../theme';
 import { useHabit } from '../context/HabitContext';
+import AddictionRecoveryGame from './games/AddictionRecoveryGame';
 
 // Predefined Habit Categories
 const HABIT_CATEGORIES = [
@@ -96,6 +97,8 @@ const GameContent = styled.div`
   background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 2rem;
+  overflow-y: auto;
+  max-height: 80vh;
 `;
 
 const StageGrid = styled.div`
@@ -305,6 +308,144 @@ const BreakthroughGame = () => {
     return "Incredible dedication! You're an inspiration!";
   };
 
+  const renderGameContent = () => {
+    if (!selectedCategory) {
+      return (
+        <div style={{ textAlign: 'center', padding: '3rem' }}>
+          <h2>Select a Category</h2>
+          <p>Choose a habit category from the left to begin your transformation journey.</p>
+        </div>
+      );
+    }
+
+    if (selectedCategory.id === 'addiction') {
+      return <AddictionRecoveryGame />;
+    }
+
+    return (
+      <>
+        <h2>{selectedCategory.name} Journey</h2>
+        <p>{selectedCategory.description}</p>
+
+        <PointsDisplay>
+          <h3>Current Points: {getCategoryProgress(selectedCategory.id)}</h3>
+          <div>
+            Next Goal: {getCurrentStage(selectedCategory.id)?.goal}
+            <div style={{ fontSize: '0.9rem', opacity: 0.8, marginTop: '0.5rem' }}>
+              {getCurrentStage(selectedCategory.id)?.points - getCategoryProgress(selectedCategory.id)} points needed
+            </div>
+          </div>
+        </PointsDisplay>
+
+        <ProgressIndicator progress={calculateProgress(selectedCategory.id)}>
+          <h3>Overall Progress</h3>
+          <div className="progress-bar">
+            <div className="fill" />
+          </div>
+          <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+            {calculateProgress(selectedCategory.id).toFixed(1)}% Complete
+          </div>
+        </ProgressIndicator>
+
+        <ActionButtons>
+          <ActionButton 
+            onClick={() => handleProgressUpdate(5, 'Small Win')}
+            color="#4CAF50"
+          >
+            Small Win (+5 pts)
+            <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+              Quick daily tasks
+            </div>
+          </ActionButton>
+          <ActionButton 
+            onClick={() => handleProgressUpdate(10, 'Daily Goal')}
+            color="#2196F3"
+          >
+            Daily Goal (+10 pts)
+            <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+              Complete daily target
+            </div>
+          </ActionButton>
+          <ActionButton 
+            onClick={() => handleProgressUpdate(25, 'Major Achievement')}
+            color="#9C27B0"
+          >
+            Major Achievement (+25 pts)
+            <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+              Significant milestone
+            </div>
+          </ActionButton>
+        </ActionButtons>
+
+        {localLastAction && (
+          <LastActionBox>
+            <h4>Last Action</h4>
+            <p>{localLastAction.type} completed at {localLastAction.timestamp} (+{localLastAction.points} points)</p>
+          </LastActionBox>
+        )}
+
+        <StageGrid>
+          {selectedCategory.stages.map(stage => (
+            <StageCard 
+              key={stage.level}
+              isCompleted={isStageCompleted(stage, selectedCategory.id)}
+              isCurrent={isCurrentStage(stage, selectedCategory.id)}
+            >
+              <h3>Level {stage.level}</h3>
+              <h4>{stage.goal}</h4>
+              <p style={{ margin: '1rem 0' }}>Reward: {stage.reward}</p>
+              <p>Required Points: {stage.points}</p>
+              {isStageCompleted(stage, selectedCategory.id) && (
+                <p style={{ color: '#2ecc71', marginTop: '1rem' }}>
+                  ✨ Stage Complete!
+                </p>
+              )}
+              {isCurrentStage(stage, selectedCategory.id) && (
+                <div style={{ marginTop: '1rem' }}>
+                  <div className="progress-bar">
+                    <div 
+                      className="fill" 
+                      style={{ 
+                        width: `${(getCategoryProgress(selectedCategory.id) / stage.points) * 100}%`,
+                        background: theme.colors.accent 
+                      }} 
+                    />
+                  </div>
+                  <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                    {stage.points - getCategoryProgress(selectedCategory.id)} points to complete
+                  </p>
+                </div>
+              )}
+            </StageCard>
+          ))}
+        </StageGrid>
+
+        <ProgressChart>
+          <h3>Progress History</h3>
+          {getCategoryHistory(selectedCategory.id).length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={getCategoryHistory(selectedCategory.id)}>
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="points" 
+                  stroke={theme.colors.accent}
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <p style={{ textAlign: 'center', padding: '2rem' }}>
+              No progress history yet. Start adding achievements!
+            </p>
+          )}
+        </ProgressChart>
+      </>
+    );
+  };
+
   return (
     <GameContainer>
       {showConfetti && <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 100 }}>
@@ -357,133 +498,7 @@ const BreakthroughGame = () => {
         </CategoryList>
 
         <GameContent>
-          {selectedCategory ? (
-            <>
-              <h2>{selectedCategory.name} Journey</h2>
-              <p>{selectedCategory.description}</p>
-
-              <PointsDisplay>
-                <h3>Current Points: {getCategoryProgress(selectedCategory.id)}</h3>
-                <div>
-                  Next Goal: {getCurrentStage(selectedCategory.id)?.goal}
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8, marginTop: '0.5rem' }}>
-                    {getCurrentStage(selectedCategory.id)?.points - getCategoryProgress(selectedCategory.id)} points needed
-                  </div>
-                </div>
-              </PointsDisplay>
-
-              <ProgressIndicator progress={calculateProgress(selectedCategory.id)}>
-                <h3>Overall Progress</h3>
-                <div className="progress-bar">
-                  <div className="fill" />
-                </div>
-                <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
-                  {calculateProgress(selectedCategory.id).toFixed(1)}% Complete
-                </div>
-              </ProgressIndicator>
-
-              <ActionButtons>
-                <ActionButton 
-                  onClick={() => handleProgressUpdate(5, 'Small Win')}
-                  color="#4CAF50"
-                >
-                  Small Win (+5 pts)
-                  <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                    Quick daily tasks
-                  </div>
-                </ActionButton>
-                <ActionButton 
-                  onClick={() => handleProgressUpdate(10, 'Daily Goal')}
-                  color="#2196F3"
-                >
-                  Daily Goal (+10 pts)
-                  <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                    Complete daily target
-                  </div>
-                </ActionButton>
-                <ActionButton 
-                  onClick={() => handleProgressUpdate(25, 'Major Achievement')}
-                  color="#9C27B0"
-                >
-                  Major Achievement (+25 pts)
-                  <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                    Significant milestone
-                  </div>
-                </ActionButton>
-              </ActionButtons>
-
-              {localLastAction && (
-                <LastActionBox>
-                  <h4>Last Action</h4>
-                  <p>{localLastAction.type} completed at {localLastAction.timestamp} (+{localLastAction.points} points)</p>
-                </LastActionBox>
-              )}
-
-              <StageGrid>
-                {selectedCategory.stages.map(stage => (
-                  <StageCard 
-                    key={stage.level}
-                    isCompleted={isStageCompleted(stage, selectedCategory.id)}
-                    isCurrent={isCurrentStage(stage, selectedCategory.id)}
-                  >
-                    <h3>Level {stage.level}</h3>
-                    <h4>{stage.goal}</h4>
-                    <p style={{ margin: '1rem 0' }}>Reward: {stage.reward}</p>
-                    <p>Required Points: {stage.points}</p>
-                    {isStageCompleted(stage, selectedCategory.id) && (
-                      <p style={{ color: '#2ecc71', marginTop: '1rem' }}>
-                        ✨ Stage Complete!
-                      </p>
-                    )}
-                    {isCurrentStage(stage, selectedCategory.id) && (
-                      <div style={{ marginTop: '1rem' }}>
-                        <div className="progress-bar">
-                          <div 
-                            className="fill" 
-                            style={{ 
-                              width: `${(getCategoryProgress(selectedCategory.id) / stage.points) * 100}%`,
-                              background: theme.colors.accent 
-                            }} 
-                          />
-                        </div>
-                        <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                          {stage.points - getCategoryProgress(selectedCategory.id)} points to complete
-                        </p>
-                      </div>
-                    )}
-                  </StageCard>
-                ))}
-              </StageGrid>
-
-              <ProgressChart>
-                <h3>Progress History</h3>
-                {getCategoryHistory(selectedCategory.id).length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={getCategoryHistory(selectedCategory.id)}>
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line 
-                        type="monotone" 
-                        dataKey="points" 
-                        stroke={theme.colors.accent}
-                        strokeWidth={2}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <p style={{ textAlign: 'center', padding: '2rem' }}>
-                    No progress history yet. Start adding achievements!
-                  </p>
-                )}
-              </ProgressChart>
-            </>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '3rem' }}>
-              <h2>Select a Category</h2>
-              <p>Choose a habit category from the left to begin your transformation journey.</p>
-            </div>
-          )}
+          {renderGameContent()}
         </GameContent>
       </GameGrid>
     </GameContainer>

@@ -369,6 +369,7 @@ const CategoryCard = styled(Card)`
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  margin-bottom: 1rem;
 
   &:hover {
     background: rgba(255, 255, 255, 0.15);
