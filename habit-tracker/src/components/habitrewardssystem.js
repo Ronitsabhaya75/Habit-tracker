@@ -1,3 +1,22 @@
+/**
+ * Habit Progress and Rewards Tracking System
+ *
+ * Features:
+ * - Track progress across multiple habit categories (fitness, mindfulness)
+ * - Implement reward tiers with points and badges
+ * - Persistent storage using localStorage
+ * - Activity logging and progress tracking
+ *
+ * Usage: Wrap app with HabitProgressProvider and use useHabitProgress hook
+ * to access progress management methods
+ *
+ * Key Methods:
+ * - addProgress: Add points to a habit category
+ * - getProgress: Retrieve current progress
+ * - getRewards: Get earned rewards
+ * - resetProgress: Clear progress for a category
+ */
+
 // 1. habitContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
