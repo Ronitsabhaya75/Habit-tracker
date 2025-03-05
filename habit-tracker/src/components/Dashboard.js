@@ -666,13 +666,13 @@ const Dashboard = () => {
   };
 
   const handleEditTask = (taskId, newText) => {
-    setTasks(tasks.map(task =>
+    setTasks(tasks.map(task => 
       task.id === taskId ? { ...task, text: newText, isEditing: false } : task
     ));
   };
 
   const toggleEdit = (taskId) => {
-    setTasks(tasks.map(task =>
+    setTasks(tasks.map(task => 
       task.id === taskId ? { ...task, isEditing: !task.isEditing } : task
     ));
   };
@@ -836,43 +836,41 @@ const Dashboard = () => {
         </Card>
 
         <Card>
-          <h2>Tasks</h2>
-          <ul>
-            {tasks.map(task => (
-              <li key={task.id} style={{ margin: '8px 0' }}>
-                {task.isEditing ? (
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
+            <h2>Tasks</h2>
+            <ul>
+              {tasks.map(task => (
+                <li key={task.id} style={{ margin: '8px 0' }}>
+                  {task.isEditing ? (
                     <EditInput
+                      type="text"
                       value={task.text}
                       onChange={(e) => setTasks(tasks.map(t => t.id === task.id ? { ...t, text: e.target.value } : t))}
                       onKeyPress={(e) => { if (e.key === 'Enter') handleEditTask(task.id, e.target.value); }}
                       autoFocus
                       onBlur={() => toggleEdit(task.id)}
+                      onKeyDown={(e) => { if (e.key === 'Escape') toggleEdit(task.id); }}
                     />
-                    <Button onClick={() => handleEditTask(task.id, task.text)}>Save</Button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ flexGrow: 1 }}>{task.text}</span>
-                    <Button onClick={() => toggleEdit(task.id)} style={{ marginLeft: '8px' }}>Edit</Button>
-                    <DeleteButton onClick={() => deleteTask(task.id)}>Delete</DeleteButton>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-          <AddHabitButton onClick={addHabit}>+ New Habit</AddHabitButton>
-          {showInput && (
-            <AddHabitInput
-              ref={inputRef}
-              value={newHabit}
-              onChange={(e) => setNewHabit(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Enter new habit"
-            />
-          )}
-        </Card>
-      </GridContainer>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span style={{ cursor: 'pointer', flexGrow: 1 }} onClick={() => toggleEdit(task.id)}>{task.text}</span>
+                      <DeleteButton onClick={() => deleteTask(task.id)}>Delete</DeleteButton>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <AddHabitButton onClick={addHabit}>+ New Habit</AddHabitButton>
+            {showInput && (
+              <AddHabitInput
+                ref={inputRef}
+                value={newHabit}
+                onChange={(e) => setNewHabit(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Enter new habit"
+              />
+            )}
+          </Card>
+        </GridContainer>
       </MainContent>
     </DashboardContainer>
   );
