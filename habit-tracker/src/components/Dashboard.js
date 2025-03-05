@@ -6,16 +6,19 @@
  * - A sidebar with navigation options.
  * - A header displaying user information.
  * - Various cards that display key metrics:
- *    • A progress overview using a responsive chart.
+ *    • A progress overview using a responsive chart (Line, Bar) showing all available data.
  *    • A leaderboard ranking users based on performance.
  *    • A section for achievements and milestones.
  *    • A task list for managing activities.
+ *    • A streak counter for tracking consistency.
+ *    • Habit category progress with stages.
  *
  * The component utilizes React hooks (useState, useEffect, useRef) for state management
  * and side effects. It employs styled-components for CSS-in-JS styling and 
  * integrates with Recharts for data visualization.
  *
- * It also interacts with authentication context (useAuth) to fetch the current user's details.
+ * It also interacts with authentication context (useAuth) and habit context (useHabit) 
+ * to fetch the current user's details and habit progress.
  *
  * 🔍 Simulated asynchronous functions (e.g., fetchUserData, fetchLeaderboardData) 
  * are used to mimic API requests.
@@ -23,14 +26,27 @@
  * The code follows a modular structure, ensuring readability and maintainability.
  */
 
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
 import { useAuth } from '../context/AuthContext';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useHabit } from '../context/HabitContext';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
-// **ANIMATIONS**
+const HABIT_CATEGORIES = [
+  { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
+    { level: 1, goal: 'First Week Clean', points: 50, reward: 'Self-Care Package' },
+    { level: 2, goal: 'One Month Milestone', points: 200, reward: 'Wellness Session' },
+    { level: 3, goal: 'Quarterly Achievement', points: 500, reward: 'Personal Experience Gift' },
+  ]},
+  { id: 'fitness', name: 'Fitness Transformation', icon: '💪', description: 'Build a healthier, stronger you', stages: [
+    { level: 1, goal: 'Consistent Workouts', points: 75, reward: 'Healthy Meal Coupon' },
+    { level: 2, goal: 'Nutrition Tracking', points: 250, reward: 'Fitness Gear' },
+    { level: 3, goal: 'Body Composition Change', points: 600, reward: 'Personal Training' },
+  ]},
+];
+
 const floatAnimation = keyframes`
   0% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-15px) rotate(2deg); }
@@ -60,16 +76,14 @@ const pulseGlow = keyframes`
   100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
 `;
 
-// **BACKGROUND**
 const Background = styled.div`
   position: absolute;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #2b3a67 0%, #1a2233 100%);
+  background: ${theme.colors.background};
   overflow: hidden;
 `;
 
-// Gradient Overlay
 const GradientOverlay = styled.div`
   position: absolute;
   width: 100%;
@@ -79,16 +93,14 @@ const GradientOverlay = styled.div`
   z-index: 1;
 `;
 
-// Scenery
 const Scenery = styled.div`
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 30%;
-  background: linear-gradient(180deg, transparent 0%, rgba(48, 56, 97, 0.2) 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(11, 38, 171, 0.2) 100%);
   z-index: 1;
-  
   &::before {
     content: '';
     position: absolute;
@@ -99,7 +111,6 @@ const Scenery = styled.div`
     background: linear-gradient(135deg, #3b4874 20%, #2b3a67 100%);
     clip-path: polygon(0% 100%, 50% 30%, 100% 100%);
   }
-  
   &::after {
     content: '';
     position: absolute;
@@ -112,7 +123,6 @@ const Scenery = styled.div`
   }
 `;
 
-// Stars
 const Star = styled.div`
   position: absolute;
   width: ${props => props.size || '30px'};
@@ -123,7 +133,6 @@ const Star = styled.div`
   animation: ${starGlow} ${props => props.duration || '3s'} infinite ease-in-out;
   animation-delay: ${props => props.delay || '0s'};
   opacity: 0.7;
-  
   &::before {
     content: '★';
     position: absolute;
@@ -135,7 +144,6 @@ const Star = styled.div`
   }
 `;
 
-// Achievement Badge
 const AchievementBadge = styled.div`
   position: absolute;
   width: 60px;
@@ -148,7 +156,6 @@ const AchievementBadge = styled.div`
   right: 15%;
   z-index: 2;
   animation: ${pulseGlow} 4s infinite ease-in-out;
-  
   &::before {
     content: '🏆';
     position: absolute;
@@ -159,7 +166,6 @@ const AchievementBadge = styled.div`
   }
 `;
 
-// Rocket
 const Rocket = styled.div`
   position: absolute;
   top: 30%;
@@ -169,7 +175,6 @@ const Rocket = styled.div`
   z-index: 3;
   animation: ${floatAnimation} 8s infinite ease-in-out;
   transform-origin: center center;
-  
   &::before {
     content: '🚀';
     position: absolute;
@@ -178,7 +183,6 @@ const Rocket = styled.div`
   }
 `;
 
-// Rocket Trail
 const RocketTrail = styled.div`
   position: absolute;
   top: 50%;
@@ -194,7 +198,6 @@ const RocketTrail = styled.div`
   animation: ${trailAnimation} 2s infinite;
 `;
 
-// Progress Circle
 const ProgressCircle = styled.div`
   position: absolute;
   bottom: 20%;
@@ -206,7 +209,6 @@ const ProgressCircle = styled.div`
   border-top: 3px solid rgba(100, 220, 255, 0.8);
   animation: ${slowRotate} 8s linear infinite;
   z-index: 2;
-  
   &::after {
     content: '';
     position: absolute;
@@ -220,7 +222,6 @@ const ProgressCircle = styled.div`
   }
 `;
 
-// XP Orb
 const XPOrb = styled.div`
   position: absolute;
   width: 15px;
@@ -233,7 +234,6 @@ const XPOrb = styled.div`
   z-index: 2;
 `;
 
-// Dashboard Container
 const DashboardContainer = styled.div`
   display: flex;
   min-height: 100vh;
@@ -241,7 +241,6 @@ const DashboardContainer = styled.div`
   color: ${theme.colors.text};
 `;
 
-// Sidebar
 const Sidebar = styled.div`
   width: 250px;
   padding: 2rem;
@@ -251,14 +250,12 @@ const Sidebar = styled.div`
   z-index: 10;
 `;
 
-// Nav List
 const NavList = styled.ul`
   list-style: none;
   padding: 0;
   margin-top: 2rem;
 `;
 
-// Nav Item
 const NavItem = styled.li`
   padding: 1rem;
   margin: 0.5rem 0;
@@ -276,7 +273,6 @@ const NavItem = styled.li`
   }
 `;
 
-// Main Content
 const MainContent = styled.div`
   flex: 1;
   padding: 3rem;
@@ -284,7 +280,6 @@ const MainContent = styled.div`
   z-index: 10;
 `;
 
-// Header
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
@@ -292,17 +287,10 @@ const Header = styled.div`
   margin-bottom: 2rem;
 `;
 
-// User Greeting
 const UserGreeting = styled.div`
-  h1 {
-    font-size: 2.5rem;
-    span {
-      color: ${theme.colors.accent};
-    }
-  }
+  h1 { font-size: 2.5rem; span { color: ${theme.colors.accent}; } }
 `;
 
-// Level Badge
 const LevelBadge = styled.div`
   background: ${theme.colors.secondary};
   padding: 0.8rem 1.5rem;
@@ -311,7 +299,6 @@ const LevelBadge = styled.div`
   box-shadow: ${theme.shadows.card};
 `;
 
-// Grid Container
 const GridContainer = styled.div`
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -319,16 +306,126 @@ const GridContainer = styled.div`
   align-items: start;
 `;
 
-// Card
 const Card = styled.div`
   background: ${theme.colors.glassWhite};
   padding: 2rem;
   border-radius: 16px;
   border: 1px solid ${theme.colors.borderWhite};
   backdrop-filter: blur(8px);
+  transition: transform 0.2s ease;
+  &:hover { transform: translateY(-2px); }
 `;
 
-// Progress Bar Container
+const CategoryCard = styled(Card)`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    &::after { transform: translateX(0); }
+  }
+  &::after {
+    content: '→';
+    position: absolute;
+    right: 1rem;
+    font-size: 1.5rem;
+    transform: translateX(-20px);
+    opacity: 0.7;
+    transition: transform 0.2s ease;
+  }
+`;
+
+const CategoryIcon = styled.span`
+  font-size: 2rem;
+`;
+
+const CategoryInfo = styled.div`
+  flex: 1;
+`;
+
+const ProgressBar = styled.div`
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  div {
+    height: 100%;
+    background: ${theme.colors.accent};
+    width: ${props => props.progress}%;
+    transition: width 0.3s ease;
+  }
+`;
+
+const Button = styled.button`
+  background: ${theme.colors.accent};
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const LeaderboardList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+`;
+
+const LeaderboardItem = styled.li`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  &:hover { background: rgba(255, 255, 255, 0.1); }
+`;
+
+const UserRank = styled.span`
+  color: ${theme.colors.accent};
+  font-weight: 600;
+`;
+
+const UserScore = styled.span`
+  color: ${theme.colors.secondary};
+`;
+
+const StagesList = styled.div`
+  margin-top: 1rem;
+`;
+
+const StageItem = styled.div`
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  &.completed { background: rgba(46, 213, 115, 0.1); }
+  &.current { border: 1px solid ${theme.colors.accent}; }
+`;
+
+const RewardBadge = styled.span`
+  background: ${theme.colors.accent};
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+`;
+
 const ProgressBarContainer = styled.div`
   width: 100%;
   background: rgba(255, 255, 255, 0.2);
@@ -337,14 +434,13 @@ const ProgressBarContainer = styled.div`
   overflow: hidden;
   margin-top: 1rem;
   & div {
-    width: 30%;
+    width: ${props => props.progress || '30%'};
     height: 100%;
     background: ${theme.colors.accent};
     transition: width 0.3s ease;
   }
 `;
 
-// Add Habit Input
 const AddHabitInput = styled.input`
   width: calc(100% - 20px);
   padding: 8px;
@@ -353,7 +449,6 @@ const AddHabitInput = styled.input`
   border-radius: 8px;
 `;
 
-// Add Habit Button
 const AddHabitButton = styled.button`
   background: ${theme.colors.accent};
   color: white;
@@ -363,70 +458,167 @@ const AddHabitButton = styled.button`
   cursor: pointer;
   font-size: 1rem;
   margin-top: 0.5rem;
-  &:hover {
-    background: ${theme.colors.secondary};
-  }
+  &:hover { background: ${theme.colors.secondary}; }
 `;
 
-// Leaderboard List
-const LeaderboardList = styled.ul`
+const EditInput = styled.input`
+  padding: 4px;
+  margin-right: 8px;
+  border: 1px solid ${theme.colors.borderWhite};
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: ${theme.colors.text};
+`;
+
+const DeleteButton = styled.button`
+  background: rgba(255, 0, 0, 0.3);
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 8px;
+  &:hover { background: rgba(255, 0, 0, 0.5); }
+`;
+
+const ChartControls = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+`;
+
+const ChartTypeButton = styled.button`
+  background: ${props => props.active ? theme.colors.accent : 'rgba(114, 137, 218, 0.2)'};
+  color: ${theme.colors.text};
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover { background: ${props => props.active ? theme.colors.accent : 'rgba(114, 137, 218, 0.3)'}; }
+`;
+
+const ChartContainer = styled.div`
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
+const AchievementList = styled.ul`
   list-style: none;
   padding: 0;
   margin-top: 1rem;
 `;
 
-// Leaderboard Item
-const LeaderboardItem = styled.li`
+const AchievementItem = styled.li`
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  margin: 0.5rem 0;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  
+  transition: transform 0.2s ease;
   &:hover {
+    transform: translateY(-2px);
     background: rgba(255, 255, 255, 0.1);
   }
 `;
 
-// User Rank
-const UserRank = styled.span`
+const AchievementTitle = styled.span`
   color: ${theme.colors.accent};
   font-weight: 600;
 `;
 
-// User Score
-const UserScore = styled.span`
+const AchievementDetails = styled.span`
   color: ${theme.colors.secondary};
 `;
 
-// Dashboard Component
+const LogoutButton = styled.button`
+  background: ${theme.colors.secondary}; // Use secondary color for consistency
+  color: white; // Ensures readability
+  border: 1px solid rgba(253, 3, 3, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  &:hover {
+    background: ${theme.colors.accent}; // Use accent color on hover for visual interest
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+`;
+
 const Dashboard = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth(); // Add logout from AuthContext
+  const { progress, getStreak, getCategoryProgress, setStreak } = useHabit();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
-  const [newHabit, setNewHabit] = useState("");
+  const [newHabit, setNewHabit] = useState('');
   const [showInput, setShowInput] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [chartType, setChartType] = useState('line');
+  const [streak, setLocalStreak] = useState(0);
+  const [activeCategory, setActiveCategory] = useState(null);
   const inputRef = useRef(null);
+  const [showAllAchievements, setShowAllAchievements] = useState(false);
+
+  const achievements = [
+    { id: 1, title: 'First Week Streak', description: 'Completed 7 days of habits', earned: streak >= 7 },
+    { id: 2, title: 'Milestone 100 XP', description: 'Reached 100 XP points', earned: Object.values(progress).reduce((sum, p) => sum + p, 0) >= 100 },
+    { id: 3, title: 'Habit Master', description: 'Completed 3 habits consistently', earned: Object.keys(progress).length >= 3 },
+  ];
+
+  const handleLogout = () => {
+    logout(); // Call logout method from AuthContext
+    navigate('/login'); // Redirect to login page after logout
+  }
+
+  const fetchUserProgress = useCallback(async () => {
+    try {
+      setLoading(true);
+      const userProgress = await fakeFetchUserData();
+      setData(userProgress.map((item, index) => ({
+        day: `Day ${index + 1}`,
+        progress: getCategoryProgress(item.date) || item.progress,
+      })));
+    } catch (error) {
+      console.error('Error fetching user progress:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [getCategoryProgress]);
+
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      const leaderboardData = await fakeFetchLeaderboardData();
+      setLeaderboard(leaderboardData);
+    } catch (error) {
+      console.error('Error fetching leaderboard data:', error);
+    }
+  }, []);
 
   useEffect(() => {
     fetchLeaderboard();
-  }, []);
+    fetchUserProgress();
+    const streakValue = getStreak();
+    setLocalStreak(streakValue);
+    setStreak(streakValue); // Sync with context
+  }, [fetchLeaderboard, fetchUserProgress, getStreak, setStreak]);
 
   useEffect(() => {
     if (user && !leaderboard.some(entry => entry.name === user.name)) {
-      setLeaderboard(prev => [...prev, { name: user.name, xp: 0 }]);
+      setLeaderboard(prev => [...prev, { name: user.name, xp: Object.values(progress).reduce((sum, p) => sum + p, 0) }]);
     }
-  }, [user, leaderboard]);
+  }, [user, progress, leaderboard]);
 
   const sortedLeaderboard = [...leaderboard].sort((a, b) => b.xp - a.xp);
-
-  useEffect(() => {
-    fetchUserProgress();
-  }, []);
 
   useEffect(() => {
     if (showInput && inputRef.current) {
@@ -434,39 +626,23 @@ const Dashboard = () => {
     }
   }, [showInput]);
 
-  const fetchUserProgress = async () => {
-    try {
-      setLoading(true);
-      const userProgress = await fakeFetchUserData();
-      setData(userProgress);
-    } catch (error) {
-      console.error("Error fetching user progress:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchLeaderboard = async () => {
-    try {
-      const leaderboardData = await fakeFetchLeaderboardData();
-      setLeaderboard(leaderboardData);
-    } catch (error) {
-      console.error("Error fetching leaderboard data:", error);
-    }
-  };
-
   const fakeFetchUserData = async () => {
-    return new Promise((resolve) => {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 6);
+    return new Promise(resolve => {
       setTimeout(() => {
         resolve(
-          Array.from({ length: 5 }, (_, i) => ({ progress: Math.floor(Math.random() * 100) }))
+          Array.from({ length: 7 }, (_, i) => ({
+            date: new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000).toLocaleDateString(),
+            progress: Math.floor(Math.random() * 100),
+          }))
         );
       }, 1000);
     });
   };
 
   const fakeFetchLeaderboardData = async () => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         resolve([
           { name: 'Sameer', xp: 450 },
@@ -479,22 +655,100 @@ const Dashboard = () => {
     });
   };
 
-  const addHabit = () => {
-    setShowInput(true);
-  };
+  const addHabit = () => setShowInput(true);
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && newHabit.trim()) {
-      setTasks([...tasks, newHabit.trim()]);
-      setNewHabit("");
+      setTasks([...tasks, { id: Date.now(), text: newHabit.trim(), isEditing: false }]);
+      setNewHabit('');
       setShowInput(false);
     }
+  };
+
+  const handleEditTask = (taskId, newText) => {
+    setTasks(tasks.map(task =>
+      task.id === taskId ? { ...task, text: newText, isEditing: false } : task
+    ));
+  };
+
+  const toggleEdit = (taskId) => {
+    setTasks(tasks.map(task =>
+      task.id === taskId ? { ...task, isEditing: !task.isEditing } : task
+    ));
+  };
+
+  const deleteTask = (taskId) => {
+    setTasks(tasks.filter(task => task.id !== taskId));
   };
 
   const getLineColor = (progress) => {
     if (progress < 30) return 'red';
     if (progress < 60) return 'lightcoral';
     return 'lightgreen';
+  };
+
+  const calculateCategoryProgress = (categoryId) => {
+    const category = HABIT_CATEGORIES.find(cat => cat.id === categoryId);
+    if (!category) return 0;
+    const currentPoints = getCategoryProgress(categoryId);
+    const maxPoints = category.stages[category.stages.length - 1].points;
+    return Math.min((currentPoints / maxPoints) * 100, 100);
+  };
+
+  const getCurrentStage = (categoryId) => {
+    const category = HABIT_CATEGORIES.find(cat => cat.id === categoryId);
+    if (!category) return null;
+    const currentPoints = getCategoryProgress(categoryId);
+    return category.stages.find(stage => currentPoints < stage.points) || category.stages[category.stages.length - 1];
+  };
+
+  const handleCategoryClick = (categoryId) => {
+    setActiveCategory(categoryId);
+    navigate(`/breakthrough-game?category=${categoryId}`, { state: { fromDashboard: true } });
+  };
+
+  const getStageStatus = (stage, categoryId) => {
+    const currentPoints = getCategoryProgress(categoryId);
+    if (currentPoints >= stage.points) return 'completed';
+    if (currentPoints < stage.points && (!getCurrentStage(categoryId) || getCurrentStage(categoryId).level === stage.level)) return 'current';
+    return '';
+  };
+
+  const calculateTotalLevel = () => {
+    const totalPoints = Object.values(progress).reduce((sum, points) => sum + points, 0);
+    return Math.floor(totalPoints / 100) + 1;
+  };
+
+  const renderChart = () => {
+    switch (chartType) {
+      case 'bar':
+        return (
+          <ResponsiveContainer width="100%" height={150}>
+            <BarChart data={data}>
+              <XAxis dataKey="day" stroke={theme.colors.text} />
+              <YAxis hide />
+              <Tooltip />
+              <Bar dataKey="progress" fill={theme.colors.accent} />
+            </BarChart>
+          </ResponsiveContainer>
+        );
+      default:
+        return (
+          <ResponsiveContainer width="100%" height={150}>
+            <LineChart data={data}>
+              <XAxis dataKey="day" stroke={theme.colors.text} />
+              <YAxis hide />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="progress"
+                stroke={data.length ? getLineColor(data[data.length - 1]?.progress) : theme.colors.accent}
+                strokeWidth={2}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        );
+    }
   };
 
   return (
@@ -505,9 +759,7 @@ const Dashboard = () => {
         <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
         <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
         <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
-        <Rocket>
-          <RocketTrail />
-        </Rocket>
+        <Rocket><RocketTrail /></Rocket>
         <AchievementBadge />
         <ProgressCircle />
         <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
@@ -520,6 +772,7 @@ const Dashboard = () => {
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem className="active">📊 Dashboard</NavItem>
+          <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Breakthrough Game</NavItem>
           <NavItem>🏆 Achievements</NavItem>
           <NavItem>📈 Statistics</NavItem>
           <NavItem>⚙️ Settings</NavItem>
@@ -530,66 +783,96 @@ const Dashboard = () => {
         <Header>
           <UserGreeting>
             <h1>Welcome{user?.name ? `, ${user.name}` : ''}! 👋</h1>
-            <LevelBadge>Level 1 - 0 XP</LevelBadge>
+            <LevelBadge>Level {calculateTotalLevel()} - {Object.values(progress).reduce((sum, p) => sum + p, 0)} XP</LevelBadge>
           </UserGreeting>
+          <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
         </Header>
 
-        <GridContainer>
-          <Card>
-            <h1>Progress Overview</h1>
-            <ResponsiveContainer width="100%" height={150}>
-              <LineChart data={data}>
-                <XAxis dataKey="day" stroke={theme.colors.text} />
-                <YAxis hide />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="progress" 
-                  stroke={data.length ? getLineColor(data[data.length - 1].progress) : theme.colors.accent} 
-                  strokeWidth={2} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </Card>
 
-          <Card>
-            <h2>Leaderboard</h2>
-            <LeaderboardList>
-              {sortedLeaderboard.map((leaderboardUser, index) => (
-                <LeaderboardItem key={leaderboardUser.name}>
-                  <div>
-                    <UserRank>#{index + 1}</UserRank> {leaderboardUser.name}
+      <GridContainer>
+        <Card>
+          <h2>Progress Overview</h2>
+          <ChartControls>
+            <ChartTypeButton active={chartType === 'line'} onClick={() => setChartType('line')}>Line</ChartTypeButton>
+            <ChartTypeButton active={chartType === 'bar'} onClick={() => setChartType('bar')}>Bar</ChartTypeButton>
+          </ChartControls>
+          {loading ? <p>Loading chart data...</p> : <ChartContainer>{renderChart()}</ChartContainer>}
+          <h3 style={{ marginTop: '1rem' }}>Current Streak: {streak} days</h3>
+          <ProgressBarContainer progress={Math.min((streak / 14) * 100, 100)}><div></div></ProgressBarContainer>
+          <p>{streak >= 14 ? 'Streak Maxed!' : `${14 - streak} days to max streak`}</p>
+        </Card>
+
+        <Card>
+          <h2>Leaderboard</h2>
+          <LeaderboardList>
+            {sortedLeaderboard.map((player, index) => (
+              <LeaderboardItem key={player.name}>
+                <div><UserRank>#{index + 1}</UserRank> {player.name}</div>
+                <UserScore>{player.xp} XP</UserScore>
+              </LeaderboardItem>
+            ))}
+          </LeaderboardList>
+        </Card>
+
+        <Card>
+        <h2>Achievements</h2>
+        <AchievementList>
+          {achievements
+            .filter(achievement => showAllAchievements || achievement.earned) // Show all if expanded
+            .map(achievement => (
+              <AchievementItem key={achievement.id}>
+                <AchievementTitle>{achievement.title}</AchievementTitle>
+                <AchievementDetails>{achievement.description}</AchievementDetails>
+              </AchievementItem>
+          ))}
+        </AchievementList>
+
+        <Button 
+          style={{ marginTop: '1rem', width: '100%' }} 
+          onClick={() => setShowAllAchievements(prev => !prev)}
+        >
+          {showAllAchievements ? "Show Earned Only" : "View All Achievements"}
+        </Button>
+        </Card>
+
+        <Card>
+          <h2>Tasks</h2>
+          <ul>
+            {tasks.map(task => (
+              <li key={task.id} style={{ margin: '8px 0' }}>
+                {task.isEditing ? (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <EditInput
+                      value={task.text}
+                      onChange={(e) => setTasks(tasks.map(t => t.id === task.id ? { ...t, text: e.target.value } : t))}
+                      onKeyPress={(e) => { if (e.key === 'Enter') handleEditTask(task.id, e.target.value); }}
+                      autoFocus
+                      onBlur={() => toggleEdit(task.id)}
+                    />
+                    <Button onClick={() => handleEditTask(task.id, task.text)}>Save</Button>
                   </div>
-                  <UserScore>{leaderboardUser.xp} XP</UserScore>
-                </LeaderboardItem>
-              ))}
-            </LeaderboardList>
-          </Card>
-
-          <Card>
-            <h2>Achievements</h2>
-            <p>Unlock new milestones by progressing through your habits!</p>
-          </Card>
-
-          <Card>
-            <h2>Tasks</h2>
-            <ul>
-              {tasks.map((task, index) => (
-                <li key={index}>{task}</li>
-              ))}
-            </ul>
-            <AddHabitButton onClick={addHabit}>+ New Habit</AddHabitButton>
-            {showInput && (
-              <AddHabitInput 
-                ref={inputRef}
-                value={newHabit} 
-                onChange={(e) => setNewHabit(e.target.value)} 
-                onKeyPress={handleKeyPress} 
-                placeholder="Enter new habit" 
-              />
-            )}
-          </Card>
-        </GridContainer>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ flexGrow: 1 }}>{task.text}</span>
+                    <Button onClick={() => toggleEdit(task.id)} style={{ marginLeft: '8px' }}>Edit</Button>
+                    <DeleteButton onClick={() => deleteTask(task.id)}>Delete</DeleteButton>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+          <AddHabitButton onClick={addHabit}>+ New Habit</AddHabitButton>
+          {showInput && (
+            <AddHabitInput
+              ref={inputRef}
+              value={newHabit}
+              onChange={(e) => setNewHabit(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Enter new habit"
+            />
+          )}
+        </Card>
+      </GridContainer>
       </MainContent>
     </DashboardContainer>
   );

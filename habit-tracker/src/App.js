@@ -1,24 +1,30 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';  // Correct path
-import Navbar from './components/Navbar';
-import Home from './components/Home';
+import { AuthProvider } from './context/AuthContext';
+import { HabitProvider } from './context/HabitContext';
+import Dashboard from './components/Dashboard';
+import BreakthroughGame from './components/BreakthroughGame';
 import Login from './components/Login';
 import Register from './components/Register';
-import Dashboard from './components/Dashboard';
-
+import Home from './components/Home';
+import { ThemeProvider } from 'styled-components';
+import { theme } from './theme';
 
 function App() {
   return (
-    <AuthProvider>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-      </Routes>
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+      <AuthProvider>
+        <HabitProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/breakthrough-game" element={<BreakthroughGame />} />
+          </Routes>
+        </HabitProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
