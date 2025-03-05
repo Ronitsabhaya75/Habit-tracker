@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { theme } from '../../theme'; // Adjusted to reach src/theme.js
+import BreakthroughGame from '../BreakthroughGame';
 import { useHabit } from '../../context/HabitContext'; // Adjusted to reach src/context/HabitContext.js
+import { useAuth } from '../../context/AuthContext'; // Adjusted to reach src/context/AuthContext.js
 
+// Animations
+const floatAnimation = keyframes`
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+`;
+
+const starGlow = keyframes`
+  0% { opacity: 0.6; filter: blur(1px); }
+  50% { opacity: 1; filter: blur(0px); }
+  100% { opacity: 0.6; filter: blur(1px); }
+`;
+
+// Styled Components
 const GameWrapper = styled.div`
   padding: 2rem;
   background: rgba(255, 255, 255, 0.05);
