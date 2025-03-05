@@ -585,7 +585,6 @@ const Dashboard = () => {
       setLoading(true);
       const userProgress = await fakeFetchUserData();
       setData(userProgress.map((item, index) => ({
-        day: `Day ${index + 1}`,
         progress: getCategoryProgress(item.date) || item.progress,
       })));
     } catch (error) {
@@ -634,7 +633,7 @@ const Dashboard = () => {
         resolve(
           Array.from({ length: 7 }, (_, i) => ({
             date: new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            progress: Math.floor(Math.random() * 100),
+            progress: Math.floor(Math.random() * 10),
           }))
         );
       }, 1000);
@@ -682,8 +681,8 @@ const Dashboard = () => {
   };
 
   const getLineColor = (progress) => {
-    if (progress < 30) return 'red';
-    if (progress < 60) return 'lightcoral';
+    if (progress < 4) return 'red';
+    if (progress < 6) return 'lightcoral';
     return 'lightgreen';
   };
 
@@ -773,8 +772,6 @@ const Dashboard = () => {
         <NavList>
           <NavItem className="active">📊 Dashboard</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Breakthrough Game</NavItem>
-          <NavItem>🏆 Achievements</NavItem>
-          <NavItem>📈 Statistics</NavItem>
           <NavItem>⚙️ Settings</NavItem>
         </NavList>
       </Sidebar>
@@ -831,7 +828,7 @@ const Dashboard = () => {
           style={{ marginTop: '1rem', width: '100%' }} 
           onClick={() => setShowAllAchievements(prev => !prev)}
         >
-          {showAllAchievements ? "Show Earned Only" : "View All Achievements"}
+          {showAllAchievements ? "Collapse" :  "View All Achievements"}
         </Button>
         </Card>
 

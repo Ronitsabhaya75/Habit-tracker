@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { theme } from '../theme';
 import { useHabit } from '../context/HabitContext';
-import AddictionRecoveryGame from './games/AddictionRecoveryGame';
+import { useAuth } from '../context/AuthContext';
+import AddictionRecoveryGame from '../components/games/AddictionRecoveryGame';
 
-// Animations (copied from Home.js)
+// Animations
 const floatAnimation = keyframes`
   0% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-15px) rotate(2deg); }
@@ -16,12 +17,6 @@ const starGlow = keyframes`
   0% { opacity: 0.6; filter: blur(1px); }
   50% { opacity: 1; filter: blur(0px); }
   100% { opacity: 0.6; filter: blur(1px); }
-`;
-
-const pulseGlow = keyframes`
-  0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
-  50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px rgba(100, 220, 255, 0.8); }
-  100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
 `;
 
 // Background Components
@@ -111,47 +106,127 @@ const Subtitle = styled.p`
 // Games Grid
 const GamesGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 4rem auto;
-  position: relative;
-  z-index: 10;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+  max-width: 800px;
+  margin: 2rem auto;
+  padding-left: 250px;
 `;
 
 const GameCard = styled.div`
-  background: ${theme.colors.glassWhite};
-  padding: 2rem;
-  border-radius: 15px;
-  text-align: center;
-  backdrop-filter: blur(5px);
-  border: 1px solid ${theme.colors.borderWhite};
-  transition: transform 0.2s;
+  background: linear-gradient(145deg, rgba(114, 137, 218, 0.15), rgba(90, 128, 244, 0.1));
+  padding: 1.5rem;
+  border-radius: 16px;
+  aspect-ratio: 1/1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.3s ease;
   position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 
   &:hover {
     transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    
+    &::before {
+      opacity: 0.1;
+    }
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.4), transparent);
+    opacity: 0.05;
+    transition: opacity 0.3s ease;
   }
 `;
 
-const CategoryIcon = styled.div`
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+const IconWrapper = styled.div`
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, ${theme.colors.accent}, ${theme.colors.secondary});
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 4px 15px rgba(114, 137, 218, 0.3);
+  font-size: 28px;
 `;
 
-const ProgressBar = styled.div`
+const ProgressContainer = styled.div`
+  position: relative;
   width: 100%;
-  height: 8px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  margin-top: 1rem;
+  height: 6px;
+  border-radius: 3px;
   overflow: hidden;
   
-  div {
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
-    background: ${theme.colors.secondary};
     width: ${props => props.progress}%;
-    transition: width 0.3s ease;
+    background: linear-gradient(90deg, ${theme.colors.accent}, ${theme.colors.secondary});
+    transition: width 0.5s ease;
+    animation: shine 2s infinite;
+  }
+
+  @keyframes shine {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+`;
+
+const Percentage = styled.span`
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, ${theme.colors.accent}, ${theme.colors.secondary});
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+`;
+
+const Sidebar = styled.div`
+  width: 250px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-right: 1px solid ${theme.colors.borderWhite};
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  color: white;
+`;
+
+const LogoutButton = styled.button`
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: ${theme.colors.secondary};
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  z-index: 1001;
+  
+  &:hover {
+    background: ${theme.colors.accent};
+    transform: translateY(-2px);
   }
 `;
 
@@ -165,6 +240,18 @@ const GameContent = styled.div`
   border-radius: 15px;
   backdrop-filter: blur(5px);
   border: 1px solid ${theme.colors.borderWhite};
+  font-size: 1.2rem;
+  line-height: 1.6;
+
+  h2, h3, h4 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  p {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
 `;
 
 const BackButton = styled.button`
@@ -180,6 +267,46 @@ const BackButton = styled.button`
 
   &:hover {
     transform: scale(1.05);
+  }
+`;
+
+const NavList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin-top: 2rem;
+`;
+
+const NavItem = styled.li`
+  padding: 1rem;
+  margin: 0.5rem 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  &.active {
+    background: ${theme.colors.secondary};
+  }
+`;
+const PlayButton = styled.button`
+  background: ${theme.colors.accent};
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+  align-self: center;
+
+  &:hover {
+    background: ${theme.colors.secondary};
+    transform: translateY(-2px);
   }
 `;
 
@@ -200,20 +327,28 @@ const BreakthroughGame = () => {
   const location = useLocation();
   const { getCategoryProgress } = useHabit();
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const categoryId = params.get('category');
+    const pathParts = location.pathname.split('/');
+    const categoryId = pathParts[pathParts.length - 1]; // Get the last part of the URL
 
     if (categoryId && HABIT_CATEGORIES.some(cat => cat.id === categoryId)) {
       setSelectedCategory(HABIT_CATEGORIES.find(cat => cat.id === categoryId));
     } else {
-      setSelectedCategory(null);
+      setSelectedCategory(null); // Reset if no valid category is found
     }
   }, [location]);
 
   const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
+    navigate(`/breakthrough-game/${category.id}`); // Navigate to the correct URL
+    setSelectedCategory(category); // Update the selected category
   };
 
   const calculateProgress = (categoryId) => {
@@ -225,7 +360,17 @@ const BreakthroughGame = () => {
 
   return (
     <>
-      {/* Background with Stars */}
+      <Sidebar>
+        <h2 style={{ color: 'white' }}>HabitQuest</h2>
+        <NavList>
+          <NavItem style={{ color: 'white' }} onClick={() => navigate('/dashboard')}>📊 Dashboard</NavItem>
+          <NavItem className="active" style={{ color: 'white' }}>🎮 Breakthrough Game</NavItem>
+          <NavItem style={{ color: 'white' }} onClick={() => navigate('/settings')}>⚙️ Settings</NavItem>
+        </NavList>
+      </Sidebar>
+
+      <LogoutButton onClick={handleLogout}>Log Out</LogoutButton>
+
       <Background>
         <GradientOverlay />
         <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
@@ -249,20 +394,63 @@ const BreakthroughGame = () => {
         {!selectedCategory ? (
           <GamesGrid>
             {HABIT_CATEGORIES.map(category => (
-              <GameCard key={category.id} onClick={() => handleCategorySelect(category)}>
-                <CategoryIcon>{category.icon}</CategoryIcon>
-                <h3>{category.name}</h3>
-                <p style={{ opacity: 0.9, marginBottom: '1rem' }}>{category.description}</p>
-                <ProgressBar progress={calculateProgress(category.id)}>
-                  <div />
-                </ProgressBar>
-                <small>{Math.round(calculateProgress(category.id))}% Completed</small>
+              <GameCard key={category.id}>
+                <div>
+                  <IconWrapper>{category.icon}</IconWrapper>
+                  <h3 style={{ 
+                    fontSize: '1.4rem',
+                    margin: '1rem 0 0.5rem',
+                    background: 'linear-gradient(45deg, #fff, #e6e6e6)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}>
+                    {category.name}
+                  </h3>
+                  <p style={{
+                    fontSize: '0.9rem',
+                    lineHeight: '1.4',
+                    opacity: '0.9',
+                    padding: '0 1rem'
+                  }}>
+                    {category.description}
+                  </p>
+                </div>
+                
+                <div style={{ textAlign: 'center' }}>
+                  <Percentage>{Math.round(calculateProgress(category.id))}%</Percentage>
+                  <ProgressContainer progress={calculateProgress(category.id)} />
+                </div>
+
+                {/* Play Button */}
+            <PlayButton 
+            style={{ marginTop: '1rem', width: '100%' }} 
+            onClick={() => navigate(`/breakthrough-game/${category.id}/play`)}
+          >
+            Play Now
+          </PlayButton>
+
+
+                {/* Sparkle effect */}
+                <div style={{
+                  position: 'absolute',
+                  top: '10%',
+                  right: '10%',
+                  width: '15px',
+                  height: '15px',
+                  background: 'rgba(255, 255, 255, 0.4)',
+                  borderRadius: '50%',
+                  filter: 'blur(2px)',
+                  animation: 'twinkle 3s infinite'
+                }} />
               </GameCard>
             ))}
           </GamesGrid>
         ) : (
           <GameContent>
-            <BackButton onClick={() => setSelectedCategory(null)}>
+            <BackButton onClick={() => {
+              navigate('/breakthrough-game'); // Navigate back
+              setSelectedCategory(null); // Reset the selected category
+            }}>
               ← Back to All Games
             </BackButton>
             <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>{selectedCategory.name} Journey</h2>
