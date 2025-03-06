@@ -7,7 +7,7 @@ import { theme } from '../theme';
 import { useHabit } from '../context/HabitContext';
 import AddictionRecoveryGame from './games/AddictionRecoveryGame';
 
-// Predefined Habit Categories
+// Predefined Habit Categories and new updates to sync with the main dashboard
 const HABIT_CATEGORIES = [
   { 
     id: 'addiction', 
@@ -298,7 +298,7 @@ const BreakthroughGame = () => {
       alert(`🎉 Congratulations! You've completed ${completedStage.goal} and earned ${completedStage.reward}!`);
     }
   };
-
+  // There should be more options in the menu 
   const getMotivationalMessage = () => {
     const currentPoints = getCategoryProgress(selectedCategory?.id || '');
     if (currentPoints === 0) return "Ready to start your journey? Every step counts!";
