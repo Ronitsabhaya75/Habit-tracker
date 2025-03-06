@@ -291,6 +291,16 @@ const FeatureCard = styled.div`
   text-align: center;
   backdrop-filter: blur(5px);
   border: 1px solid ${theme.colors.borderWhite};
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+`;
+
+const FeatureIcon = styled.div`
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
 `;
 
 const FeatureTitle = styled.h3`
@@ -327,41 +337,48 @@ const Home = () => {
       {/* Home Content */}
       <HomeContainer>
         <HeroSection>
-          <Title>Level Up</Title>
+          <Title>Level Up Your Life</Title>
           <Subtitle>
-            Turn your daily habits into an engaging game. Track progress, earn
-            <br />
-            XP, unlock achievements, and build lasting habits while having fun!
+            Transform your daily habits into an epic journey of self-improvement.
+            Track progress, earn rewards, and breakthrough your limitations!
           </Subtitle>
-          {/* Keep the "Get Started" button */}
-          <CTAButton to="/register">Get Started</CTAButton>
+          <CTAButton to="/register">Begin Your Journey</CTAButton>
         </HeroSection>
 
         <FeaturesGrid>
           <FeatureCard>
+            <FeatureIcon>🎮</FeatureIcon>
+            <FeatureTitle>Breakthrough Game</FeatureTitle>
+            <FeatureText>
+              Turn your habit-building journey into an engaging game.
+              Complete challenges, earn points, and unlock achievements.
+            </FeatureText>
+          </FeatureCard>
+
+          <FeatureCard>
+            <FeatureIcon>📈</FeatureIcon>
             <FeatureTitle>Track Progress</FeatureTitle>
             <FeatureText>
-              Monitor your habits with beautiful
-              <br />
-              visualizations and stats
+              Monitor your habits with beautiful visualizations
+              and detailed statistics to stay motivated.
             </FeatureText>
           </FeatureCard>
 
           <FeatureCard>
+            <FeatureIcon>🏆</FeatureIcon>
             <FeatureTitle>Earn Rewards</FeatureTitle>
             <FeatureText>
-              Level up and unlock achievements as you
-              <br />
-              build better habits
+              Level up and unlock real achievements as you
+              build better habits and transform your life.
             </FeatureText>
           </FeatureCard>
 
           <FeatureCard>
-            <FeatureTitle>Stay Motivated</FeatureTitle>
+            <FeatureIcon>👥</FeatureIcon>
+            <FeatureTitle>Community</FeatureTitle>
             <FeatureText>
-              Join a community of people building better
-              <br />
-              habits together
+              Join a supportive community of people on their own
+              transformation journeys. Share tips and celebrate wins!
             </FeatureText>
           </FeatureCard>
         </FeaturesGrid>
