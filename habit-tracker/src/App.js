@@ -1,26 +1,34 @@
-// src/App.js
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';  // Correct path
-import Navbar from './components/Navbar';
-import Home from './components/Home';
+import { AuthProvider } from './context/AuthContext';
+import { HabitProvider } from './context/HabitContext';
+import Dashboard from './components/Dashboard';
+import BreakthroughGame from './components/BreakthroughGame';
 import Login from './components/Login';
 import Register from './components/Register';
-import Dashboard from './components/Dashboard';
-import Footer from './components/Footer';
+import Home from './components/Home';
+import { ThemeProvider } from 'styled-components';
+import { theme } from './theme';
+import AddictionRecoveryGame from './components/games/AddictionRecoveryGame';
+import HabitProgressTracker from './components/HabitProgressTracker';
 
 function App() {
   return (
-    <AuthProvider>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-      </Routes>
-      <Footer />
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+      <AuthProvider>
+        <HabitProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/breakthrough-game" element={<BreakthroughGame />} />
+            <Route path="/habitRewards" element={<HabitProgressTracker />} />
+        <Route path="/breakthrough-game/:categoryId/play" element={<AddictionRecoveryGame />} />
+          </Routes>
+        </HabitProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
