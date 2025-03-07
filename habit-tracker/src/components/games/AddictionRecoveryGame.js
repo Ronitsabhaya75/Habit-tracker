@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+<<<<<<< HEAD
 import { useParams } from 'react-router-dom';
 import { theme } from '../../theme';
 import { useHabit } from '../../context/HabitContext';
 import { useAuth } from '../../context/AuthContext';
+=======
+import { theme } from '../../theme'; // Adjusted to reach src/theme.js
+import BreakthroughGame from '../BreakthroughGame';
+import { useHabit } from '../../context/HabitContext'; // Adjusted to reach src/context/HabitContext.js
+import { useAuth } from '../../context/AuthContext'; // Adjusted to reach src/context/AuthContext.js
+>>>>>>> origin/feature-Ronitkumar-Sabhaya
 
 // Animations
 const floatAnimation = keyframes`
@@ -147,6 +154,7 @@ const MeditationTimer = styled.div`
 const guidedActivities = [
   { id: 'meditation', title: '5-Minute Mindfulness Meditation', description: 'Stay present and focused.', duration: 300, points: 10, guidance: ['Find a comfortable position', 'Take deep breaths', 'Focus on your breath', 'Let thoughts pass', 'Notice body sensations'] },
   { id: 'breathing', title: 'Deep Breathing Exercise', description: 'Practice 4-7-8 breathing.', duration: 180, points: 5, guidance: ['Inhale for 4s', 'Hold for 7s', 'Exhale for 8s', 'Repeat cycle'] },
+<<<<<<< HEAD
   { id: 'gratitude', title: 'Gratitude Journal', description: 'Write three things you\'re grateful for.', points: 5, guidance: ['Reflect on a positive event', 'Consider helpful people', 'Note a personal strength'] },
   { id: 'affirmations', title: 'Positive Affirmations', description: 'Repeat positive statements.', points: 5, guidance: ['I am strong', 'I am capable', 'I am worthy'] }
 ];
@@ -154,6 +162,12 @@ const guidedActivities = [
 
 const AddictionRecoveryGame = () => {
   const { categoryId } = useParams();
+=======
+  { id: 'gratitude', title: 'Gratitude Journal', description: 'Write three things you’re grateful for.', points: 5, guidance: ['Reflect on a positive event', 'Consider helpful people', 'Note a personal strength'] },
+];
+
+const AddictionRecoveryGame = () => {
+>>>>>>> origin/feature-Ronitkumar-Sabhaya
   const { updateProgress, getCategoryProgress } = useHabit();
   const [completedChallenges, setCompletedChallenges] = useState([]);
   const [currentStreak, setCurrentStreak] = useState(0);
@@ -169,6 +183,7 @@ const AddictionRecoveryGame = () => {
   const [showGuidance, setShowGuidance] = useState(false);
   const [currentGuidanceStep, setCurrentGuidanceStep] = useState(0);
 
+<<<<<<< HEAD
   // Define updateStreak function
   const updateStreak = () => {
     const today = new Date().toISOString().split('T')[0];
@@ -201,6 +216,8 @@ const AddictionRecoveryGame = () => {
   };
 
   // Load data from localStorage
+=======
+>>>>>>> origin/feature-Ronitkumar-Sabhaya
   useEffect(() => {
     const savedData = JSON.parse(localStorage.getItem('addictionRecoveryData') || '{}');
     if (savedData) {
@@ -223,14 +240,20 @@ const AddictionRecoveryGame = () => {
     }
   }, []);
 
+<<<<<<< HEAD
   // Save data to localStorage
+=======
+>>>>>>> origin/feature-Ronitkumar-Sabhaya
   useEffect(() => {
     localStorage.setItem('addictionRecoveryData', JSON.stringify({
       journalEntries, achievements, timeElapsed, completedChallenges, currentStreak, lastCompletionDate,
     }));
   }, [journalEntries, achievements, timeElapsed, completedChallenges, currentStreak, lastCompletionDate]);
 
+<<<<<<< HEAD
   // Timer for clean time tracking
+=======
+>>>>>>> origin/feature-Ronitkumar-Sabhaya
   useEffect(() => {
     let interval;
     if (timerActive) {
@@ -244,9 +267,14 @@ const AddictionRecoveryGame = () => {
       }, 1000);
     }
     return () => clearInterval(interval);
+<<<<<<< HEAD
   }, [timerActive]);
 
   // Activity timer
+=======
+  }, [timerActive, handleMilestone]);
+
+>>>>>>> origin/feature-Ronitkumar-Sabhaya
   useEffect(() => {
     let interval;
     if (activityInProgress && activityTimer > 0) {
@@ -264,7 +292,25 @@ const AddictionRecoveryGame = () => {
       }, 1000);
     }
     return () => clearInterval(interval);
+<<<<<<< HEAD
   }, [activityInProgress, activityTimer]);
+=======
+  }, [activityInProgress, activityTimer, completeActivity]);
+
+  const updateStreak = () => {
+    const today = new Date().toISOString().split('T')[0];
+    if (lastCompletionDate !== today) {
+      setCurrentStreak(prev => prev + 1);
+      setLastCompletionDate(today);
+    }
+  };
+
+  const handleMilestone = (type, points) => {
+    updateProgress('addiction', points);
+    setAchievements(prev => [...prev, { type, timestamp: new Date().toISOString(), points }]);
+    if (type === 'daily') updateStreak();
+  };
+>>>>>>> origin/feature-Ronitkumar-Sabhaya
 
   const startActivity = (activity) => {
     setActivityInProgress(activity);
@@ -273,6 +319,23 @@ const AddictionRecoveryGame = () => {
     setCurrentGuidanceStep(0);
   };
 
+<<<<<<< HEAD
+=======
+  const completeActivity = (activity) => {
+    updateProgress('addiction', activity.points);
+    setCompletedChallenges(prev => [...prev, activity.id]);
+    setActivityInProgress(null);
+    setShowGuidance(false);
+    setAchievements(prev => [...prev, {
+      type: 'activity',
+      activity: activity.title,
+      timestamp: new Date().toISOString(),
+      points: activity.points,
+    }]);
+    updateStreak();
+  };
+
+>>>>>>> origin/feature-Ronitkumar-Sabhaya
   const addJournalEntry = () => {
     if (currentJournalEntry.trim()) {
       setJournalEntries(prev => [{
@@ -404,7 +467,11 @@ const AddictionRecoveryGame = () => {
       {selectedMood === 'struggling' && (
         <GameSection style={{ background: 'rgba(244, 67, 54, 0.1)' }}>
           <h3>Need Support?</h3>
+<<<<<<< HEAD
           <p>Remember, it's okay to ask for help. Here are some resources:</p>
+=======
+          <p>Remember, it’s okay to ask for help. Here are some resources:</p>
+>>>>>>> origin/feature-Ronitkumar-Sabhaya
           <ul>
             <li>Call your support buddy</li>
             <li>Practice deep breathing exercises</li>
