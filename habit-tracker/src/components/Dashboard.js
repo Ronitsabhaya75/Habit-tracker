@@ -33,6 +33,7 @@ import { useAuth } from '../context/AuthContext';
 import { useHabit } from '../context/HabitContext';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useNavigate } from 'react-router-dom';
+import SpinWheel from './SpinWheel'; // Import the SpinWheel component
 
 const HABIT_CATEGORIES = [
   { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
@@ -771,13 +772,14 @@ const Dashboard = () => {
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem className="active">📊 Dashboard</NavItem>
+          <NavItem onClick={() => navigate('/habitRewards')}>🎮 Habit Rewards</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Breakthrough Game</NavItem>
           <NavItem>⚙️ Settings</NavItem>
         </NavList>
       </Sidebar>
 
       <MainContent>
-        <Header>
+      <Header>
           <UserGreeting>
             <h1>Welcome{user?.name ? `, ${user.name}` : ''}! 👋</h1>
             <LevelBadge>Level {calculateTotalLevel()} - {Object.values(progress).reduce((sum, p) => sum + p, 0)} XP</LevelBadge>
@@ -810,6 +812,10 @@ const Dashboard = () => {
             ))}
           </LeaderboardList>
         </Card>
+        <Card>
+            <h2>Spin the Wheel</h2>
+            <SpinWheel />
+          </Card>
 
         <Card>
         <h2>Achievements</h2>
@@ -867,6 +873,7 @@ const Dashboard = () => {
               />
             )}
           </Card>
+          
         </GridContainer>
       </MainContent>
     </DashboardContainer>
