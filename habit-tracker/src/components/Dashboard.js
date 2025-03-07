@@ -33,10 +33,6 @@ import { useAuth } from '../context/AuthContext';
 import { useHabit } from '../context/HabitContext';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import SpinWheel from './SpinWheel'; // Import the SpinWheel component
-=======
->>>>>>> origin/feature-Ronitkumar-Sabhaya
 
 const HABIT_CATEGORIES = [
   { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
@@ -775,10 +771,6 @@ const Dashboard = () => {
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem className="active">📊 Dashboard</NavItem>
-<<<<<<< HEAD
-          <NavItem onClick={() => navigate('/habitRewards')}>🎮 Habit Rewards</NavItem>
-=======
->>>>>>> origin/feature-Ronitkumar-Sabhaya
           <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Breakthrough Game</NavItem>
           <NavItem>⚙️ Settings</NavItem>
         </NavList>
@@ -793,60 +785,6 @@ const Dashboard = () => {
           <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
         </Header>
 
-<<<<<<< HEAD
-
-      <GridContainer>
-        <Card>
-          <h2>Progress Overview</h2>
-          <ChartControls>
-            <ChartTypeButton active={chartType === 'line'} onClick={() => setChartType('line')}>Line</ChartTypeButton>
-            <ChartTypeButton active={chartType === 'bar'} onClick={() => setChartType('bar')}>Bar</ChartTypeButton>
-          </ChartControls>
-          {loading ? <p>Loading chart data...</p> : <ChartContainer>{renderChart()}</ChartContainer>}
-          <h3 style={{ marginTop: '1rem' }}>Current Streak: {streak} days</h3>
-          <ProgressBarContainer progress={Math.min((streak / 14) * 100, 100)}><div></div></ProgressBarContainer>
-          <p>{streak >= 14 ? 'Streak Maxed!' : `${14 - streak} days to max streak`}</p>
-        </Card>
-
-        <Card>
-          <h2>Leaderboard</h2>
-          <LeaderboardList>
-            {sortedLeaderboard.map((player, index) => (
-              <LeaderboardItem key={player.name}>
-                <div><UserRank>#{index + 1}</UserRank> {player.name}</div>
-                <UserScore>{player.xp} XP</UserScore>
-              </LeaderboardItem>
-            ))}
-          </LeaderboardList>
-        </Card>
-        <Card>
-            <h2>Spin the Wheel</h2>
-            <SpinWheel />
-          </Card>
-
-        <Card>
-        <h2>Achievements</h2>
-        <AchievementList>
-          {achievements
-            .filter(achievement => showAllAchievements || achievement.earned) // Show all if expanded
-            .map(achievement => (
-              <AchievementItem key={achievement.id}>
-                <AchievementTitle>{achievement.title}</AchievementTitle>
-                <AchievementDetails>{achievement.description}</AchievementDetails>
-              </AchievementItem>
-          ))}
-        </AchievementList>
-
-        <Button 
-          style={{ marginTop: '1rem', width: '100%' }} 
-          onClick={() => setShowAllAchievements(prev => !prev)}
-        >
-          {showAllAchievements ? "Collapse" :  "View All Achievements"}
-        </Button>
-        </Card>
-
-        <Card>
-=======
 
       <GridContainer>
         <Card>
@@ -895,7 +833,6 @@ const Dashboard = () => {
         </Card>
 
         <Card>
->>>>>>> origin/feature-Ronitkumar-Sabhaya
             <h2>Tasks</h2>
             <ul>
               {tasks.map(task => (

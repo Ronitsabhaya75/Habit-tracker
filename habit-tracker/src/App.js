@@ -10,10 +10,6 @@ import Home from './components/Home';
 import { ThemeProvider } from 'styled-components';
 import { theme } from './theme';
 import AddictionRecoveryGame from './components/games/AddictionRecoveryGame';
-<<<<<<< HEAD
-import HabitProgressTracker from './components/HabitProgressTracker';
-=======
->>>>>>> origin/feature-Ronitkumar-Sabhaya
 
 function App() {
   return (
@@ -25,15 +21,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
-<<<<<<< HEAD
-            <Route path="/breakthrough-game" element={<BreakthroughGame />} />
-            <Route path="/habitRewards" element={<HabitProgressTracker />} />
-            <Route path="/breakthrough-game/:categoryId/play" element={<AddictionRecoveryGame />} />
-=======
             <Route path="/breakthrough-game" element={<BreakthroughGame />}>
         <Route path="/breakthrough-game/:categoryId/play" element={<AddictionRecoveryGame />} />
             </Route>
->>>>>>> origin/feature-Ronitkumar-Sabhaya
           </Routes>
         </HabitProvider>
       </AuthProvider>
