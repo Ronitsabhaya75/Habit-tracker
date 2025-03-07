@@ -21,8 +21,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            {/* Corrected nested routing */}
             <Route path="/breakthrough-game" element={<BreakthroughGame />}>
-        <Route path="/breakthrough-game/:categoryId/play" element={<AddictionRecoveryGame />} />
+              <Route path=":categoryId/play" element={<AddictionRecoveryGame />} />
             </Route>
           </Routes>
         </HabitProvider>

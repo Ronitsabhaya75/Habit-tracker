@@ -23,6 +23,7 @@ import React from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Link } from 'react-router-dom';
 import { theme } from '../theme';
+import Navbar from './Navbar';
 
 // **ANIMATIONS**
 const floatAnimation = keyframes`
@@ -336,6 +337,7 @@ const Home = () => {
 
       {/* Home Content */}
       <HomeContainer>
+        <Navbar />
         <HeroSection>
           <Title>Level Up Your Life</Title>
           <Subtitle>
