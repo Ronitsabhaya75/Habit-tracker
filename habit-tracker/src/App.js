@@ -10,6 +10,7 @@ import Home from './components/Home';
 import { ThemeProvider } from 'styled-components';
 import { theme } from './theme';
 import AddictionRecoveryGame from './components/games/AddictionRecoveryGame';
+import HabitProgressTracker from './components/HabitProgressTracker';
 
 function App() {
   return (
@@ -21,9 +22,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/breakthrough-game" element={<BreakthroughGame />}>
+            <Route path="/breakthrough-game" element={<BreakthroughGame />} />
+            <Route path="/habitRewards" element={<HabitProgressTracker />} />
         <Route path="/breakthrough-game/:categoryId/play" element={<AddictionRecoveryGame />} />
-            </Route>
           </Routes>
         </HabitProvider>
       </AuthProvider>
