@@ -772,6 +772,7 @@ const Dashboard = () => {
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem className="active">📊 Dashboard</NavItem>
+          <NavItem onClick={() => navigate('/habitRewards')}>🎮 Habit Rewards</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Breakthrough Game</NavItem>
           <NavItem>⚙️ Settings</NavItem>
         </NavList>
@@ -829,8 +830,8 @@ const Dashboard = () => {
           ))}
         </AchievementList>
 
-        <Button
-          style={{ marginTop: '1rem', width: '100%' }}
+        <Button 
+          style={{ marginTop: '1rem', width: '100%' }} 
           onClick={() => setShowAllAchievements(prev => !prev)}
         >
           {showAllAchievements ? "Collapse" :  "View All Achievements"}
@@ -872,7 +873,7 @@ const Dashboard = () => {
               />
             )}
           </Card>
-
+          
         </GridContainer>
       </MainContent>
     </DashboardContainer>
