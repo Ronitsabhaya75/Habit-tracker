@@ -17,13 +17,14 @@ const SpinWheel = () => {
     if (spinning) return;
     setSpinning(true);
     const randomRotation = Math.floor(Math.random() * 360) + 360 * 5; // Spin at least 5 full rotations
-    setRotation(rotation + randomRotation);
+    const newRotation = rotation + randomRotation;
+    setRotation(newRotation);
 
     setTimeout(() => {
       const segmentAngle = 360 / segments.length;
-      const normalizedRotation = rotation + randomRotation;
       // Calculate winning segment based on where the wheel stops relative to the fixed pointer
-      const winningSegmentIndex = Math.floor(((normalizedRotation % 360) / segmentAngle)) % segments.length;
+      const normalizedRotation = newRotation % 360;
+      const winningSegmentIndex = Math.floor(normalizedRotation / segmentAngle) % segments.length;
       const winningSegment = segments[segments.length - 1 - winningSegmentIndex];
       alert(`You won: ${winningSegment.reward}!`);
       setSpinning(false);
@@ -90,7 +91,7 @@ const SpinWheel = () => {
           height: '250px'
         }}>
           <svg width="250" height="250" viewBox="0 0 250 250">
-            <g transform={`rotate(${rotation} 125 125)`}>
+            <g transform={`rotate(${rotation} 125 125)`} style={{ transition: spinning ? 'transform 3s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'none' }}>
               {segments.map((segment, index) => (
                 <path
                   key={index}
