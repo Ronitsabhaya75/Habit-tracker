@@ -323,6 +323,26 @@ const AuthLink = styled(Link)`
     text-decoration: underline;
   }
 `;
+const HomeButton = styled(Link)`
+  position: absolute;
+  top: 1rem;
+  right: 8rem;
+  background: ${theme.colors.primary}; /* Use primary color from theme */
+  color: #FFFFFF;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  z-index: 1001;
+  text-decoration: none;
+
+  &:hover {
+    background: ${theme.colors.accent}; /* Use accent color for hover */
+    transform: translateY(-2px);
+  }
+`;
 
 const Login = () => {
   const { login } = useContext(AuthContext);
@@ -373,6 +393,7 @@ const Login = () => {
 
       {/* Login Form */}
       <LoginContainer>
+        <HomeButton to="/">Home</HomeButton>
         <LoginForm onSubmit={handleSubmit}>
           <AuthTitle>Login</AuthTitle>
           <AuthSubtitle>Continue your journey</AuthSubtitle>

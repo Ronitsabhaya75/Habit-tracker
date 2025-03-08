@@ -22,7 +22,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/breakthrough-game" element={<BreakthroughGame />}>
-        <Route path="/breakthrough-game/:categoryId/play" element={<AddictionRecoveryGame />} />
+              <Route path=":categoryId/play" element={<AddictionRecoveryGame />} />
             </Route>
           </Routes>
         </HabitProvider>

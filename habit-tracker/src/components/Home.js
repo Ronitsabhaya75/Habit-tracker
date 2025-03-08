@@ -23,7 +23,7 @@ import React from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Link } from 'react-router-dom';
 import { theme } from '../theme';
-import Navbar from './Navbar';
+
 
 // **ANIMATIONS**
 const floatAnimation = keyframes`
@@ -314,6 +314,48 @@ const FeatureText = styled.p`
   line-height: 1.6;
 `;
 
+
+const LoginButton = styled(Link)`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: ${theme.colors.primary}; /* Use primary color from theme */
+  color: #FFFFFF; /* White text color */
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  z-index: 1001;
+  text-decoration: none;
+
+  &:hover {
+    background: ${theme.colors.accent}; /* Use accent color for hover */
+    transform: translateY(-2px);
+  }
+`;
+
+const HomeButton = styled(Link)`
+  position: absolute;
+  top: 1rem;
+  right: 8rem;
+  background: ${theme.colors.primary}; /* Use primary color from theme */
+  color: #FFFFFF;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  z-index: 1001;
+  text-decoration: none;
+
+  &:hover {
+    background: ${theme.colors.accent}; /* Use accent color for hover */
+    transform: translateY(-2px);
+  }
+`;
 const Home = () => {
   return (
     <>
@@ -337,7 +379,8 @@ const Home = () => {
 
       {/* Home Content */}
       <HomeContainer>
-        <Navbar />
+      <LoginButton to="/login">Login</LoginButton>
+      <HomeButton to="/">Home</HomeButton>
         <HeroSection>
           <Title>Level Up Your Life</Title>
           <Subtitle>
