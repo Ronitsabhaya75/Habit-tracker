@@ -7,6 +7,7 @@ import BreakthroughGame from './components/BreakthroughGame';
 import Login from './components/Login';
 import Register from './components/Register';
 import Home from './components/Home';
+import Track from './components/Track'; // Import the new Track component
 import { ThemeProvider } from 'styled-components';
 import { theme } from './theme';
 import AddictionRecoveryGame from './components/games/AddictionRecoveryGame';
@@ -21,6 +22,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/track" element={<Track />} /> {/* Add the Track route */}
             <Route path="/breakthrough-game" element={<BreakthroughGame />}>
               <Route path=":categoryId/play" element={<AddictionRecoveryGame />} />
             </Route>

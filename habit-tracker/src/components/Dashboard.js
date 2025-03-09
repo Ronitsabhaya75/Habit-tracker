@@ -553,6 +553,167 @@ const LogoutButton = styled.button`
   }
 `;
 
+// Calendar styled components
+const CalendarContainer = styled.div`
+  margin-top: 1rem;
+`;
+
+const CalendarHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+`;
+
+const MonthNavButton = styled.button`
+  background: rgba(114, 137, 218, 0.2);
+  color: ${theme.colors.text};
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover {
+    background: rgba(114, 137, 218, 0.4);
+  }
+`;
+
+const CalendarGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+`;
+
+const CalendarDay = styled.div`
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  background: ${props => 
+    props.isToday 
+      ? 'rgba(114, 137, 218, 0.3)' 
+      : props.isSelected 
+        ? theme.colors.accent 
+        : props.hasEvent 
+          ? 'rgba(100, 220, 255, 0.2)' 
+          : 'rgba(255, 255, 255, 0.05)'
+  };
+  
+  color: ${props => props.isCurrentMonth ? theme.colors.text : 'rgba(255, 255, 255, 0.4)'};
+  font-weight: ${props => props.isToday || props.isSelected ? 'bold' : 'normal'};
+  
+  &:hover {
+    background: ${props => props.isSelected ? theme.colors.accent : 'rgba(114, 137, 218, 0.3)'};
+  }
+  
+  &::after {
+    content: ${props => props.hasEvent ? '"•"' : '""'};
+    position: absolute;
+    bottom: 2px;
+    color: ${theme.colors.accent};
+    font-size: 14px;
+  }
+`;
+
+const DayLabel = styled.div`
+  text-align: center;
+  padding: 0.5rem 0;
+  font-weight: bold;
+  color: ${theme.colors.secondary};
+`;
+
+const EventModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+`;
+
+const EventModalContent = styled.div`
+  background: ${theme.colors.glassWhite};
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid ${theme.colors.borderWhite};
+  backdrop-filter: blur(8px);
+  width: 90%;
+  max-width: 500px;
+`;
+
+const EventInput = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid ${theme.colors.borderWhite};
+  border-radius: 8px;
+  color: ${theme.colors.text};
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+`;
+
+const EventTextarea = styled.textarea`
+  width: 100%;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid ${theme.colors.borderWhite};
+  border-radius: 8px;
+  color: ${theme.colors.text};
+  min-height: 100px;
+  resize: vertical;
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+`;
+
+const EventList = styled.div`
+  margin-top: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+`;
+
+const EventItem = styled.div`
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+`;
+
+const ModalButtonContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+`;
+
+const CancelButton = styled(Button)`
+  background: rgba(255, 255, 255, 0.1);
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+`;
+
+const AddEventButton = styled(Button)`
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+`;
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth(); // Add logout from AuthContext
@@ -568,6 +729,13 @@ const Dashboard = () => {
   const [activeCategory, setActiveCategory] = useState(null);
   const inputRef = useRef(null);
   const [showAllAchievements, setShowAllAchievements] = useState(false);
+
+  // Calendar state
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [events, setEvents] = useState({});
+  const [newEvent, setNewEvent] = useState({ title: '', description: '' });
 
   const achievements = [
     { id: 1, title: 'First Week Streak', description: 'Completed 7 days of habits', earned: streak >= 7 },
@@ -750,6 +918,8 @@ const Dashboard = () => {
     }
   };
 
+
+
   return (
     <DashboardContainer>
       <Background>
@@ -772,12 +942,13 @@ const Dashboard = () => {
         <NavList>
           <NavItem className="active">📊 Dashboard</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Breakthrough Game</NavItem>
+          <NavItem onClick={() => navigate('/track')}>📅 Track</NavItem> {/* New Track Button */}
           <NavItem>⚙️ Settings</NavItem>
         </NavList>
       </Sidebar>
 
       <MainContent>
-      <Header>
+        <Header>
           <UserGreeting>
             <h1>Welcome{user?.name ? `, ${user.name}` : ''}! 👋</h1>
             <LevelBadge>Level {calculateTotalLevel()} - {Object.values(progress).reduce((sum, p) => sum + p, 0)} XP</LevelBadge>
@@ -833,42 +1004,41 @@ const Dashboard = () => {
         </Card>
 
         <Card>
-            <h2>Tasks</h2>
-            <ul>
-              {tasks.map(task => (
-                <li key={task.id} style={{ margin: '8px 0' }}>
-                  {task.isEditing ? (
-                    <EditInput
-                      type="text"
-                      value={task.text}
-                      onChange={(e) => setTasks(tasks.map(t => t.id === task.id ? { ...t, text: e.target.value } : t))}
-                      onKeyPress={(e) => { if (e.key === 'Enter') handleEditTask(task.id, e.target.value); }}
-                      autoFocus
-                      onBlur={() => toggleEdit(task.id)}
-                      onKeyDown={(e) => { if (e.key === 'Escape') toggleEdit(task.id); }}
-                    />
-                  ) : (
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span style={{ cursor: 'pointer', flexGrow: 1 }} onClick={() => toggleEdit(task.id)}>{task.text}</span>
-                      <DeleteButton onClick={() => deleteTask(task.id)}>Delete</DeleteButton>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <AddHabitButton onClick={addHabit}>+ New Habit</AddHabitButton>
-            {showInput && (
-              <AddHabitInput
-                ref={inputRef}
-                value={newHabit}
-                onChange={(e) => setNewHabit(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Enter new habit"
-              />
-            )}
-          </Card>
-          
-        </GridContainer>
+          <h2>Tasks</h2>
+          <ul>
+            {tasks.map(task => (
+              <li key={task.id} style={{ margin: '8px 0' }}>
+                {task.isEditing ? (
+                  <EditInput
+                    type="text"
+                    value={task.text}
+                    onChange={(e) => setTasks(tasks.map(t => t.id === task.id ? { ...t, text: e.target.value } : t))}
+                    onKeyPress={(e) => { if (e.key === 'Enter') handleEditTask(task.id, e.target.value); }}
+                    autoFocus
+                    onBlur={() => toggleEdit(task.id)}
+                    onKeyDown={(e) => { if (e.key === 'Escape') toggleEdit(task.id); }}
+                  />
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ cursor: 'pointer', flexGrow: 1 }} onClick={() => toggleEdit(task.id)}>{task.text}</span>
+                    <DeleteButton onClick={() => deleteTask(task.id)}>Delete</DeleteButton>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+          <AddHabitButton onClick={addHabit}>+ New Habit</AddHabitButton>
+          {showInput && (
+            <AddHabitInput
+              ref={inputRef}
+              value={newHabit}
+              onChange={(e) => setNewHabit(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Enter new habit"
+            />
+          )}
+        </Card>
+      </GridContainer>
       </MainContent>
     </DashboardContainer>
   );
