@@ -690,10 +690,10 @@ const Track = () => {
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
-          <NavItem onClick={() => navigate('/dashboard')}>📊 Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Breakthrough Game</NavItem>
-          <NavItem className="active">Tasks</NavItem>
-          <NavItem>⚙️ Settings</NavItem>
+          <NavItem onClick={() => navigate('/dashboard')}>Dashboard</NavItem>
+          <NavItem onClick={() => navigate('/breakthrough-game')}>Games</NavItem>
+          <NavItem className="active">Events</NavItem> {/* New Track Button */}
+          <NavItem onClick={() => navigate('/review')}>Review</NavItem>
         </NavList>
       </Sidebar>
       <TrackContainer>
