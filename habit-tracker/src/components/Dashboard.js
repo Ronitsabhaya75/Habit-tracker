@@ -276,7 +276,7 @@ const NavItem = styled.li`
 const MainContent = styled.div`
   flex: 1;
   padding: 3rem;
-  margin-left: 250px;
+  margin-left: 20px;
   z-index: 10;
 `;
 
@@ -301,9 +301,11 @@ const LevelBadge = styled.div`
 
 const GridContainer = styled.div`
   display: grid;
+  gird-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   grid-template-columns: 2fr 1fr;
   gap: 1rem;
   align-items: start;
+  justify-content: start;
 `;
 
 const Card = styled.div`
@@ -841,42 +843,6 @@ const Dashboard = () => {
         >
           {showAllAchievements ? "Collapse" :  "View All Achievements"}
         </Button>
-        </Card>
-
-        <Card>
-          <h2>Tasks</h2>
-          <ul>
-            {tasks.map(task => (
-              <li key={task.id} style={{ margin: '8px 0' }}>
-                {task.isEditing ? (
-                  <EditInput
-                    type="text"
-                    value={task.text}
-                    onChange={(e) => setTasks(tasks.map(t => t.id === task.id ? { ...t, text: e.target.value } : t))}
-                    onKeyPress={(e) => { if (e.key === 'Enter') handleEditTask(task.id, e.target.value); }}
-                    autoFocus
-                    onBlur={() => toggleEdit(task.id)}
-                    onKeyDown={(e) => { if (e.key === 'Escape') toggleEdit(task.id); }}
-                  />
-                ) : (
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ cursor: 'pointer', flexGrow: 1 }} onClick={() => toggleEdit(task.id)}>{task.text}</span>
-                    <DeleteButton onClick={() => deleteTask(task.id)}>Delete</DeleteButton>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-          <AddHabitButton onClick={addHabit}>+ New Habit</AddHabitButton>
-          {showInput && (
-            <AddHabitInput
-              ref={inputRef}
-              value={newHabit}
-              onChange={(e) => setNewHabit(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Enter new habit"
-            />
-          )}
         </Card>
       </GridContainer>
       </MainContent>

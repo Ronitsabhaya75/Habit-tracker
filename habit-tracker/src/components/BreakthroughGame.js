@@ -214,7 +214,7 @@ const NavItem = styled.li`
 const MainContent = styled.div`
   flex: 1;
   padding: 3rem;
-  margin-left: 250px;
+  margin-left: 20px;
   z-index: 10;
 `;
 
