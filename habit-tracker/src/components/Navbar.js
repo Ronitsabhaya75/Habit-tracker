@@ -4,7 +4,7 @@ import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
 import AuthContext from '../context/AuthContext';
 
-// **ANIMATIONS**
+// **ANIMATIIONS**
 const starGlow = keyframes`
   0% { opacity: 0.6; filter: blur(1px); }
   50% { opacity: 1; filter: blur(0px); }
