@@ -1,4 +1,4 @@
-// 3. Create ProtectedRoute component (src/components/ProtectedRoute.js)
+// 3. Create ProtectedRoute component (src/components/ProtectedRoute.jss)
 import React, { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
