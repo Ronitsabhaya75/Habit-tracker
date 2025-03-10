@@ -1,5 +1,5 @@
 /**
- * Home Component
+ * Home Components
  *
  * This file implements the Home component for the LevelUp application.
  * It serves as the landing page, introducing users to the platform's features.
