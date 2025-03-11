@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
 import { useNavigate } from 'react-router-dom';
@@ -400,9 +400,17 @@ const EventItem = styled.div`
   border-radius: 8px;
   margin-bottom: 0.5rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
+`;
+
+const EventCheckbox = styled.input`
+  margin-right: 0.5rem;
+  cursor: pointer;
 `;
 
 const ModalButtonContainer = styled.div`
@@ -469,8 +477,37 @@ const Track = () => {
   const [events, setEvents] = useState({});
   const [newEvent, setNewEvent] = useState({ title: '', description: '' });
   const [editEvent, setEditEvent] = useState(null);
+  const [userExp, setUserExp] = useState(0); // EXP state
 
   const navigate = useNavigate();
+
+  // Load EXP from localStorage on mount
+  useEffect(() => {
+    const savedExp = localStorage.getItem('userExp');
+    if (savedExp) {
+      setUserExp(parseInt(savedExp, 10));
+    }
+  }, []);
+
+  // Save EXP to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('userExp', userExp);
+  }, [userExp]);
+
+  const handleTaskCompletion = (eventId, isCompleted) => {
+    const dateKey = formatDate(selectedDate);
+    const updatedEvents = { ...events };
+
+    updatedEvents[dateKey] = updatedEvents[dateKey].map(event =>
+      event.id === eventId ? { ...event, completed: isCompleted } : event
+    );
+
+    if (isCompleted) {
+      setUserExp(prevExp => prevExp + 20);
+    }
+
+    setEvents(updatedEvents);
+  };
 
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
@@ -539,7 +576,8 @@ const Track = () => {
         updatedEvents[dateKey].push({
           id: Date.now(),
           title: newEvent.title,
-          description: newEvent.description
+          description: newEvent.description,
+          completed: false,
         });
       }
       
@@ -642,9 +680,17 @@ const Track = () => {
       <EventList>
         {dateEvents.map(event => (
           <EventItem key={event.id} onClick={() => handleOpenEventModal(event)}>
-            <strong>{event.title}</strong>
-            {event.description && <p>{event.description}</p>}
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <div>
+              <EventCheckbox
+                type="checkbox"
+                checked={event.completed || false}
+                onChange={(e) => handleTaskCompletion(event.id, e.target.checked)}
+                onClick={(e) => e.stopPropagation()} // Prevent event modal from opening
+              />
+              <strong>{event.title}</strong>
+              {event.description && <p>{event.description}</p>}
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
               <DeleteButton onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id); }}>Delete</DeleteButton>
             </div>
           </EventItem>
@@ -698,6 +744,9 @@ const Track = () => {
       </Sidebar>
       <TrackContainer>
         <h1 style={{ fontSize: '2.5rem', color: theme.colors.accent, marginBottom: '1rem' }}>Track Your Habits</h1>
+        <div style={{ marginBottom: '1rem', fontSize: '1.2rem', color: theme.colors.text }}>
+          <strong>EXP:</strong> {userExp}
+        </div>
         <CalendarContainer>
           <CalendarHeader>
             <MonthNavButton onClick={previousMonth}>← Prev</MonthNavButton>
