@@ -1,7 +1,7 @@
 /**
  * Dashboard components
  *
- * This file implements the Dashboard component for the application.
+ * This file implements the Dashboard components for the application.
  * It provides an interactive dashboard that includes:
  * - A sidebar with navigation options.
  * - A header displaying user information.
