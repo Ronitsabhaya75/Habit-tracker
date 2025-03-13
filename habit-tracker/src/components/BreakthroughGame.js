@@ -2,174 +2,64 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import styled, { keyframes } from 'styled-components';
-import { theme } from '../theme';
+import { theme } from '../theme'; // Assuming you have a theme file
 import { useHabit } from '../context/HabitContext';
 
-// Keyframes for animations
+// Animations
 const floatAnimation = keyframes`
-  0% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(2deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 `;
 
 const starGlow = keyframes`
-  0% { opacity: 0.6; filter: blur(1px); }
-  50% { opacity: 1; filter: blur(0px); }
-  100% { opacity: 0.6; filter: blur(1px); }
+  0% { opacity: 0.6; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.6; transform: scale(0.8); }
 `;
 
-const slowRotate = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
-
-const trailAnimation = keyframes`
-  0% { opacity: 0; transform: translateX(20px); }
-  20% { opacity: 0.7; }
-  100% { opacity: 0; transform: translateX(-100px); }
-`;
-
-const pulseGlow = keyframes`
-  0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
-  50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px rgba(100, 220, 255, 0.8); }
-  100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
-`;
-
-// Styled Components
 const Background = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: ${theme.colors.background};
-  overflow: hidden;
-`;
-
-const GradientOverlay = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 30% 50%, rgba(114, 137, 218, 0.15) 0%, transparent 70%),
-              radial-gradient(circle at 70% 70%, rgba(90, 128, 244, 0.1) 0%, transparent 60%);
-  z-index: 1;
-`;
-
-const Scenery = styled.div`
-  position: absolute;
-  bottom: 0;
+  position: fixed;
+  top: 0;
   left: 0;
   width: 100%;
-  height: 30%;
-  background: linear-gradient(180deg, transparent 0%, rgba(11, 38, 171, 0.2) 100%);
-  z-index: 1;
+  height: 100%;
+  background: linear-gradient(135deg, #1e2749 0%, #2e3b73 100%);
+  z-index: 0;
+  overflow: hidden;
+
   &::before {
     content: '';
     position: absolute;
-    bottom: 0;
-    left: 5%;
-    width: 30%;
-    height: 80%;
-    background: linear-gradient(135deg, #3b4874 20%, #2b3a67 100%);
-    clip-path: polygon(0% 100%, 50% 30%, 100% 100%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(114, 137, 218, 0.3) 0%, transparent 70%);
+    top: 10%;
+    left: 15%;
+    animation: ${floatAnimation} 6s ease-in-out infinite;
   }
+
   &::after {
     content: '';
     position: absolute;
-    bottom: 0;
-    right: 15%;
-    width: 40%;
-    height: 90%;
-    background: linear-gradient(135deg, #2b3a67 20%, #1a2233 100%);
-    clip-path: polygon(0% 100%, 40% 20%, 80% 60%, 100% 100%);
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(255, 107, 107, 0.2) 0%, transparent 70%);
+    bottom: 20%;
+    right: 10%;
+    animation: ${floatAnimation} 8s ease-in-out infinite;
   }
 `;
 
 const Star = styled.div`
   position: absolute;
-  width: ${props => props.size || '30px'};
-  height: ${props => props.size || '30px'};
-  background: radial-gradient(circle, rgba(255, 210, 70, 0.9) 0%, rgba(255, 210, 70, 0) 70%);
+  width: 2px;
+  height: 2px;
+  background: white;
   border-radius: 50%;
-  z-index: 2;
-  animation: ${starGlow} ${props => props.duration || '3s'} infinite ease-in-out;
-  animation-delay: ${props => props.delay || '0s'};
-  opacity: 0.7;
-  &::before {
-    content: '★';
-    position: absolute;
-    font-size: ${props => parseInt(props.size) * 0.8 || '24px'};
-    color: rgba(255, 210, 70, 0.9);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-`;
-
-const Rocket = styled.div`
-  position: absolute;
-  top: 30%;
-  left: 15%;
-  width: 50px;
-  height: 50px;
-  z-index: 3;
-  animation: ${floatAnimation} 8s infinite ease-in-out;
-  transform-origin: center center;
-  &::before {
-    content: '🚀';
-    position: absolute;
-    font-size: 28px;
-    transform: rotate(45deg);
-  }
-`;
-
-const RocketTrail = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 80px;
-  height: 8px;
-  background: linear-gradient(90deg, rgba(100, 220, 255, 0) 0%, rgba(100, 220, 255, 0.7) 100%);
-  border-radius: 4px;
-  z-index: 2;
-  opacity: 0.5;
-  filter: blur(2px);
-  transform: translateX(-80px);
-  animation: ${trailAnimation} 2s infinite;
-`;
-
-const ProgressCircle = styled.div`
-  position: absolute;
-  bottom: 20%;
-  right: 10%;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 3px solid rgba(100, 220, 255, 0.2);
-  border-top: 3px solid rgba(100, 220, 255, 0.8);
-  animation: ${slowRotate} 8s linear infinite;
-  z-index: 2;
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    border: 2px dashed rgba(100, 220, 255, 0.2);
-  }
-`;
-
-const XPOrb = styled.div`
-  position: absolute;
-  width: 15px;
-  height: 15px;
-  background: radial-gradient(circle, rgba(160, 232, 255, 0.6) 30%, rgba(160, 232, 255, 0) 70%);
-  border-radius: 50%;
-  animation: ${floatAnimation} ${props => props.duration || '4s'} infinite ease-in-out;
-  animation-delay: ${props => props.delay || '0s'};
-  opacity: 0.5;
-  z-index: 2;
+  animation: ${starGlow} ${props => props.speed || '2s'} ease-in-out infinite;
+  top: ${props => props.top || '50%'};
+  left: ${props => props.left || '50%'};
 `;
 
 const DashboardContainer = styled.div`
@@ -221,17 +111,6 @@ const MainContent = styled.div`
 const GameHeader = styled.div`
   text-align: center;
   margin-bottom: 3rem;
-
-  h1 {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-  }
-
-  p {
-    opacity: 0.8;
-    max-width: 600px;
-    margin: 0 auto;
-  }
 `;
 
 const GameContent = styled.div`
@@ -255,11 +134,14 @@ const StageCard = styled.div`
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   padding: 1.5rem;
-  border: 1px solid ${props => props.isCompleted ? 'rgba(46, 213, 115, 0.5)' : props.isCurrent ? theme.colors.accent : 'rgba(255, 255, 255, 0.1)'};
+  border: 1px solid ${props =>
+    props.isCompleted ? 'rgba(46, 213, 115, 0.5)' : props.isCurrent ? theme.colors.accent : 'rgba(255, 255, 255, 0.1)'};
   position: relative;
   overflow: hidden;
 
-  ${props => props.isCompleted && `
+  ${props =>
+    props.isCompleted &&
+    `
     &::after {
       content: '✓';
       position: absolute;
@@ -310,10 +192,6 @@ const PointsDisplay = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  h3 {
-    margin: 0;
-  }
 `;
 
 const ProgressIndicator = styled.div`
@@ -360,6 +238,8 @@ const BreakthroughGame = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [localLastAction, setLocalLastAction] = useState(null);
 
+  const categoryId = new URLSearchParams(location.search).get('category') || 'default';
+
   useEffect(() => {
     if (lastAction && (!localLastAction || lastAction.timestamp > localLastAction.timestamp)) {
       setLocalLastAction(lastAction);
@@ -367,32 +247,32 @@ const BreakthroughGame = () => {
   }, [lastAction]);
 
   const handleProgressUpdate = (points, actionType) => {
-    updateProgress('default', points);
-    
+    updateProgress(categoryId, points, actionType);
+
     setLocalLastAction({
       type: actionType,
-      points: points,
+      points,
       timestamp: new Date().toLocaleTimeString(),
-      categoryId: 'default'
+      categoryId,
     });
-    
+
     if (points >= 25) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
     }
 
-    const currentPoints = getCategoryProgress('default') + points;
+    const currentPoints = getCategoryProgress(categoryId) + points;
     const completedStage = stages.find(
-      stage => currentPoints >= stage.points && getCategoryProgress('default') < stage.points
+      stage => currentPoints >= stage.points && getCategoryProgress(categoryId) < stage.points
     );
-    
+
     if (completedStage) {
       alert(`🎉 Congratulations! You've completed ${completedStage.goal} and earned ${completedStage.reward}!`);
     }
   };
 
   const getMotivationalMessage = () => {
-    const currentPoints = getCategoryProgress('default');
+    const currentPoints = getCategoryProgress(categoryId);
     if (currentPoints === 0) return "Ready to start your journey? Every step counts!";
     if (currentPoints < 50) return "Great start! Keep building those healthy habits!";
     if (currentPoints < 100) return "You're making excellent progress! Stay consistent!";
@@ -403,22 +283,22 @@ const BreakthroughGame = () => {
   const stages = [
     { level: 1, goal: 'First Week', points: 50, reward: 'Self-Care Package' },
     { level: 2, goal: 'One Month Milestone', points: 200, reward: 'Wellness Session' },
-    { level: 3, goal: 'Quarterly Achievement', points: 500, reward: 'Personal Experience Gift' }
+    { level: 3, goal: 'Quarterly Achievement', points: 500, reward: 'Personal Experience Gift' },
   ];
 
   const calculateProgress = () => {
-    const currentPoints = getCategoryProgress('default');
+    const currentPoints = getCategoryProgress(categoryId);
     const maxPoints = stages[stages.length - 1].points;
     return Math.min((currentPoints / maxPoints) * 100, 100);
   };
 
   const getCurrentStage = () => {
-    const currentPoints = getCategoryProgress('default');
+    const currentPoints = getCategoryProgress(categoryId);
     return stages.find(stage => currentPoints < stage.points) || stages[stages.length - 1];
   };
 
   const isStageCompleted = (stage) => {
-    const currentPoints = getCategoryProgress('default');
+    const currentPoints = getCategoryProgress(categoryId);
     return currentPoints >= stage.points;
   };
 
@@ -430,17 +310,9 @@ const BreakthroughGame = () => {
   return (
     <DashboardContainer>
       <Background>
-        <GradientOverlay />
-        <Scenery />
-        <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
-        <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
-        <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
-        <Rocket><RocketTrail /></Rocket>
-        <ProgressCircle />
-        <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
-        <XPOrb style={{ top: '30%', right: '25%' }} duration="5s" delay="1.2s" />
-        <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
-        <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
+        <Star top="20%" left="30%" speed="2s" />
+        <Star top="40%" left="60%" speed="3s" />
+        <Star top="70%" left="20%" speed="2.5s" />
       </Background>
 
       <Sidebar>
@@ -448,8 +320,8 @@ const BreakthroughGame = () => {
         <NavList>
           <NavItem onClick={() => navigate('/dashboard')}>Dashboard</NavItem>
           <NavItem className="active">Games</NavItem>
-          <NavItem onClick={() => navigate('/track')}>Events</NavItem> {/* New Track Button */}
-          <NavItem onClick={() => navigate('/review')}> Dashboard Review</NavItem>
+          <NavItem onClick={() => navigate('/track')}>Events</NavItem>
+          <NavItem onClick={() => navigate('/review')}>Review</NavItem>
         </NavList>
       </Sidebar>
 
@@ -467,11 +339,11 @@ const BreakthroughGame = () => {
           <p>Track your progress and achieve your goals through consistent effort.</p>
 
           <PointsDisplay>
-            <h3>Current Points: {getCategoryProgress('default')}</h3>
+            <h3>Current Points: {getCategoryProgress(categoryId)}</h3>
             <div>
               Next Goal: {getCurrentStage()?.goal}
               <div style={{ fontSize: '0.9rem', opacity: 0.8, marginTop: '0.5rem' }}>
-                {getCurrentStage()?.points - getCategoryProgress('default')} points needed
+                {getCurrentStage()?.points - getCategoryProgress(categoryId)} points needed
               </div>
             </div>
           </PointsDisplay>
@@ -487,45 +359,33 @@ const BreakthroughGame = () => {
           </ProgressIndicator>
 
           <ActionButtons>
-            <ActionButton 
-              onClick={() => handleProgressUpdate(5, 'Small Win')}
-              color="#4CAF50"
-            >
+            <ActionButton onClick={() => handleProgressUpdate(5, 'Small Win')} color="#4CAF50">
               Small Win (+5 pts)
-              <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                Quick daily tasks
-              </div>
+              <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Quick daily tasks</div>
             </ActionButton>
-            <ActionButton 
-              onClick={() => handleProgressUpdate(10, 'Daily Goal')}
-              color="#2196F3"
-            >
+            <ActionButton onClick={() => handleProgressUpdate(10, 'Daily Goal')} color="#2196F3">
               Daily Goal (+10 pts)
-              <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                Complete daily target
-              </div>
+              <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Complete daily target</div>
             </ActionButton>
-            <ActionButton 
-              onClick={() => handleProgressUpdate(25, 'Major Achievement')}
-              color="#9C27B0"
-            >
+            <ActionButton onClick={() => handleProgressUpdate(25, 'Major Achievement')} color="#9C27B0">
               Major Achievement (+25 pts)
-              <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                Significant milestone
-              </div>
+              <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Significant milestone</div>
             </ActionButton>
           </ActionButtons>
 
           {localLastAction && (
             <LastActionBox>
               <h4>Last Action</h4>
-              <p>{localLastAction.type} completed at {localLastAction.timestamp} (+{localLastAction.points} points)</p>
+              <p>
+                {localLastAction.type} completed at {localLastAction.timestamp} (+{localLastAction.points}{' '}
+                points)
+              </p>
             </LastActionBox>
           )}
 
           <StageGrid>
             {stages.map(stage => (
-              <StageCard 
+              <StageCard
                 key={stage.level}
                 isCompleted={isStageCompleted(stage)}
                 isCurrent={isCurrentStage(stage)}
@@ -535,23 +395,21 @@ const BreakthroughGame = () => {
                 <p style={{ margin: '1rem 0' }}>Reward: {stage.reward}</p>
                 <p>Required Points: {stage.points}</p>
                 {isStageCompleted(stage) && (
-                  <p style={{ color: '#2ecc71', marginTop: '1rem' }}>
-                    ✨ Stage Complete!
-                  </p>
+                  <p style={{ color: '#2ecc71', marginTop: '1rem' }}>✨ Stage Complete!</p>
                 )}
                 {isCurrentStage(stage) && (
                   <div style={{ marginTop: '1rem' }}>
                     <div className="progress-bar">
-                      <div 
-                        className="fill" 
-                        style={{ 
-                          width: `${(getCategoryProgress('default') / stage.points) * 100}%`,
-                          background: theme.colors.accent 
-                        }} 
+                      <div
+                        className="fill"
+                        style={{
+                          width: `${(getCategoryProgress(categoryId) / stage.points) * 100}%`,
+                          background: theme.colors.accent,
+                        }}
                       />
                     </div>
                     <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                      {stage.points - getCategoryProgress('default')} points to complete
+                      {stage.points - getCategoryProgress(categoryId)} points to complete
                     </p>
                   </div>
                 )}
@@ -561,18 +419,13 @@ const BreakthroughGame = () => {
 
           <ProgressChart>
             <h3>Progress History</h3>
-            {getCategoryHistory('default').length > 0 ? (
+            {getCategoryHistory(categoryId).length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={getCategoryHistory('default')}>
+                <LineChart data={getCategoryHistory(categoryId)}>
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="points" 
-                    stroke={theme.colors.accent}
-                    strokeWidth={2}
-                  />
+                  <Line type="monotone" dataKey="points" stroke={theme.colors.accent} strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (

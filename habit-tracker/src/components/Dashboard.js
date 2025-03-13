@@ -654,11 +654,6 @@ const Dashboard = () => {
     return new Promise(resolve => {
       setTimeout(() => {
         resolve([
-          { name: 'Sameer', xp: 450 },
-          { name: 'Aarav', xp: 380 },
-          { name: 'Priya', xp: 320 },
-          { name: 'Vikram', xp: 290 },
-          { name: 'Anika', xp: 250 },
         ]);
       }, 1000);
     });
@@ -691,8 +686,8 @@ const Dashboard = () => {
   };
 
   const getLineColor = (progress) => {
-    if (progress < 4) return 'red';
-    if (progress < 6) return 'lightcoral';
+    if (progress < 40) return 'red';
+    if (progress > 40 && progress < 60) return 'lightcoral';
     return 'lightgreen';
   };
 
