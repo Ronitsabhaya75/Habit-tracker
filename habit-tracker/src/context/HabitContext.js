@@ -13,15 +13,10 @@ export const HabitProvider = ({ children }) => {
     return savedHistory ? JSON.parse(savedHistory) : [];
   };
 
-  const loadStreak = () => {
-    const savedStreak = localStorage.getItem('habitStreak');
-    return savedStreak ? parseInt(savedStreak, 10) : 0;
-  };
-
   const [progress, setProgress] = useState(loadProgress);
   const [progressHistory, setProgressHistory] = useState(loadHistory);
   const [lastAction, setLastAction] = useState(null);
-  const [streak, setStreak] = useState(loadStreak);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     localStorage.setItem('habitProgress', JSON.stringify(progress));
@@ -31,11 +26,7 @@ export const HabitProvider = ({ children }) => {
     localStorage.setItem('habitHistory', JSON.stringify(progressHistory));
   }, [progressHistory]);
 
-  useEffect(() => {
-    localStorage.setItem('habitStreak', streak.toString());
-  }, [streak]);
-
-  const updateProgress = (categoryId, points, actionType = 'General') => {
+  const updateProgress = (categoryId, points) => {
     const currentProgress = progress[categoryId] || 0;
     const newProgress = currentProgress + points;
 
@@ -53,7 +44,7 @@ export const HabitProvider = ({ children }) => {
 
     setProgressHistory(prev => [...prev, historyEntry]);
     setLastAction({
-      type: actionType,
+      type: points >= 25 ? 'Major Achievement' : points >= 10 ? 'Daily Goal' : 'Small Win',
       points,
       timestamp: new Date().toLocaleTimeString(),
       categoryId,
@@ -61,14 +52,8 @@ export const HabitProvider = ({ children }) => {
 
     const today = new Date().toLocaleDateString();
     const lastUpdate = progressHistory.length > 0 ? progressHistory[progressHistory.length - 1].date : null;
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const wasYesterday = lastUpdate === yesterday.toLocaleDateString();
-
-    if (!lastUpdate || wasYesterday) {
-      setStreak(prev => (today !== lastUpdate ? prev + 1 : prev));
-    } else if (lastUpdate !== today) {
-      setStreak(1);
+    if (lastUpdate !== today) {
+      setStreak(prev => prev + 1);
     }
 
     return historyEntry;
@@ -81,28 +66,23 @@ export const HabitProvider = ({ children }) => {
       .filter(entry => entry.categoryId === categoryId)
       .map(entry => ({
         ...entry,
-        points: getCategoryProgress(categoryId),
+        points: entry.points,
       }));
   };
 
   const getStreak = () => streak;
 
-  const resetStreak = () => setStreak(0);
-
   return (
-    <HabitContext.Provider
-      value={{
-        progress,
-        progressHistory,
-        updateProgress,
-        getCategoryProgress,
-        getCategoryHistory,
-        lastAction,
-        getStreak,
-        setStreak,
-        resetStreak,
-      }}
-    >
+    <HabitContext.Provider value={{
+      progress,
+      progressHistory,
+      updateProgress,
+      getCategoryProgress,
+      getCategoryHistory,
+      lastAction,
+      getStreak,
+      setStreak,
+    }}>
       {children}
     </HabitContext.Provider>
   );

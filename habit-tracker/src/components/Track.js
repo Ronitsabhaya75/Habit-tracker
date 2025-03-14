@@ -470,6 +470,7 @@ const DeleteButton = styled.button`
   }
 `;
 
+
 const Track = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -477,11 +478,10 @@ const Track = () => {
   const [events, setEvents] = useState({});
   const [newEvent, setNewEvent] = useState({ title: '', description: '' });
   const [editEvent, setEditEvent] = useState(null);
-  const [userExp, setUserExp] = useState(0); // EXP state
+  const [userExp, setUserExp] = useState(0);
 
   const navigate = useNavigate();
 
-  // Load EXP from localStorage on mount
   useEffect(() => {
     const savedExp = localStorage.getItem('userExp');
     if (savedExp) {
@@ -489,7 +489,6 @@ const Track = () => {
     }
   }, []);
 
-  // Save EXP to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('userExp', userExp);
   }, [userExp]);
@@ -567,12 +566,10 @@ const Track = () => {
       }
       
       if (editEvent) {
-        // Update existing event
         updatedEvents[dateKey] = updatedEvents[dateKey].map(event => 
           event.id === editEvent.id ? { ...event, ...newEvent } : event
         );
       } else {
-        // Add new event
         updatedEvents[dateKey].push({
           id: Date.now(),
           title: newEvent.title,
@@ -601,13 +598,11 @@ const Track = () => {
     
     const days = [];
     
-    // Day labels (Mon, Tue, etc.)
     const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     dayLabels.forEach(day => {
       days.push(<DayLabel key={`label-${day}`}>{day}</DayLabel>);
     });
     
-    // Empty cells for days from previous month
     for (let i = 0; i < firstDayOfMonth; i++) {
       const prevMonthDay = new Date(year, month, 0 - (firstDayOfMonth - i - 1));
       days.push(
@@ -621,7 +616,6 @@ const Track = () => {
       );
     }
     
-    // Days of current month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       const dateKey = formatDate(date);
@@ -646,8 +640,7 @@ const Track = () => {
       );
     }
     
-    // Fill remaining cells with days from next month
-    const totalCells = 42; // 6 rows * 7 days
+    const totalCells = 42;
     const remainingCells = totalCells - (firstDayOfMonth + daysInMonth);
     
     for (let i = 1; i <= remainingCells; i++) {
@@ -685,7 +678,7 @@ const Track = () => {
                 type="checkbox"
                 checked={event.completed || false}
                 onChange={(e) => handleTaskCompletion(event.id, e.target.checked)}
-                onClick={(e) => e.stopPropagation()} // Prevent event modal from opening
+                onClick={(e) => e.stopPropagation()}
               />
               <strong>{event.title}</strong>
               {event.description && <p>{event.description}</p>}
@@ -701,44 +694,29 @@ const Track = () => {
 
   return (
     <>
-      {/* Modern Subtle Gaming Background */}
       <Background>
-        {/* Gradient Overlay */}
         <GradientOverlay />
-        
-        {/* Mountain Scenery */}
         <Scenery />
-        
-        {/* Stars */}
         <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
         <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
         <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
-        
-        {/* Rocket with animation */}
         <Rocket>
           <RocketTrail />
         </Rocket>
-        
-        {/* Achievement Badge */}
         <AchievementBadge />
-        
-        {/* Progress Circle */}
         <ProgressCircle />
-        
-        {/* XP Orbs */}
         <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
         <XPOrb style={{ top: '30%', right: '25%' }} duration="5s" delay="1.2s" />
         <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
         <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
       </Background>
 
-      {/* Track Content */}
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem onClick={() => navigate('/dashboard')}>Dashboard</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>Games</NavItem>
-          <NavItem className="active">Events</NavItem> {/* New Track Button */}
+          <NavItem className="active">Events</NavItem>
           <NavItem onClick={() => navigate('/review')}>Review</NavItem>
         </NavList>
       </Sidebar>
