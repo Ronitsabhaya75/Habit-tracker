@@ -546,7 +546,7 @@ const App = () => {
         <MainContent>
           <Header>
             <UserGreeting>
-              <h1>Welcome to <span>HabitProgressTracker</span></h1>
+              <h1>Welcome to <span>HabitQuest</span></h1>
             </UserGreeting>
             <LevelBadge>Level 3 Explorer</LevelBadge>
           </Header>
