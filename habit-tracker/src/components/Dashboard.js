@@ -778,6 +778,8 @@ const Dashboard = () => {
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem className="active">Dashboard</NavItem>
+          <NavItem onClick={() => navigate('/spinWheel')}> SpinWheel</NavItem>
+          <NavItem onClick={() => navigate('/habitProgressTracker')}>HabitProgressTracker</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>Games</NavItem>
           <NavItem onClick={() => navigate('/track')}>Events</NavItem> {/* New Track Button */}
           <NavItem onClick={() => navigate('/review')}> Review</NavItem>
