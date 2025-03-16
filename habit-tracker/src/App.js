@@ -12,6 +12,8 @@ import { ThemeProvider } from 'styled-components';
 import { theme } from './theme';
 import AddictionRecoveryGame from './components/games/AddictionRecoveryGame';
 import DashboardReview from './components/DashboardReview';
+import SpinWheel from './components/SpinWheel';
+import HabitProgressTracker from './components/HabitProgressTracker';
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/spinWheel" element={<SpinWheel />} />
+            <Route path="/habitProgressTracker" element={<HabitProgressTracker />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/track" element={<Track />} />
