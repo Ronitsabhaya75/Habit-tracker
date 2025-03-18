@@ -1,5 +1,5 @@
 /**
- * Dashboard component
+ * Dashboard components
  *
  * This file implements the Dashboard components for the application.
  * It provides an interactive dashboard that includes:
