@@ -28,45 +28,37 @@ npm -v
 
 # Next step:
 
-
-## Installation
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone git@csegitlab.engineering.unt.edu:csce-3444/spring-2025/golden-warriors.git
-
-# Step 2: Navigate to the project directory.
-cd habit-tracker
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. install dependecies
+```bash
+npm install
 ```
 
-**Edit a file directly in GitHub**
+2. start the project on localhost (this will run on localhost:3000)
+```bash
+npm start
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
 
-**Use GitHub Codespaces**
+3. **Add the resolved file**:
+    ```sh
+    git add README.md
+    ```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+4. **Commit the merge**:
+    ```sh
+    git commit -m "Resolved merge conflict in README.md"
+    ```
 
-## What technologies are used for this project?
+5. **Push the changes to the remote repository**:
+    ```sh
+    git push origin master
+    ```
 
-This project is built with .
+Here are the commands combined:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```sh
+code README.md
+# Resolve conflicts in the file and save it
+git add README.md
+git commit -m "Resolved merge conflict in README.md"
+git push origin master
