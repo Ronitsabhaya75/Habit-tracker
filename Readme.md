@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Frontend - Starting point
 
 ## Current Progress:
@@ -62,3 +63,6 @@ code README.md
 git add README.md
 git commit -m "Resolved merge conflict in README.md"
 git push origin master
+=======
+echo "My name is Aashishpal Reddy Kandala. This is my fourth semester in UNT." 
+>>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf

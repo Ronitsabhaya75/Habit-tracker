@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+<<<<<<< HEAD
 import { AuthProvider } from './context/AuthContext';
 import { HabitProvider } from './context/HabitContext';
 import Dashboard from './components/Dashboard';
@@ -36,6 +37,27 @@ function App() {
         </HabitProvider>
       </AuthProvider>
     </ThemeProvider>
+=======
+import { AuthProvider } from './context/AuthContext';  // Correct path
+import Navbar from './components/Navbar';
+import Home from './components/Home';
+import Login from './components/Login';
+import Register from './components/Register';
+import Dashboard from './components/Dashboard';
+
+
+function App() {
+  return (
+    <AuthProvider>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </AuthProvider>
+>>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
   );
 }
 
