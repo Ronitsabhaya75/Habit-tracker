@@ -1,31 +1,5 @@
-<<<<<<< HEAD
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-=======
-/**
- * Home Component
- *
- * This file implements the Home component for the LevelUp application.
- * It serves as the landing page, introducing users to the platform's features.
- *
- * Features included:
- *  - A hero section with a title, description, and a call-to-action button.
- *  - A grid layout displaying key features of the application.
- *  - Responsive design ensuring a seamless experience across devices.
- *
- * The component utilizes:
- *  - styled-components for CSS-in-JS styling.
- *  - React Router's Link component for navigation.
- *  - Theme-based colors and styles for consistency.
- *  - Grid and flexbox techniques for an adaptive layout.
- *
- * The goal of this component is to engage users, encourage sign-ups,
- * and provide an overview of how the platform gamifies habit tracking.
- */
-
-import React from 'react';
-import styled, { keyframes } from 'styled-components';
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 import { Link } from 'react-router-dom';
 import { theme } from '../theme';
 
@@ -42,21 +16,17 @@ const starGlow = keyframes`
   100% { opacity: 0.6; filter: blur(1px); }
 `;
 
-<<<<<<< HEAD
 const blinkStar = keyframes`
   0% { opacity: 0.1; }
   50% { opacity: 1; }
   100% { opacity: 0.1; }
 `;
 
-=======
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 const slowRotate = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 `;
 
-<<<<<<< HEAD
 const rocketMovement = keyframes`
   0% { transform: translateX(0) translateY(0) rotate(45deg); }
   25% { transform: translateX(15px) translateY(-10px) rotate(40deg); }
@@ -65,8 +35,6 @@ const rocketMovement = keyframes`
   100% { transform: translateX(0) translateY(0) rotate(45deg); }
 `;
 
-=======
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 const trailAnimation = keyframes`
   0% { opacity: 0; transform: translateX(20px); }
   20% { opacity: 0.7; }
@@ -79,7 +47,6 @@ const pulseGlow = keyframes`
   100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
 `;
 
-<<<<<<< HEAD
 const ctaPulse = keyframes`
   0% { transform: scale(1); box-shadow: 0 0 0 rgba(255, 165, 0, 0.4); }
   70% { transform: scale(1.05); box-shadow: 0 0 10px rgba(255, 165, 0, 0.4); }
@@ -114,15 +81,6 @@ const Background = styled.div`
   perspective: 1000px;
   z-index: 0;
   transition: background 0.5s ease;
-=======
-// **BACKGROUND**
-const Background = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #2b3a67 0%, #1a2233 100%);
-  overflow: hidden;
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 `;
 
 // Gradient Overlay
@@ -130,7 +88,6 @@ const GradientOverlay = styled.div`
   position: absolute;
   width: 100%;
   height: 100%;
-<<<<<<< HEAD
   background: ${props => props.darkMode
     ? `radial-gradient(circle at 30% 50%, rgba(79, 70, 229, 0.15) 0%, transparent 70%),
         radial-gradient(circle at 70% 70%, rgba(79, 70, 229, 0.1) 0%, transparent 60%)`
@@ -147,11 +104,6 @@ const ParallaxLayer = styled.div`
   height: 100%;
   transform: translateZ(${props => props.depth}px) scale(${props => 1 + Math.abs(props.depth)/1000});
   z-index: ${props => Math.floor(10 - Math.abs(props.depth/10))};
-=======
-  background: radial-gradient(circle at 30% 50%, rgba(114, 137, 218, 0.15) 0%, transparent 70%),
-              radial-gradient(circle at 70% 70%, rgba(90, 128, 244, 0.1) 0%, transparent 60%);
-  z-index: 1;
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 `;
 
 // Scenery
@@ -195,13 +147,9 @@ const Star = styled.div`
   background: radial-gradient(circle, rgba(255, 210, 70, 0.9) 0%, rgba(255, 210, 70, 0) 70%);
   border-radius: 50%;
   z-index: 2;
-<<<<<<< HEAD
   animation: ${props => props.blink 
     ? css`${blinkStar} ${props.blinkDuration || '7s'} infinite`
     : css`${starGlow} ${props.duration || '3s'} infinite ease-in-out`};
-=======
-  animation: ${starGlow} ${props => props.duration || '3s'} infinite ease-in-out;
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
   animation-delay: ${props => props.delay || '0s'};
   opacity: 0.7;
   
@@ -248,21 +196,13 @@ const Rocket = styled.div`
   width: 50px;
   height: 50px;
   z-index: 3;
-<<<<<<< HEAD
-=======
-  animation: ${floatAnimation} 8s infinite ease-in-out;
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
   transform-origin: center center;
   
   &::before {
     content: '🚀';
     position: absolute;
     font-size: 28px;
-<<<<<<< HEAD
     animation: ${rocketMovement} 12s infinite ease-in-out;
-=======
-    transform: rotate(45deg);
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
   }
 `;
 
@@ -271,11 +211,7 @@ const RocketTrail = styled.div`
   position: absolute;
   top: 50%;
   left: 0;
-<<<<<<< HEAD
   width: 100px;
-=======
-  width: 80px;
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
   height: 8px;
   background: linear-gradient(90deg, rgba(100, 220, 255, 0) 0%, rgba(100, 220, 255, 0.7) 100%);
   border-radius: 4px;
@@ -283,11 +219,7 @@ const RocketTrail = styled.div`
   opacity: 0.5;
   filter: blur(2px);
   transform: translateX(-80px);
-<<<<<<< HEAD
   animation: ${trailAnimation} 1.5s infinite;
-=======
-  animation: ${trailAnimation} 2s infinite;
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 `;
 
 // Progress Circle
@@ -333,16 +265,10 @@ const XPOrb = styled.div`
 const HomeContainer = styled.div`
   min-height: 100vh;
   position: relative;
-<<<<<<< HEAD
   color: ${props => props.darkMode ? theme.colors.textDark : theme.colors.text};
   padding: 2rem;
   background: transparent;
   z-index: 1;
-=======
-  color: ${theme.colors.text};
-  padding: 2rem;
-  background: transparent; /* Remove purple gradient */
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 `;
 
 const HeroSection = styled.div`
@@ -352,20 +278,14 @@ const HeroSection = styled.div`
   margin: 0 auto;
   position: relative;
   z-index: 10;
-<<<<<<< HEAD
   animation: ${fadeIn} 1s ease-out;
-=======
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 `;
 
 const Title = styled.h1`
   font-size: 3.5rem;
   margin-bottom: 1.5rem;
   line-height: 1.2;
-<<<<<<< HEAD
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-=======
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 `;
 
 const Subtitle = styled.p`
@@ -382,7 +302,6 @@ const CTAButton = styled(Link)`
   border-radius: 30px;
   text-decoration: none;
   font-weight: bold;
-<<<<<<< HEAD
   display: inline-flex;
   align-items: center;
   margin: 1rem 0;
@@ -408,17 +327,6 @@ const CTASubtext = styled.p`
   font-style: italic;
 `;
 
-=======
-  display: inline-block;
-  margin: 1rem 0;
-  transition: transform 0.2s;
-
-  &:hover {
-    transform: scale(1.05);
-  }
-`;
-
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 const FeaturesGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -427,7 +335,6 @@ const FeaturesGrid = styled.div`
   margin: 4rem auto;
   position: relative;
   z-index: 10;
-<<<<<<< HEAD
   animation: ${fadeIn} 1s ease-out;
   animation-delay: 0.2s;
   opacity: 0;
@@ -438,17 +345,10 @@ const FeatureCard = styled.div`
   background: ${props => props.darkMode 
     ? 'rgba(17, 24, 39, 0.7)' 
     : theme.colors.glassWhite};
-=======
-`;
-
-const FeatureCard = styled.div`
-  background: ${theme.colors.glassWhite};
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
   padding: 2rem;
   border-radius: 15px;
   text-align: center;
   backdrop-filter: blur(5px);
-<<<<<<< HEAD
   border: 1px solid ${props => props.darkMode 
     ? 'rgba(55, 65, 81, 0.5)' 
     : theme.colors.borderWhite};
@@ -470,9 +370,6 @@ const FeatureIcon = styled.div`
     transform: scale(1.2);
     animation: ${iconGlow} 2s infinite;
   }
-=======
-  border: 1px solid ${theme.colors.borderWhite};
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 `;
 
 const FeatureTitle = styled.h3`
@@ -485,7 +382,6 @@ const FeatureText = styled.p`
   line-height: 1.6;
 `;
 
-<<<<<<< HEAD
 const NavBar = styled.div`
   position: absolute;
   top: 1rem;
@@ -898,77 +794,9 @@ const Home = () => {
             ))}
           </TestimonialsGrid>
         </TestimonialsSection> */}
-=======
-const Home = () => {
-  return (
-    <>
-      {/* Background with Stars */}
-      <Background>
-        <GradientOverlay />
-        <Scenery />
-        <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
-        <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
-        <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
-        <Rocket>
-          <RocketTrail />
-        </Rocket>
-        <AchievementBadge />
-        <ProgressCircle />
-        <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
-        <XPOrb style={{ top: '30%', right: '25%' }} duration="5s" delay="1.2s" />
-        <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
-        <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
-      </Background>
-
-      {/* Home Content */}
-      <HomeContainer>
-        <HeroSection>
-          <Title>Level Up</Title>
-          <Subtitle>
-            Turn your daily habits into an engaging game. Track progress, earn
-            <br />
-            XP, unlock achievements, and build lasting habits while having fun!
-          </Subtitle>
-          {/* Keep the "Get Started" button */}
-          <CTAButton to="/register">Get Started</CTAButton>
-        </HeroSection>
-
-        <FeaturesGrid>
-          <FeatureCard>
-            <FeatureTitle>Track Progress</FeatureTitle>
-            <FeatureText>
-              Monitor your habits with beautiful
-              <br />
-              visualizations and stats
-            </FeatureText>
-          </FeatureCard>
-
-          <FeatureCard>
-            <FeatureTitle>Earn Rewards</FeatureTitle>
-            <FeatureText>
-              Level up and unlock achievements as you
-              <br />
-              build better habits
-            </FeatureText>
-          </FeatureCard>
-
-          <FeatureCard>
-            <FeatureTitle>Stay Motivated</FeatureTitle>
-            <FeatureText>
-              Join a community of people building better
-              <br />
-              habits together
-            </FeatureText>
-          </FeatureCard>
-        </FeaturesGrid>
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
       </HomeContainer>
     </>
   );
 };
 
-<<<<<<< HEAD
 export default Home;
-=======
-export default Home;
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf

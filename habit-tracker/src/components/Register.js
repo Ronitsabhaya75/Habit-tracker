@@ -306,7 +306,6 @@ const AuthLink = styled(Link)`
     text-decoration: underline;
   }
 `;
-<<<<<<< HEAD
 const HomeButton = styled(Link)`
   position: absolute;
   top: 1rem;
@@ -327,9 +326,6 @@ const HomeButton = styled(Link)`
     transform: translateY(-2px);
   }
 `;
-=======
-
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 const Register = () => {
   const { login, isAuthenticated } = useContext(AuthContext);
   const [username, setUsername] = useState('');
@@ -389,10 +385,7 @@ const Register = () => {
 
       {/* Register Form */}
       <RegisterContainer>
-<<<<<<< HEAD
         <HomeButton to="/">Home</HomeButton>
-=======
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
         <RegisterForm onSubmit={handleSubmit}>
           <AuthTitle>Register</AuthTitle>
           <AuthSubtitle>Start your journey today</AuthSubtitle>

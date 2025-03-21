@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /**
  * Navbar Component
  *
@@ -26,8 +25,6 @@
  * The component is structured for maintainability and a seamless user experience.
  */
 
-=======
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
@@ -146,10 +143,6 @@ const Navbar = () => {
             </>
           ) : (
             <>
-<<<<<<< HEAD
-=======
-              <NavLink to="/">Home</NavLink>
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
               <NavLink to="/login">Login</NavLink>
             </>
           )}

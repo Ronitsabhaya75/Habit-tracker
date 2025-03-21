@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /**
  * Login Component
  *
@@ -17,8 +16,6 @@
  * It follows a modular structure, ensuring readability and maintainability.
  */
 
-=======
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 import React, { useState, useContext } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
@@ -326,7 +323,6 @@ const AuthLink = styled(Link)`
     text-decoration: underline;
   }
 `;
-<<<<<<< HEAD
 const HomeButton = styled(Link)`
   position: absolute;
   top: 1rem;
@@ -347,8 +343,6 @@ const HomeButton = styled(Link)`
     transform: translateY(-2px);
   }
 `;
-=======
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
 
 const Login = () => {
   const { login } = useContext(AuthContext);
@@ -399,10 +393,7 @@ const Login = () => {
 
       {/* Login Form */}
       <LoginContainer>
-<<<<<<< HEAD
         <HomeButton to="/">Home</HomeButton>
-=======
->>>>>>> b6fad21e19d8d1b5f44ee51762ca8efbcc9c63bf
         <LoginForm onSubmit={handleSubmit}>
           <AuthTitle>Login</AuthTitle>
           <AuthSubtitle>Continue your journey</AuthSubtitle>
