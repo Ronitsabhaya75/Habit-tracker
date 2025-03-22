@@ -14,6 +14,7 @@ import AddictionRecoveryGame from './components/games/AddictionRecoveryGame';
 import DashboardReview from './components/DashboardReview';
 import SpinWheel from './components/SpinWheel';
 import HabitProgressTracker from './components/HabitProgressTracker';
+import Chess from './components/games/chess';
 
 function App() {
   return (
@@ -28,10 +29,10 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/track" element={<Track />} />
-            <Route path="/review" element={<DashboardReview />} /> {/* Move this outside */}
-            <Route path="/breakthrough-game" element={<BreakthroughGame />}>
-              <Route path=":categoryId/play" element={<AddictionRecoveryGame />} />
-            </Route>
+            <Route path="/review" element={<DashboardReview />} />
+            <Route path="/breakthrough-game" element={<BreakthroughGame />} />
+            <Route path="/addiction-recovery" element={<AddictionRecoveryGame />} />
+            <Route path="/chess" element={<Chess />} />
           </Routes>
         </HabitProvider>
       </AuthProvider>

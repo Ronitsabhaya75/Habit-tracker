@@ -5,6 +5,16 @@ import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme'; // Assuming you have a theme file
 import { useHabit } from '../context/HabitContext';
 
+// Chess pieces (Unicode characters)
+const pieces = {
+  pawn: '♟',
+  rook: '♜',
+  knight: '♞',
+  bishop: '♝',
+  queen: '♛',
+  king: '♚',
+};
+
 // Animations
 const floatAnimation = keyframes`
   0% { transform: translateY(0px); }
@@ -18,6 +28,7 @@ const starGlow = keyframes`
   100% { opacity: 0.6; transform: scale(0.8); }
 `;
 
+// Styled Components
 const Background = styled.div`
   position: fixed;
   top: 0;
@@ -123,65 +134,24 @@ const GameContent = styled.div`
   margin: 0 auto;
 `;
 
-const StageGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-`;
-
-const StageCard = styled.div`
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 1.5rem;
-  border: 1px solid ${props =>
-    props.isCompleted ? 'rgba(46, 213, 115, 0.5)' : props.isCurrent ? theme.colors.accent : 'rgba(255, 255, 255, 0.1)'};
-  position: relative;
-  overflow: hidden;
-
-  ${props =>
-    props.isCompleted &&
-    `
-    &::after {
-      content: '✓';
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      color: rgba(46, 213, 115, 1);
-      font-size: 1.5rem;
-    }
-  `}
-`;
-
-const ActionButton = styled.button`
-  background: ${props => props.color || theme.colors.accent};
+const GameButton = styled.button`
+  background: ${theme.colors.accent};
   color: white;
   border: none;
-  padding: 1rem 2rem;
-  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  margin: 1rem;
+  width: 80%;
+  max-width: 400px;
   cursor: pointer;
+  font-size: 1.2rem;
   font-weight: 600;
-  width: 100%;
-  margin-top: 1rem;
   transition: all 0.2s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
-
-const ProgressChart = styled.div`
-  margin-top: 2rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 1.5rem;
 `;
 
 const PointsDisplay = styled.div`
@@ -224,12 +194,104 @@ const ActionButtons = styled.div`
   margin-top: 1rem;
 `;
 
+const ActionButton = styled.button`
+  background: ${props => props.color || theme.colors.accent};
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+  margin-top: 1rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+`;
+
 const LastActionBox = styled.div`
   margin: 1rem 0;
   padding: 1rem;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
 `;
+
+const StageGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+`;
+
+const StageCard = styled.div`
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid ${props =>
+    props.isCompleted ? 'rgba(46, 213, 115, 0.5)' : props.isCurrent ? theme.colors.accent : 'rgba(255, 255, 255, 0.1)'};
+  position: relative;
+  overflow: hidden;
+
+  ${props =>
+    props.isCompleted &&
+    `
+    &::after {
+      content: '✓';
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      color: rgba(46, 213, 115, 1);
+      font-size: 1.5rem;
+    }
+  `}
+`;
+
+const ProgressChart = styled.div`
+  margin-top: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+`;
+
+const GamesHub = () => {
+  const navigate = useNavigate();
+
+  const games = [
+    {
+      title: 'Chess',
+      description: 'Play a game of chess to improve your strategic thinking.',
+      path: '/chess',
+    },
+    {
+      title: 'Addiction Recovery',
+      description: 'Track your progress and stay motivated on your recovery journey.',
+      path: '/addiction-recovery',
+    },
+  ];
+
+  return (
+    <GameContent>
+      <h1>Choose Your Game</h1>
+      {games.map((game, index) => (
+        <GameButton key={index} onClick={() => navigate(game.path)}>
+          {game.title}
+          <div style={{ fontSize: '0.9rem', marginTop: '0.5rem', opacity: 0.8 }}>
+            {game.description}
+          </div>
+        </GameButton>
+      ))}
+    </GameContent>
+  );
+};
 
 const BreakthroughGame = () => {
   const location = useLocation();
@@ -326,115 +388,121 @@ const BreakthroughGame = () => {
       </Sidebar>
 
       <MainContent>
-        <GameHeader>
-          <h1>Breakthrough: Your Transformation Journey</h1>
-          <p>Level up your life through consistent habits and meaningful achievements.</p>
-          <div style={{ marginTop: '1rem', color: theme.colors.accent }}>
-            {getMotivationalMessage()}
-          </div>
-        </GameHeader>
-
-        <GameContent>
-          <h2>Your Journey</h2>
-          <p>Track your progress and achieve your goals through consistent effort.</p>
-
-          <PointsDisplay>
-            <h3>Current Points: {getCategoryProgress(categoryId)}</h3>
-            <div>
-              Next Goal: {getCurrentStage()?.goal}
-              <div style={{ fontSize: '0.9rem', opacity: 0.8, marginTop: '0.5rem' }}>
-                {getCurrentStage()?.points - getCategoryProgress(categoryId)} points needed
+        {location.pathname === '/breakthrough-game' ? (
+          <GamesHub /> // Render Games Hub
+        ) : (
+          <>
+            <GameHeader>
+              <h1>Breakthrough: Your Transformation Journey</h1>
+              <p>Level up your life through consistent habits and meaningful achievements.</p>
+              <div style={{ marginTop: '1rem', color: theme.colors.accent }}>
+                {getMotivationalMessage()}
               </div>
-            </div>
-          </PointsDisplay>
+            </GameHeader>
 
-          <ProgressIndicator progress={calculateProgress()}>
-            <h3>Overall Progress</h3>
-            <div className="progress-bar">
-              <div className="fill" />
-            </div>
-            <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
-              {calculateProgress().toFixed(1)}% Complete
-            </div>
-          </ProgressIndicator>
+            <GameContent>
+              <h2>Your Journey</h2>
+              <p>Track your progress and achieve your goals through consistent effort.</p>
 
-          <ActionButtons>
-            <ActionButton onClick={() => handleProgressUpdate(5, 'Small Win')} color="#4CAF50">
-              Small Win (+5 pts)
-              <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Quick daily tasks</div>
-            </ActionButton>
-            <ActionButton onClick={() => handleProgressUpdate(10, 'Daily Goal')} color="#2196F3">
-              Daily Goal (+10 pts)
-              <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Complete daily target</div>
-            </ActionButton>
-            <ActionButton onClick={() => handleProgressUpdate(25, 'Major Achievement')} color="#9C27B0">
-              Major Achievement (+25 pts)
-              <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Significant milestone</div>
-            </ActionButton>
-          </ActionButtons>
-
-          {localLastAction && (
-            <LastActionBox>
-              <h4>Last Action</h4>
-              <p>
-                {localLastAction.type} completed at {localLastAction.timestamp} (+{localLastAction.points}{' '}
-                points)
-              </p>
-            </LastActionBox>
-          )}
-
-          <StageGrid>
-            {stages.map(stage => (
-              <StageCard
-                key={stage.level}
-                isCompleted={isStageCompleted(stage)}
-                isCurrent={isCurrentStage(stage)}
-              >
-                <h3>Level {stage.level}</h3>
-                <h4>{stage.goal}</h4>
-                <p style={{ margin: '1rem 0' }}>Reward: {stage.reward}</p>
-                <p>Required Points: {stage.points}</p>
-                {isStageCompleted(stage) && (
-                  <p style={{ color: '#2ecc71', marginTop: '1rem' }}>✨ Stage Complete!</p>
-                )}
-                {isCurrentStage(stage) && (
-                  <div style={{ marginTop: '1rem' }}>
-                    <div className="progress-bar">
-                      <div
-                        className="fill"
-                        style={{
-                          width: `${(getCategoryProgress(categoryId) / stage.points) * 100}%`,
-                          background: theme.colors.accent,
-                        }}
-                      />
-                    </div>
-                    <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                      {stage.points - getCategoryProgress(categoryId)} points to complete
-                    </p>
+              <PointsDisplay>
+                <h3>Current Points: {getCategoryProgress(categoryId)}</h3>
+                <div>
+                  Next Goal: {getCurrentStage()?.goal}
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8, marginTop: '0.5rem' }}>
+                    {getCurrentStage()?.points - getCategoryProgress(categoryId)} points needed
                   </div>
-                )}
-              </StageCard>
-            ))}
-          </StageGrid>
+                </div>
+              </PointsDisplay>
 
-          <ProgressChart>
-            <h3>Progress History</h3>
-            {getCategoryHistory(categoryId).length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={getCategoryHistory(categoryId)}>
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="points" stroke={theme.colors.accent} strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <p style={{ textAlign: 'center', padding: '2rem' }}>
-                No progress history yet. Start adding achievements!
-              </p>
-            )}
-          </ProgressChart>
-        </GameContent>
+              <ProgressIndicator progress={calculateProgress()}>
+                <h3>Overall Progress</h3>
+                <div className="progress-bar">
+                  <div className="fill" />
+                </div>
+                <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+                  {calculateProgress().toFixed(1)}% Complete
+                </div>
+              </ProgressIndicator>
+
+              <ActionButtons>
+                <ActionButton onClick={() => handleProgressUpdate(5, 'Small Win')} color="#4CAF50">
+                  Small Win (+5 pts)
+                  <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Quick daily tasks</div>
+                </ActionButton>
+                <ActionButton onClick={() => handleProgressUpdate(10, 'Daily Goal')} color="#2196F3">
+                  Daily Goal (+10 pts)
+                  <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Complete daily target</div>
+                </ActionButton>
+                <ActionButton onClick={() => handleProgressUpdate(25, 'Major Achievement')} color="#9C27B0">
+                  Major Achievement (+25 pts)
+                  <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Significant milestone</div>
+                </ActionButton>
+              </ActionButtons>
+
+              {localLastAction && (
+                <LastActionBox>
+                  <h4>Last Action</h4>
+                  <p>
+                    {localLastAction.type} completed at {localLastAction.timestamp} (+{localLastAction.points}{' '}
+                    points)
+                  </p>
+                </LastActionBox>
+              )}
+
+              <StageGrid>
+                {stages.map(stage => (
+                  <StageCard
+                    key={stage.level}
+                    isCompleted={isStageCompleted(stage)}
+                    isCurrent={isCurrentStage(stage)}
+                  >
+                    <h3>Level {stage.level}</h3>
+                    <h4>{stage.goal}</h4>
+                    <p style={{ margin: '1rem 0' }}>Reward: {stage.reward}</p>
+                    <p>Required Points: {stage.points}</p>
+                    {isStageCompleted(stage) && (
+                      <p style={{ color: '#2ecc71', marginTop: '1rem' }}>✨ Stage Complete!</p>
+                    )}
+                    {isCurrentStage(stage) && (
+                      <div style={{ marginTop: '1rem' }}>
+                        <div className="progress-bar">
+                          <div
+                            className="fill"
+                            style={{
+                              width: `${(getCategoryProgress(categoryId) / stage.points) * 100}%`,
+                              background: theme.colors.accent,
+                            }}
+                          />
+                        </div>
+                        <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                          {stage.points - getCategoryProgress(categoryId)} points to complete
+                        </p>
+                      </div>
+                    )}
+                  </StageCard>
+                ))}
+              </StageGrid>
+
+              <ProgressChart>
+                <h3>Progress History</h3>
+                {getCategoryHistory(categoryId).length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={getCategoryHistory(categoryId)}>
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="points" stroke={theme.colors.accent} strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p style={{ textAlign: 'center', padding: '2rem' }}>
+                    No progress history yet. Start adding achievements!
+                  </p>
+                )}
+              </ProgressChart>
+            </GameContent>
+          </>
+        )}
       </MainContent>
     </DashboardContainer>
   );
