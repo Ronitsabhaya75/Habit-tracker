@@ -1,9 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import styled, { keyframes } from 'styled-components';
-import { theme } from '../../theme'; // Adjusted to reach src/theme.js
-import BreakthroughGame from '../BreakthroughGame';
-import { useHabit } from '../../context/HabitContext'; // Adjusted to reach src/context/HabitContext.js
-import { useAuth } from '../../context/AuthContext'; // Adjusted to reach src/context/AuthContext.js
+import React, { useState, useEffect, useCallback } from 'react';
+import styled, { keyframes, createGlobalStyle } from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import { theme } from '../../theme'; // Ensure this path is correct
+import { useHabit } from '../../context/HabitContext'; // Ensure this path is correct
+
+// Global styles to ensure app background
+const GlobalStyle = createGlobalStyle`
+  body {
+    background: ${theme.colors.background};
+    color: ${theme.colors.text};
+    margin: 0;
+    padding: 0;
+  }
+`;
 
 // Animations
 const floatAnimation = keyframes`
@@ -21,7 +30,7 @@ const starGlow = keyframes`
 // Styled Components
 const GameWrapper = styled.div`
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: ${theme.colors.glassWhite};
   border-radius: 12px;
   margin-top: 2rem;
 `;
@@ -47,6 +56,14 @@ const Button = styled.button`
   }
 `;
 
+const BackButton = styled(Button)`
+  background: ${theme.colors.secondary};
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+`;
+
 const MoodTracker = styled.div`
   display: flex;
   justify-content: center;
@@ -66,19 +83,19 @@ const MoodButton = styled.button`
     transform: scale(1.2);
   }
   &.selected {
-    background: rgba(255, 255, 255, 0.1);
+    background: ${theme.colors.glassWhite};
   }
 `;
 
 const GameSection = styled.div`
   margin: 2rem 0;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: ${theme.colors.glassWhite};
   border-radius: 12px;
 `;
 
 const ActivityCard = styled.div`
-  background: rgba(255, 255, 255, 0.1);
+  background: ${theme.colors.glassWhite};
   border-radius: 12px;
   padding: 1.5rem;
   margin: 1rem 0;
@@ -86,7 +103,27 @@ const ActivityCard = styled.div`
   transition: all 0.2s;
   &:hover {
     transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.15);
+    background: ${theme.colors.borderWhite};
+  }
+  &.completed {
+    border: 2px solid ${theme.colors.accent};
+    position: relative;
+    
+    &:after {
+      content: '✓';
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: ${theme.colors.accent};
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
   }
 `;
 
@@ -98,7 +135,7 @@ const ProgressGrid = styled.div`
 `;
 
 const StatCard = styled.div`
-  background: rgba(255, 255, 255, 0.1);
+  background: ${theme.colors.glassWhite};
   padding: 1rem;
   border-radius: 8px;
   text-align: center;
@@ -107,7 +144,7 @@ const StatCard = styled.div`
 `;
 
 const JournalEntry = styled.div`
-  background: rgba(255, 255, 255, 0.05);
+  background: ${theme.colors.glassWhite};
   padding: 1rem;
   border-radius: 8px;
   margin: 1rem 0;
@@ -116,8 +153,8 @@ const JournalEntry = styled.div`
 
 const TextArea = styled.textarea`
   width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: ${theme.colors.glassWhite};
+  border: 1px solid ${theme.colors.borderWhite};
   border-radius: 8px;
   padding: 1rem;
   color: ${theme.colors.text};
@@ -147,10 +184,11 @@ const MeditationTimer = styled.div`
 const guidedActivities = [
   { id: 'meditation', title: '5-Minute Mindfulness Meditation', description: 'Stay present and focused.', duration: 300, points: 10, guidance: ['Find a comfortable position', 'Take deep breaths', 'Focus on your breath', 'Let thoughts pass', 'Notice body sensations'] },
   { id: 'breathing', title: 'Deep Breathing Exercise', description: 'Practice 4-7-8 breathing.', duration: 180, points: 5, guidance: ['Inhale for 4s', 'Hold for 7s', 'Exhale for 8s', 'Repeat cycle'] },
-  { id: 'gratitude', title: 'Gratitude Journal', description: 'Write three things you’re grateful for.', points: 5, guidance: ['Reflect on a positive event', 'Consider helpful people', 'Note a personal strength'] },
+  { id: 'gratitude', title: 'Gratitude Journal', description: "Write three things you're grateful for.", points: 5, guidance: ['Reflect on a positive event', 'Consider helpful people', 'Note a personal strength'] },
 ];
 
 const AddictionRecoveryGame = () => {
+  const navigate = useNavigate();
   const { updateProgress, getCategoryProgress } = useHabit();
   const [completedChallenges, setCompletedChallenges] = useState([]);
   const [currentStreak, setCurrentStreak] = useState(0);
@@ -165,6 +203,38 @@ const AddictionRecoveryGame = () => {
   const [achievements, setAchievements] = useState([]);
   const [showGuidance, setShowGuidance] = useState(false);
   const [currentGuidanceStep, setCurrentGuidanceStep] = useState(0);
+
+  const handleBackClick = () => {
+    navigate('/breakthrough-game');
+  };
+
+  const updateStreak = useCallback(() => {
+    const today = new Date().toISOString().split('T')[0];
+    if (lastCompletionDate !== today) {
+      setCurrentStreak(prev => prev + 1);
+      setLastCompletionDate(today);
+    }
+  }, [lastCompletionDate]);
+
+  const handleMilestone = useCallback((type, points) => {
+    updateProgress('addiction', points);
+    setAchievements(prev => [...prev, { type, timestamp: new Date().toISOString(), points }]);
+    if (type === 'daily') updateStreak();
+  }, [updateProgress, updateStreak]);
+
+  const completeActivity = useCallback((activity) => {
+    updateProgress('addiction', activity.points);
+    setCompletedChallenges(prev => [...prev, activity.id]);
+    setActivityInProgress(null);
+    setShowGuidance(false);
+    setAchievements(prev => [...prev, {
+      type: 'activity',
+      activity: activity.title,
+      timestamp: new Date().toISOString(),
+      points: activity.points,
+    }]);
+    updateStreak();
+  }, [updateProgress, updateStreak]);
 
   useEffect(() => {
     const savedData = JSON.parse(localStorage.getItem('addictionRecoveryData') || '{}');
@@ -228,39 +298,11 @@ const AddictionRecoveryGame = () => {
     return () => clearInterval(interval);
   }, [activityInProgress, activityTimer, completeActivity]);
 
-  const updateStreak = () => {
-    const today = new Date().toISOString().split('T')[0];
-    if (lastCompletionDate !== today) {
-      setCurrentStreak(prev => prev + 1);
-      setLastCompletionDate(today);
-    }
-  };
-
-  const handleMilestone = (type, points) => {
-    updateProgress('addiction', points);
-    setAchievements(prev => [...prev, { type, timestamp: new Date().toISOString(), points }]);
-    if (type === 'daily') updateStreak();
-  };
-
   const startActivity = (activity) => {
     setActivityInProgress(activity);
     setActivityTimer(activity.duration || 0);
     setShowGuidance(true);
     setCurrentGuidanceStep(0);
-  };
-
-  const completeActivity = (activity) => {
-    updateProgress('addiction', activity.points);
-    setCompletedChallenges(prev => [...prev, activity.id]);
-    setActivityInProgress(null);
-    setShowGuidance(false);
-    setAchievements(prev => [...prev, {
-      type: 'activity',
-      activity: activity.title,
-      timestamp: new Date().toISOString(),
-      points: activity.points,
-    }]);
-    updateStreak();
   };
 
   const addJournalEntry = () => {
@@ -284,130 +326,137 @@ const AddictionRecoveryGame = () => {
   };
 
   return (
-    <GameWrapper>
-      <h2>Addiction Recovery Journey</h2>
-      <ProgressGrid>
-        <StatCard>
-          <h4>Clean Time</h4>
-          <div className="value">{formatTime(timeElapsed)}</div>
-          <Button color={timerActive ? "#f44336" : "#4CAF50"} onClick={() => setTimerActive(!timerActive)}>
-            {timerActive ? "Pause Timer" : "Start/Resume Timer"}
-          </Button>
-        </StatCard>
-        <StatCard>
-          <h4>Current Streak</h4>
-          <div className="value">{currentStreak} days</div>
-          <div>Keep going strong!</div>
-        </StatCard>
-        <StatCard>
-          <h4>Total Points</h4>
-          <div className="value">{getCategoryProgress('addiction')}</div>
-          <div>Points earned</div>
-        </StatCard>
-      </ProgressGrid>
+    <>
+      <GlobalStyle />
+      <GameWrapper>
+        <BackButton onClick={handleBackClick}>
+          ← Back to Breakthrough Game
+        </BackButton>
 
-      <GameSection>
-        <h3>How are you feeling today?</h3>
-        <MoodTracker>
-          <MoodButton className={selectedMood === 'great' ? 'selected' : ''} onClick={() => setSelectedMood('great')}>😊</MoodButton>
-          <MoodButton className={selectedMood === 'good' ? 'selected' : ''} onClick={() => setSelectedMood('good')}>🙂</MoodButton>
-          <MoodButton className={selectedMood === 'neutral' ? 'selected' : ''} onClick={() => setSelectedMood('neutral')}>😐</MoodButton>
-          <MoodButton className={selectedMood === 'struggling' ? 'selected' : ''} onClick={() => setSelectedMood('struggling')}>😟</MoodButton>
-        </MoodTracker>
-      </GameSection>
+        <h2>Addiction Recovery Journey</h2>
+        <ProgressGrid>
+          <StatCard>
+            <h4>Clean Time</h4>
+            <div className="value">{formatTime(timeElapsed)}</div>
+            <Button color={timerActive ? "#f44336" : "#4CAF50"} onClick={() => setTimerActive(!timerActive)}>
+              {timerActive ? "Pause Timer" : "Start/Resume Timer"}
+            </Button>
+          </StatCard>
+          <StatCard>
+            <h4>Current Streak</h4>
+            <div className="value">{currentStreak} days</div>
+            <div>Keep going strong!</div>
+          </StatCard>
+          <StatCard>
+            <h4>Total Points</h4>
+            <div className="value">{getCategoryProgress('addiction')}</div>
+            <div>Points earned</div>
+          </StatCard>
+        </ProgressGrid>
 
-      <GameSection>
-        <h3>Guided Activities</h3>
-        {activityInProgress ? (
-          <MeditationTimer>
-            <div className="countdown">{formatTime(activityTimer)}</div>
-            <div className="message">
-              {activityTimer > 0 ? (
-                showGuidance ? (
-                  <>
-                    <p>{activityInProgress.guidance?.[currentGuidanceStep]}</p>
-                    <Button onClick={() => setShowGuidance(false)}>Hide Guidance</Button>
-                  </>
+        <GameSection>
+          <h3>How are you feeling today?</h3>
+          <MoodTracker>
+            <MoodButton className={selectedMood === 'great' ? 'selected' : ''} onClick={() => setSelectedMood('great')}>😊</MoodButton>
+            <MoodButton className={selectedMood === 'good' ? 'selected' : ''} onClick={() => setSelectedMood('good')}>🙂</MoodButton>
+            <MoodButton className={selectedMood === 'neutral' ? 'selected' : ''} onClick={() => setSelectedMood('neutral')}>😐</MoodButton>
+            <MoodButton className={selectedMood === 'struggling' ? 'selected' : ''} onClick={() => setSelectedMood('struggling')}>😟</MoodButton>
+          </MoodTracker>
+        </GameSection>
+
+        <GameSection>
+          <h3>Guided Activities</h3>
+          {activityInProgress ? (
+            <MeditationTimer>
+              <div className="countdown">{formatTime(activityTimer)}</div>
+              <div className="message">
+                {activityTimer > 0 ? (
+                  showGuidance ? (
+                    <>
+                      <p>{activityInProgress.guidance?.[currentGuidanceStep]}</p>
+                      <Button onClick={() => setShowGuidance(false)}>Hide Guidance</Button>
+                    </>
+                  ) : (
+                    <Button onClick={() => setShowGuidance(true)}>Show Guidance</Button>
+                  )
                 ) : (
-                  <Button onClick={() => setShowGuidance(true)}>Show Guidance</Button>
-                )
-              ) : (
-                "Activity Complete! 🎉"
-              )}
-            </div>
-          </MeditationTimer>
-        ) : (
-          guidedActivities.map(activity => (
-            <ActivityCard
-              key={activity.id}
-              onClick={() => startActivity(activity)}
-              className={completedChallenges.includes(activity.id) ? 'completed' : ''}
-            >
-              <h4>{activity.title}</h4>
-              <p>{activity.description}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>+{activity.points} points</span>
-                {activity.duration && <span>{Math.floor(activity.duration / 60)} minutes</span>}
+                  "Activity Complete! 🎉"
+                )}
               </div>
-            </ActivityCard>
-          ))
-        )}
-      </GameSection>
+            </MeditationTimer>
+          ) : (
+            guidedActivities.map(activity => (
+              <ActivityCard
+                key={activity.id}
+                onClick={() => startActivity(activity)}
+                className={completedChallenges.includes(activity.id) ? 'completed' : ''}
+              >
+                <h4>{activity.title}</h4>
+                <p>{activity.description}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>+{activity.points} points</span>
+                  {activity.duration && <span>{Math.floor(activity.duration / 60)} minutes</span>}
+                </div>
+              </ActivityCard>
+            ))
+          )}
+        </GameSection>
 
-      <GameSection>
-        <h3>Recovery Journal</h3>
-        <TextArea
-          value={currentJournalEntry}
-          onChange={(e) => setCurrentJournalEntry(e.target.value)}
-          placeholder="Write about your journey, feelings, or challenges..."
-        />
-        <Button onClick={addJournalEntry}>Save Entry (+5 points)</Button>
-        {journalEntries.map((entry, index) => (
-          <JournalEntry key={index}>
-            <div className="timestamp">
-              {new Date(entry.timestamp).toLocaleString()}
-              {entry.mood && (
-                <span style={{ marginLeft: '1rem' }}>
-                  {entry.mood === 'great' ? '😊' : entry.mood === 'good' ? '🙂' : entry.mood === 'neutral' ? '😐' : '😟'}
-                </span>
-              )}
-            </div>
-            <p>{entry.text}</p>
-          </JournalEntry>
-        ))}
-      </GameSection>
-
-      <GameSection>
-        <h3>Recent Achievements</h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-          {achievements.map((achievement, index) => (
-            <Badge
-              key={index}
-              color={achievement.type === 'hourly' ? '#4CAF50' : achievement.type === 'daily' ? '#2196F3' : achievement.type === 'activity' ? '#9C27B0' : theme.colors.accent}
-            >
-              {achievement.type === 'activity' ? achievement.activity : achievement.type === 'hourly' ? 'Hour Complete' : achievement.type === 'daily' ? 'Day Complete' : 'Achievement'} (+{achievement.points} pts)
-            </Badge>
+        <GameSection>
+          <h3>Recovery Journal</h3>
+          <TextArea
+            value={currentJournalEntry}
+            onChange={(e) => setCurrentJournalEntry(e.target.value)}
+            placeholder="Write about your journey, feelings, or challenges..."
+          />
+          <Button onClick={addJournalEntry}>Save Entry (+5 points)</Button>
+          {journalEntries.map((entry, index) => (
+            <JournalEntry key={index}>
+              <div className="timestamp">
+                {new Date(entry.timestamp).toLocaleString()}
+                {entry.mood && (
+                  <span style={{ marginLeft: '1rem' }}>
+                    {entry.mood === 'great' ? '😊' : entry.mood === 'good' ? '🙂' : entry.mood === 'neutral' ? '😐' : '😟'}
+                  </span>
+                )}
+              </div>
+              <p>{entry.text}</p>
+            </JournalEntry>
           ))}
-        </div>
-      </GameSection>
+        </GameSection>
 
-      {selectedMood === 'struggling' && (
-        <GameSection style={{ background: 'rgba(244, 67, 54, 0.1)' }}>
-          <h3>Need Support?</h3>
-          <p>Remember, it’s okay to ask for help. Here are some resources:</p>
-          <ul>
-            <li>Call your support buddy</li>
-            <li>Practice deep breathing exercises</li>
-            <li>Use the urge surfing technique</li>
-            <li>Contact your counselor or support group</li>
-          </ul>
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-            <Button color="#f44336">Emergency Contact</Button>
-            <Button onClick={() => startActivity(guidedActivities[1])}>Start Breathing Exercise</Button>
+        <GameSection>
+          <h3>Recent Achievements</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {achievements.map((achievement, index) => (
+              <Badge
+                key={index}
+                color={achievement.type === 'hourly' ? '#4CAF50' : achievement.type === 'daily' ? '#2196F3' : achievement.type === 'activity' ? '#9C27B0' : theme.colors.accent}
+              >
+                {achievement.type === 'activity' ? achievement.activity : achievement.type === 'hourly' ? 'Hour Complete' : achievement.type === 'daily' ? 'Day Complete' : 'Achievement'} (+{achievement.points} pts)
+              </Badge>
+            ))}
           </div>
         </GameSection>
-      )}
-    </GameWrapper>
+
+        {selectedMood === 'struggling' && (
+          <GameSection style={{ background: 'rgba(244, 67, 54, 0.1)' }}>
+            <h3>Need Support?</h3>
+            <p>Remember, it's okay to ask for help. Here are some resources:</p>
+            <ul>
+              <li>Call your support buddy</li>
+              <li>Practice deep breathing exercises</li>
+              <li>Use the urge surfing technique</li>
+              <li>Contact your counselor or support group</li>
+            </ul>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <Button color="#f44336">Emergency Contact</Button>
+              <Button onClick={() => startActivity(guidedActivities[1])}>Start Breathing Exercise</Button>
+            </div>
+          </GameSection>
+        )}
+      </GameWrapper>
+    </>
   );
 };
 
