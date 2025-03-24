@@ -1,34 +1,37 @@
 const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-require('dotenv').config();
-const connectDB = require('./config/db');
+const Task = require('../models/Task');
+const { verifyToken } = require('../middleware/authMiddleware');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+const router = express.Router();
 
-// Connect to MongoDB
-connectDB();
-
-// Middleware
-app.use(morgan('dev'));
-app.use(express.json());
-app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
-
-// Root Route
-app.get('/', (req, res) => {
-  res.send('Welcome to the Habit Tracker API!');
+// Get all tasks for a user
+router.get('/', verifyToken, async (req, res) => {
+  const tasks = await Task.find({ userId: req.user.id });
+  res.json({ tasks });
 });
 
-// Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/tasks', require('./routes/taskRoutes'));
-app.use('/api/leaderboard', require('./routes/leaderboardRoutes'));
+// Create a new task
+router.post('/', verifyToken, async (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ message: 'Task name is required' });
 
-// Error Handling
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong', error: err.message });
+  const newTask = new Task({ userId: req.user.id, name });
+  await newTask.save();
+
+  res.status(201).json({ message: 'Task created', task: newTask });
 });
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+// Mark task as completed
+router.put('/:taskId', verifyToken, async (req, res) => {
+  const { completed } = req.body;
+  const task = await Task.findByIdAndUpdate(req.params.taskId, { completed }, { new: true });
+  res.json({ message: 'Task updated', task });
+});
+
+// Delete a task
+router.delete('/:taskId', verifyToken, async (req, res) => {
+  await Task.findByIdAndDelete(req.params.taskId);
+  res.json({ message: 'Task deleted' });
+});
+
+module.exports = router;
