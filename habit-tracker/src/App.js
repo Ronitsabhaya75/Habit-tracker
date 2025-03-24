@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { HabitProvider } from './context/HabitContext';
-import { EventProvider } from './context/EventContext'; // Import EventProvider
+import { EventProvider } from './context/EventContext';
 import Dashboard from './components/Dashboard';
 import BreakthroughGame from './components/BreakthroughGame';
 import Login from './components/Login';
@@ -16,12 +16,13 @@ import DashboardReview from './components/DashboardReview';
 import SpinWheel from './components/SpinWheel';
 import HabitProgressTracker from './components/HabitProgressTracker';
 import Chess from './components/games/chess';
+import LudoGame from './components/games/ludo/LudoGame'; // Add this import
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <AuthProvider>
-        <HabitProvider> {/* Add back the opening HabitProvider tag */}
+        <HabitProvider>
           <EventProvider>
             <Routes>
               <Route path="/" element={<Home />} />
@@ -35,9 +36,10 @@ function App() {
               <Route path="/breakthrough-game" element={<BreakthroughGame />} />
               <Route path="/addiction-recovery" element={<AddictionRecoveryGame />} />
               <Route path="/chess" element={<Chess />} />
+              <Route path="/ludo" element={<LudoGame />} /> {/* Add this route */}
             </Routes>
           </EventProvider>
-        </HabitProvider> {/* This matches the opening tag */}
+        </HabitProvider>
       </AuthProvider>
     </ThemeProvider>
   );

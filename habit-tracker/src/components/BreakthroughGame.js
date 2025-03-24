@@ -555,6 +555,11 @@ const GamesHub = () => {
       description: 'Track your progress and stay motivated on your recovery journey.',
       path: '/addiction-recovery',
     },
+    {
+      title: "ludo",
+      description: "Play a game of ludo with your friends and family.",
+      path: "/ludo"
+    }
   ];
 
   return (
