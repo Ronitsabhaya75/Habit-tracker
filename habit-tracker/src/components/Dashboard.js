@@ -242,12 +242,24 @@ const DashboardContainer = styled.div`
 `;
 
 const Sidebar = styled.div`
-  width: 250px;
+  width: 280px;
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(30, 39, 73, 0.8);
   border-right: 1px solid ${theme.colors.borderWhite};
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
   z-index: 10;
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+
+  h2 {
+    color: ${theme.colors.accent};
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
 `;
 
 const NavList = styled.ul`

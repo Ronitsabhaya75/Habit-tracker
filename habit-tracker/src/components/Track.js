@@ -470,7 +470,6 @@ const DeleteButton = styled.button`
   }
 `;
 
-
 const Track = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
