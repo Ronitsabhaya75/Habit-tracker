@@ -1,12 +1,9 @@
 const express = require('express');
-const User = require('../models/User');
+const { getLeaderboard } = require('../controllers/leaderboardController');
 
 const router = express.Router();
 
-// Get leaderboard
-router.get('/', async (req, res) => {
-  const leaderboard = await User.find().sort({ xp: -1 }).limit(5);
-  res.json(leaderboard);
-});
+// Get top users by XP
+router.get('/', getLeaderboard);
 
 module.exports = router;
