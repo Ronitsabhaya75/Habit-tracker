@@ -34,6 +34,7 @@ import { useHabit } from '../context/HabitContext';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { useEventContext } from '../context/EventContext';
+import AIChat from '../components/AIChat';
 
 const HABIT_CATEGORIES = [
   { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
@@ -546,24 +547,62 @@ const TaskText = styled.span`
 `;
 ;
 
-// ... (keep all animations and styled components the same as in your second code)
+const CoachCard = styled(Card)`
+  background: rgba(30, 39, 73, 0.9);
+  border: 1px solid ${theme.colors.accent};
+`;
+
+const CoachHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+`;
+
+const CoachIcon = styled.div`
+  font-size: 2rem;
+`;
+
+const SuggestionList = styled.ul`
+  list-style: none;
+  padding: 0;
+`;
+
+const SuggestionItem = styled.li`
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.2s ease;
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+`;
+
+const SuggestionIcon = styled.span`
+  color: ${theme.colors.accent};
+`;
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { progress, getStreak, getCategoryProgress, setStreak, updateProgress } = useHabit();
   const { events, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
-  
-  // State
+
+  // State declarations moved to the top
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newHabit, setNewHabit] = useState('');
   const [showInput, setShowInput] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [chartType, setChartType] = useState('line');
-  const [streak, setLocalStreak] = useState(0);
+  const [streak, setLocalStreak] = useState(0); // Moved up
   const inputRef = useRef(null);
   const [showAllAchievements, setShowAllAchievements] = useState(false);
+  const [coachSuggestions, setCoachSuggestions] = useState([]); // Moved down
 
   // Calculate total XP from progress and completed tasks
   const calculateTotalXP = useCallback(() => {
@@ -593,8 +632,74 @@ const Dashboard = () => {
     { id: 1, title: 'First Week Streak', description: 'Completed 7 days of habits', earned: streak >= 7 },
     { id: 2, title: 'Milestone 100 XP', description: 'Reached 100 XP points', earned: totalXP >= 100 },
     { id: 3, title: 'Habit Master', description: 'Completed 3 habits consistently', earned: Object.keys(progress).length >= 3 },
-    { id: 4, title: 'Task Champion', description: 'Completed 5 tasks in a day', earned: false }, // Example additional achievement
+    { id: 4, title: 'Task Champion', description: 'Completed 5 tasks in a day', earned: false },
   ];
+
+  // Now that streak is defined, we can use it in generateCoachSuggestions
+  const generateCoachSuggestions = useCallback(() => {
+    const suggestions = [];
+    const todayKey = new Date().toISOString().split('T')[0];
+    const todayTasks = events[todayKey] || [];
+    const completedTasks = todayTasks.filter(task => task.completed).length;
+    const totalTasks = todayTasks.length;
+
+    // Suggestion based on streak
+    if (streak >= 7) {
+      suggestions.push({
+        text: "Amazing job maintaining a 7+ day streak! Try adding a new challenging habit to level up.",
+        icon: "🌟"
+      });
+    } else if (streak < 3 && streak > 0) {
+      suggestions.push({
+        text: "You're building a streak! Keep it up for 3 more days to solidify this habit.",
+        icon: "🔥"
+      });
+    } else if (streak === 0) {
+      suggestions.push({
+        text: "Start small today with one easy task to kick off your streak!",
+        icon: "🚀"
+      });
+    }
+
+    // Suggestion based on task completion
+    if (totalTasks > 0 && completedTasks / totalTasks < 0.5) {
+      suggestions.push({
+        text: "Try breaking your tasks into smaller steps to boost completion rates.",
+        icon: "📝"
+      });
+    } else if (completedTasks === totalTasks && totalTasks > 0) {
+      suggestions.push({
+        text: "Perfect day! Consider adding a bonus task to stretch your potential.",
+        icon: "🏆"
+      });
+    }
+
+    // Suggestion based on total XP
+    if (totalXP >= 100 && totalXP < 200) {
+      suggestions.push({
+        text: "You're making great progress! Focus on consistency to hit 200 XP soon.",
+        icon: "📈"
+      });
+    } else if (totalXP < 50) {
+      suggestions.push({
+        text: "Every step counts! Complete a task now to earn 10 XP and get rolling.",
+        icon: "✨"
+      });
+    }
+
+    // General optimization tip
+    suggestions.push({
+      text: "Review your habits weekly to adjust goals and stay motivated!",
+      icon: "🗓️"
+    });
+
+    setCoachSuggestions(suggestions);
+  }, [streak, events, totalXP]);
+
+  // Update suggestions when relevant data changes
+  useEffect(() => {
+    generateCoachSuggestions();
+  }, [generateCoachSuggestions]);
 
   const handleLogout = () => {
     logout();
@@ -813,7 +918,6 @@ const Dashboard = () => {
               ))}
             </LeaderboardList>
           </Card>
-
           <Card>
             <h2>Achievements</h2>
             <AchievementList>
@@ -878,6 +982,7 @@ const Dashboard = () => {
           </Card>
         </GridContainer>
       </MainContent>
+      <AIChat user={user} />
     </DashboardContainer>
   );
 };
