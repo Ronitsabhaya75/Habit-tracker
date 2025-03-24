@@ -33,6 +33,7 @@ import { useAuth } from '../context/AuthContext';
 import { useHabit } from '../context/HabitContext';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useNavigate } from 'react-router-dom';
+import { useEventContext } from '../context/EventContext';
 
 const HABIT_CATEGORIES = [
   { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
@@ -313,7 +314,6 @@ const LevelBadge = styled.div`
 
 const GridContainer = styled.div`
   display: grid;
-  gird-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   grid-template-columns: 2fr 1fr;
   gap: 1rem;
   align-items: start;
@@ -328,52 +328,6 @@ const Card = styled.div`
   backdrop-filter: blur(8px);
   transition: transform 0.2s ease;
   &:hover { transform: translateY(-2px); }
-`;
-
-const CategoryCard = styled(Card)`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 1rem;
-  &:hover {
-    background: rgba(255, 255, 255, 0.15);
-    &::after { transform: translateX(0); }
-  }
-  &::after {
-    content: '→';
-    position: absolute;
-    right: 1rem;
-    font-size: 1.5rem;
-    transform: translateX(-20px);
-    opacity: 0.7;
-    transition: transform 0.2s ease;
-  }
-`;
-
-const CategoryIcon = styled.span`
-  font-size: 2rem;
-`;
-
-const CategoryInfo = styled.div`
-  flex: 1;
-`;
-
-const ProgressBar = styled.div`
-  width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  margin-top: 0.5rem;
-  overflow: hidden;
-  div {
-    height: 100%;
-    background: ${theme.colors.accent};
-    width: ${props => props.progress}%;
-    transition: width 0.3s ease;
-  }
 `;
 
 const Button = styled.button`
@@ -415,29 +369,6 @@ const UserRank = styled.span`
 
 const UserScore = styled.span`
   color: ${theme.colors.secondary};
-`;
-
-const StagesList = styled.div`
-  margin-top: 1rem;
-`;
-
-const StageItem = styled.div`
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  &.completed { background: rgba(46, 213, 115, 0.1); }
-  &.current { border: 1px solid ${theme.colors.accent}; }
-`;
-
-const RewardBadge = styled.span`
-  background: ${theme.colors.accent};
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
 `;
 
 const ProgressBarContainer = styled.div`
@@ -552,8 +483,8 @@ const AchievementDetails = styled.span`
 `;
 
 const LogoutButton = styled.button`
-  background: ${theme.colors.secondary}; // Use secondary color for consistency
-  color: white; // Ensures readability
+  background: ${theme.colors.secondary};
+  color: white;
   border: 1px solid rgba(253, 3, 3, 0.2);
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -561,52 +492,120 @@ const LogoutButton = styled.button`
   font-weight: 600;
   transition: all 0.2s ease;
   &:hover {
-    background: ${theme.colors.accent}; // Use accent color on hover for visual interest
+    background: ${theme.colors.accent};
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 `;
 
+const TaskList = styled.ul`
+  list-style: none;
+  padding: 0;
+`;
+
+const Task = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const TaskCheckbox = styled.div`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid ${props => props.completed ? theme.colors.accent : 'rgba(255, 255, 255, 0.3)'};
+  background: ${props => props.completed ? theme.colors.accent : 'transparent'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &::after {
+    content: ${props => props.completed ? '"✓"' : '""'};
+    color: white;
+    font-size: 0.8rem;
+  }
+  
+  &:hover {
+    border-color: ${theme.colors.accent};
+    transform: scale(1.1);
+  }
+`;
+
+const TaskText = styled.span`
+  flex: 1;
+  color: ${props => props.completed ? 'rgba(255, 255, 255, 0.5)' : '#ffffff'};
+  text-decoration: ${props => props.completed ? 'line-through' : 'none'};
+`;
+;
+
+// ... (keep all animations and styled components the same as in your second code)
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth(); // Add logout from AuthContext
-  const { progress, getStreak, getCategoryProgress, setStreak } = useHabit();
-  const [data, setData] = useState([]);
+  const { user, logout } = useAuth();
+  const { progress, getStreak, getCategoryProgress, setStreak, updateProgress } = useHabit();
+  const { events, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
+  
+  // State
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tasks, setTasks] = useState([]);
   const [newHabit, setNewHabit] = useState('');
   const [showInput, setShowInput] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [chartType, setChartType] = useState('line');
   const [streak, setLocalStreak] = useState(0);
-  const [activeCategory, setActiveCategory] = useState(null);
   const inputRef = useRef(null);
   const [showAllAchievements, setShowAllAchievements] = useState(false);
 
-  // Calendar state
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [showEventModal, setShowEventModal] = useState(false);
-  const [events, setEvents] = useState({});
-  const [newEvent, setNewEvent] = useState({ title: '', description: '' });
+  // Calculate total XP from progress and completed tasks
+  const calculateTotalXP = useCallback(() => {
+    const progressXP = Object.values(progress).reduce((sum, p) => sum + p, 0);
+    
+    // Add XP from completed tasks
+    let tasksXP = 0;
+    const todayKey = new Date().toISOString().split('T')[0];
+    const todayTasks = events[todayKey] || [];
+    tasksXP = todayTasks.filter(task => task.completed).length * 10; // 10 XP per completed task
+    
+    return progressXP + tasksXP;
+  }, [progress, events]);
+
+  const [totalXP, setTotalXP] = useState(calculateTotalXP());
+
+  // Update total XP whenever progress or tasks change
+  useEffect(() => {
+    setTotalXP(calculateTotalXP());
+  }, [calculateTotalXP]);
+
+  const currentLevel = Math.floor(totalXP / 100) + 1;
+  const levelProgress = totalXP % 100;
+  const streakPercentage = Math.min((streak / 14) * 100, 100);
 
   const achievements = [
     { id: 1, title: 'First Week Streak', description: 'Completed 7 days of habits', earned: streak >= 7 },
-    { id: 2, title: 'Milestone 100 XP', description: 'Reached 100 XP points', earned: Object.values(progress).reduce((sum, p) => sum + p, 0) >= 100 },
+    { id: 2, title: 'Milestone 100 XP', description: 'Reached 100 XP points', earned: totalXP >= 100 },
     { id: 3, title: 'Habit Master', description: 'Completed 3 habits consistently', earned: Object.keys(progress).length >= 3 },
+    { id: 4, title: 'Task Champion', description: 'Completed 5 tasks in a day', earned: false }, // Example additional achievement
   ];
 
   const handleLogout = () => {
-    logout(); // Call logout method from AuthContext
-    navigate('/login'); // Redirect to login page after logout
-  }
+    logout();
+    navigate('/login');
+  };
 
   const fetchUserProgress = useCallback(async () => {
     try {
       setLoading(true);
       const userProgress = await fakeFetchUserData();
-      setData(userProgress.map((item, index) => ({
+      setChartData(userProgress.map((item, index) => ({
         progress: getCategoryProgress(item.date) || item.progress,
       })));
     } catch (error) {
@@ -630,14 +629,14 @@ const Dashboard = () => {
     fetchUserProgress();
     const streakValue = getStreak();
     setLocalStreak(streakValue);
-    setStreak(streakValue); // Sync with context
+    setStreak(streakValue);
   }, [fetchLeaderboard, fetchUserProgress, getStreak, setStreak]);
 
   useEffect(() => {
     if (user && !leaderboard.some(entry => entry.name === user.name)) {
-      setLeaderboard(prev => [...prev, { name: user.name, xp: Object.values(progress).reduce((sum, p) => sum + p, 0) }]);
+      setLeaderboard(prev => [...prev, { name: user.name, xp: totalXP }]);
     }
-  }, [user, progress, leaderboard]);
+  }, [user, totalXP, leaderboard]);
 
   const sortedLeaderboard = [...leaderboard].sort((a, b) => b.xp - a.xp);
 
@@ -665,8 +664,7 @@ const Dashboard = () => {
   const fakeFetchLeaderboardData = async () => {
     return new Promise(resolve => {
       setTimeout(() => {
-        resolve([
-        ]);
+        resolve([]);
       }, 1000);
     });
   };
@@ -675,64 +673,47 @@ const Dashboard = () => {
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && newHabit.trim()) {
-      setTasks([...tasks, { id: Date.now(), text: newHabit.trim(), isEditing: false }]);
+      const todayKey = new Date().toISOString().split('T')[0];
+      addEvent(todayKey, { 
+        id: Date.now(), 
+        title: newHabit.trim(), 
+        completed: false 
+      });
       setNewHabit('');
       setShowInput(false);
     }
   };
 
-  const handleEditTask = (taskId, newText) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, text: newText, isEditing: false } : task
-    ));
+  const handleTaskCompletion = async (taskId, completed) => {
+    const todayKey = new Date().toISOString().split('T')[0];
+    
+    // Toggle task completion
+    await toggleEventCompletion(todayKey, taskId, completed);
+    
+    // Add XP when task is completed
+    if (completed) {
+      // Update progress with 10 XP for each completed task
+      await updateProgress('tasks', 10); // 'tasks' can be a category or you can use another key
+    }
   };
 
   const toggleEdit = (taskId) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, isEditing: !task.isEditing } : task
-    ));
+    const todayKey = new Date().toISOString().split('T')[0];
+    const task = events[todayKey]?.find(t => t.id === taskId);
+    if (task) {
+      updateEvent(todayKey, taskId, { isEditing: !task.isEditing });
+    }
   };
 
   const deleteTask = (taskId) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
+    const todayKey = new Date().toISOString().split('T')[0];
+    deleteEvent(todayKey, taskId);
   };
 
   const getLineColor = (progress) => {
-    if (progress < 40) return 'red';
-    if (progress > 40 && progress < 60) return 'lightcoral';
-    return 'lightgreen';
-  };
-
-  const calculateCategoryProgress = (categoryId) => {
-    const category = HABIT_CATEGORIES.find(cat => cat.id === categoryId);
-    if (!category) return 0;
-    const currentPoints = getCategoryProgress(categoryId);
-    const maxPoints = category.stages[category.stages.length - 1].points;
-    return Math.min((currentPoints / maxPoints) * 100, 100);
-  };
-
-  const getCurrentStage = (categoryId) => {
-    const category = HABIT_CATEGORIES.find(cat => cat.id === categoryId);
-    if (!category) return null;
-    const currentPoints = getCategoryProgress(categoryId);
-    return category.stages.find(stage => currentPoints < stage.points) || category.stages[category.stages.length - 1];
-  };
-
-  const handleCategoryClick = (categoryId) => {
-    setActiveCategory(categoryId);
-    navigate(`/breakthrough-game?category=${categoryId}`, { state: { fromDashboard: true } });
-  };
-
-  const getStageStatus = (stage, categoryId) => {
-    const currentPoints = getCategoryProgress(categoryId);
-    if (currentPoints >= stage.points) return 'completed';
-    if (currentPoints < stage.points && (!getCurrentStage(categoryId) || getCurrentStage(categoryId).level === stage.level)) return 'current';
-    return '';
-  };
-
-  const calculateTotalLevel = () => {
-    const totalPoints = Object.values(progress).reduce((sum, points) => sum + points, 0);
-    return Math.floor(totalPoints / 100) + 1;
+    if (progress < 40) return '#ff6b6b';
+    if (progress < 70) return '#feca57';
+    return '#1dd1a1';
   };
 
   const renderChart = () => {
@@ -740,7 +721,7 @@ const Dashboard = () => {
       case 'bar':
         return (
           <ResponsiveContainer width="100%" height={150}>
-            <BarChart data={data}>
+            <BarChart data={chartData}>
               <XAxis dataKey="day" stroke={theme.colors.text} />
               <YAxis hide />
               <Tooltip />
@@ -751,14 +732,14 @@ const Dashboard = () => {
       default:
         return (
           <ResponsiveContainer width="100%" height={150}>
-            <LineChart data={data}>
+            <LineChart data={chartData}>
               <XAxis dataKey="day" stroke={theme.colors.text} />
               <YAxis hide />
               <Tooltip />
               <Line
                 type="monotone"
                 dataKey="progress"
-                stroke={data.length ? getLineColor(data[data.length - 1]?.progress) : theme.colors.accent}
+                stroke={chartData.length ? getLineColor(chartData[chartData.length - 1]?.progress) : theme.colors.accent}
                 strokeWidth={2}
               />
             </LineChart>
@@ -767,7 +748,8 @@ const Dashboard = () => {
     }
   };
 
-
+  const todayKey = new Date().toISOString().split('T')[0];
+  const todayTasks = events[todayKey] || [];
 
   return (
     <DashboardContainer>
@@ -790,11 +772,11 @@ const Dashboard = () => {
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem className="active">Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/spinWheel')}> SpinWheel</NavItem>
+          <NavItem onClick={() => navigate('/spinWheel')}>SpinWheel</NavItem>
           <NavItem onClick={() => navigate('/habitProgressTracker')}>HabitProgressTracker</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>Games</NavItem>
-          <NavItem onClick={() => navigate('/track')}>Events</NavItem> {/* New Track Button */}
-          <NavItem onClick={() => navigate('/review')}> Review</NavItem>
+          <NavItem onClick={() => navigate('/track')}>Events</NavItem>
+          <NavItem onClick={() => navigate('/review')}>Review</NavItem>
         </NavList>
       </Sidebar>
 
@@ -802,58 +784,99 @@ const Dashboard = () => {
         <Header>
           <UserGreeting>
             <h1>Welcome{user?.name ? `, ${user.name}` : ''}! 👋</h1>
-            <LevelBadge>Level {calculateTotalLevel()} - {Object.values(progress).reduce((sum, p) => sum + p, 0)} XP</LevelBadge>
+            <LevelBadge>Level {currentLevel} - {totalXP} XP</LevelBadge>
           </UserGreeting>
           <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
         </Header>
 
+        <GridContainer>
+          <Card>
+            <h2>Progress Overview</h2>
+            <ChartControls>
+              <ChartTypeButton active={chartType === 'line'} onClick={() => setChartType('line')}>Line</ChartTypeButton>
+              <ChartTypeButton active={chartType === 'bar'} onClick={() => setChartType('bar')}>Bar</ChartTypeButton>
+            </ChartControls>
+            {loading ? <p>Loading chart data...</p> : <ChartContainer>{renderChart()}</ChartContainer>}
+            <h3 style={{ marginTop: '1rem' }}>Current Streak: {streak} days</h3>
+            <ProgressBarContainer progress={streakPercentage}><div></div></ProgressBarContainer>
+            <p>{streak >= 14 ? 'Streak Maxed!' : `${14 - streak} days to max streak`}</p>
+          </Card>
 
-      <GridContainer>
-        <Card>
-          <h2>Progress Overview</h2>
-          <ChartControls>
-            <ChartTypeButton active={chartType === 'line'} onClick={() => setChartType('line')}>Line</ChartTypeButton>
-            <ChartTypeButton active={chartType === 'bar'} onClick={() => setChartType('bar')}>Bar</ChartTypeButton>
-          </ChartControls>
-          {loading ? <p>Loading chart data...</p> : <ChartContainer>{renderChart()}</ChartContainer>}
-          <h3 style={{ marginTop: '1rem' }}>Current Streak: {streak} days</h3>
-          <ProgressBarContainer progress={Math.min((streak / 14) * 100, 100)}><div></div></ProgressBarContainer>
-          <p>{streak >= 14 ? 'Streak Maxed!' : `${14 - streak} days to max streak`}</p>
-        </Card>
+          <Card>
+            <h2>Leaderboard</h2>
+            <LeaderboardList>
+              {sortedLeaderboard.map((player, index) => (
+                <LeaderboardItem key={player.name}>
+                  <div><UserRank>#{index + 1}</UserRank> {player.name}</div>
+                  <UserScore>{player.xp} XP</UserScore>
+                </LeaderboardItem>
+              ))}
+            </LeaderboardList>
+          </Card>
 
-        <Card>
-          <h2>Leaderboard</h2>
-          <LeaderboardList>
-            {sortedLeaderboard.map((player, index) => (
-              <LeaderboardItem key={player.name}>
-                <div><UserRank>#{index + 1}</UserRank> {player.name}</div>
-                <UserScore>{player.xp} XP</UserScore>
-              </LeaderboardItem>
-            ))}
-          </LeaderboardList>
-        </Card>
+          <Card>
+            <h2>Achievements</h2>
+            <AchievementList>
+              {achievements
+                .filter(achievement => showAllAchievements || achievement.earned)
+                .map(achievement => (
+                  <AchievementItem key={achievement.id}>
+                    <AchievementTitle>{achievement.title}</AchievementTitle>
+                    <AchievementDetails>{achievement.description}</AchievementDetails>
+                  </AchievementItem>
+                ))}
+            </AchievementList>
+            <Button style={{ marginTop: '1rem', width: '100%' }} onClick={() => setShowAllAchievements(prev => !prev)}>
+              {showAllAchievements ? "Collapse" : "View All Achievements"}
+            </Button>
+          </Card>
 
-        <Card>
-        <h2>Achievements</h2>
-        <AchievementList>
-          {achievements
-            .filter(achievement => showAllAchievements || achievement.earned) // Show all if expanded
-            .map(achievement => (
-              <AchievementItem key={achievement.id}>
-                <AchievementTitle>{achievement.title}</AchievementTitle>
-                <AchievementDetails>{achievement.description}</AchievementDetails>
-              </AchievementItem>
-          ))}
-        </AchievementList>
-
-        <Button 
-          style={{ marginTop: '1rem', width: '100%' }} 
-          onClick={() => setShowAllAchievements(prev => !prev)}
-        >
-          {showAllAchievements ? "Collapse" :  "View All Achievements"}
-        </Button>
-        </Card>
-      </GridContainer>
+          <Card>
+            <h2>Today's Tasks</h2>
+            <TaskList>
+              {todayTasks.map((task) => (
+                <Task key={task.id}>
+                  <TaskCheckbox
+                    completed={task.completed}
+                    onClick={() => handleTaskCompletion(task.id, !task.completed)}
+                  />
+                  {task.isEditing ? (
+                    <EditInput
+                      type="text"
+                      value={task.title}
+                      onChange={(e) => updateEvent(todayKey, task.id, { title: e.target.value })}
+                      onBlur={() => toggleEdit(task.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") toggleEdit(task.id);
+                      }}
+                    />
+                  ) : (
+                    <TaskText
+                      completed={task.completed}
+                      onDoubleClick={() => toggleEdit(task.id)}
+                    >
+                      {task.title}
+                    </TaskText>
+                  )}
+                  <DeleteButton onClick={() => deleteTask(task.id)}>Delete</DeleteButton>
+                </Task>
+              ))}
+            </TaskList>
+            {showInput ? (
+              <AddHabitInput
+                ref={inputRef}
+                type="text"
+                placeholder="Add a new task..."
+                value={newHabit}
+                onChange={(e) => setNewHabit(e.target.value)}
+                onKeyPress={handleKeyPress}
+                onBlur={() => setShowInput(false)}
+              />
+            ) : (
+              <AddHabitButton onClick={addHabit}>+ Add Task</AddHabitButton>
+            )}
+          </Card>
+        </GridContainer>
       </MainContent>
     </DashboardContainer>
   );

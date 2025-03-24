@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
 import { useNavigate } from 'react-router-dom';
+import { useEventContext } from '../context/EventContext';
 
 // **ANIMATIONS**
 const floatAnimation = keyframes`
@@ -52,7 +53,7 @@ const GradientOverlay = styled.div`
   z-index: 1;
 `;
 
-// Mountain scenery in the background (like in the gaming controller image)
+// Mountain scenery in the background
 const Scenery = styled.div`
   position: absolute;
   bottom: 0;
@@ -192,7 +193,7 @@ const ProgressCircle = styled.div`
   }
 `;
 
-// **XP ORB - SUBTLE VERSION**
+// **XP ORB**
 const XPOrb = styled.div`
   position: absolute;
   width: 15px;
@@ -252,7 +253,7 @@ const TrackContainer = styled.div`
   height: 100vh;
   position: relative;
   z-index: 10;
-  margin-left: 250px; // Adjust for sidebar width
+  margin-left: 250px;
 `;
 
 const CalendarContainer = styled.div`
@@ -408,9 +409,28 @@ const EventItem = styled.div`
   }
 `;
 
-const EventCheckbox = styled.input`
-  margin-right: 0.5rem;
+const TaskCheckbox = styled.div`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid ${props => props.completed ? theme.colors.accent : 'rgba(255, 255, 255, 0.3)'};
+  background: ${props => props.completed ? theme.colors.accent : 'transparent'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  transition: all 0.2s;
+  
+  &::after {
+    content: ${props => props.completed ? '"✓"' : '""'};
+    color: white;
+    font-size: 0.8rem;
+  }
+  
+  &:hover {
+    border-color: ${theme.colors.accent};
+    transform: scale(1.1);
+  }
 `;
 
 const ModalButtonContainer = styled.div`
@@ -474,37 +494,14 @@ const Track = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
-  const [events, setEvents] = useState({});
   const [newEvent, setNewEvent] = useState({ title: '', description: '' });
   const [editEvent, setEditEvent] = useState(null);
-  const [userExp, setUserExp] = useState(0);
-
+  const { events, userExp, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const savedExp = localStorage.getItem('userExp');
-    if (savedExp) {
-      setUserExp(parseInt(savedExp, 10));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('userExp', userExp);
-  }, [userExp]);
 
   const handleTaskCompletion = (eventId, isCompleted) => {
     const dateKey = formatDate(selectedDate);
-    const updatedEvents = { ...events };
-
-    updatedEvents[dateKey] = updatedEvents[dateKey].map(event =>
-      event.id === eventId ? { ...event, completed: isCompleted } : event
-    );
-
-    if (isCompleted) {
-      setUserExp(prevExp => prevExp + 20);
-    }
-
-    setEvents(updatedEvents);
+    toggleEventCompletion(dateKey, eventId, isCompleted);
   };
 
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
@@ -558,35 +555,23 @@ const Track = () => {
   const handleAddEvent = () => {
     if (selectedDate && newEvent.title.trim()) {
       const dateKey = formatDate(selectedDate);
-      const updatedEvents = { ...events };
-      
-      if (!updatedEvents[dateKey]) {
-        updatedEvents[dateKey] = [];
-      }
-      
       if (editEvent) {
-        updatedEvents[dateKey] = updatedEvents[dateKey].map(event => 
-          event.id === editEvent.id ? { ...event, ...newEvent } : event
-        );
+        updateEvent(dateKey, editEvent.id, newEvent);
       } else {
-        updatedEvents[dateKey].push({
+        addEvent(dateKey, {
           id: Date.now(),
           title: newEvent.title,
           description: newEvent.description,
           completed: false,
         });
       }
-      
-      setEvents(updatedEvents);
       handleCloseEventModal();
     }
   };
 
   const handleDeleteEvent = (eventId) => {
     const dateKey = formatDate(selectedDate);
-    const updatedEvents = { ...events };
-    updatedEvents[dateKey] = updatedEvents[dateKey].filter(event => event.id !== eventId);
-    setEvents(updatedEvents);
+    deleteEvent(dateKey, eventId);
   };
 
   const renderCalendarDays = () => {
@@ -672,18 +657,28 @@ const Track = () => {
       <EventList>
         {dateEvents.map(event => (
           <EventItem key={event.id} onClick={() => handleOpenEventModal(event)}>
-            <div>
-              <EventCheckbox
-                type="checkbox"
-                checked={event.completed || false}
-                onChange={(e) => handleTaskCompletion(event.id, e.target.checked)}
-                onClick={(e) => e.stopPropagation()}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+              <TaskCheckbox
+                completed={event.completed || false}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTaskCompletion(event.id, !event.completed);
+                }}
               />
-              <strong>{event.title}</strong>
-              {event.description && <p>{event.description}</p>}
+              <div>
+                <strong>{event.title}</strong>
+                {event.description && <p>{event.description}</p>}
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <DeleteButton onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id); }}>Delete</DeleteButton>
+              <DeleteButton 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  handleDeleteEvent(event.id); 
+                }}
+              >
+                Delete
+              </DeleteButton>
             </div>
           </EventItem>
         ))}
@@ -699,9 +694,7 @@ const Track = () => {
         <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
         <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
         <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
-        <Rocket>
-          <RocketTrail />
-        </Rocket>
+        <Rocket><RocketTrail /></Rocket>
         <AchievementBadge />
         <ProgressCircle />
         <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />

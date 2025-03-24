@@ -2,12 +2,13 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { HabitProvider } from './context/HabitContext';
+import { EventProvider } from './context/EventContext'; // Import EventProvider
 import Dashboard from './components/Dashboard';
 import BreakthroughGame from './components/BreakthroughGame';
 import Login from './components/Login';
 import Register from './components/Register';
 import Home from './components/Home';
-import Track from './components/Track'; // Import the new Track component
+import Track from './components/Track';
 import { ThemeProvider } from 'styled-components';
 import { theme } from './theme';
 import AddictionRecoveryGame from './components/games/AddictionRecoveryGame';
@@ -20,21 +21,23 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <AuthProvider>
-        <HabitProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/spinWheel" element={<SpinWheel />} />
-            <Route path="/habitProgressTracker" element={<HabitProgressTracker />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/track" element={<Track />} />
-            <Route path="/review" element={<DashboardReview />} />
-            <Route path="/breakthrough-game" element={<BreakthroughGame />} />
-            <Route path="/addiction-recovery" element={<AddictionRecoveryGame />} />
-            <Route path="/chess" element={<Chess />} />
-          </Routes>
-        </HabitProvider>
+        <HabitProvider> {/* Add back the opening HabitProvider tag */}
+          <EventProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/spinWheel" element={<SpinWheel />} />
+              <Route path="/habitProgressTracker" element={<HabitProgressTracker />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/track" element={<Track />} />
+              <Route path="/review" element={<DashboardReview />} />
+              <Route path="/breakthrough-game" element={<BreakthroughGame />} />
+              <Route path="/addiction-recovery" element={<AddictionRecoveryGame />} />
+              <Route path="/chess" element={<Chess />} />
+            </Routes>
+          </EventProvider>
+        </HabitProvider> {/* This matches the opening tag */}
       </AuthProvider>
     </ThemeProvider>
   );
