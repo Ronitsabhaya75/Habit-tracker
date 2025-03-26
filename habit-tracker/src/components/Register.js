@@ -1,12 +1,24 @@
 import React, { useState, useContext } from 'react';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../components/firebase';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import { theme } from '../theme';
 import AuthContext from '../context/AuthContext';
 
-// Added ErrorMessage component
+// Add GlobalStyle to ensure styles are applied properly
+const GlobalStyle = createGlobalStyle`
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+  }
+`;
+
+// Error Message component
 const ErrorMessage = styled.div`
   color: #ff4d4d;
   background: rgba(255, 77, 77, 0.1);
@@ -16,7 +28,6 @@ const ErrorMessage = styled.div`
   margin-bottom: 15px;
   text-align: center;
 `;
-
 
 // **ANIMATIONS**
 const floatAnimation = keyframes`
@@ -51,15 +62,20 @@ const pulseGlow = keyframes`
 // **BACKGROUND**
 const Background = styled.div`
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   background: linear-gradient(135deg, #2b3a67 0%, #1a2233 100%);
   overflow: hidden;
+  z-index: 0;
 `;
 
 // Gradient Overlay
 const GradientOverlay = styled.div`
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   background: radial-gradient(circle at 30% 50%, rgba(114, 137, 218, 0.15) 0%, transparent 70%),
@@ -240,7 +256,7 @@ const RegisterForm = styled.form`
   border: 1px solid rgba(114, 137, 218, 0.2);
   width: 400px;
   max-width: 90%;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text || 'white'};
   box-shadow: 0 8px 32px rgba(14, 21, 47, 0.2), 
               0 0 0 1px rgba(114, 137, 218, 0.1), 
               inset 0 1px 1px rgba(255, 255, 255, 0.05);
@@ -254,9 +270,10 @@ const Input = styled.input`
   background: rgba(20, 27, 56, 0.6);
   border: 1px solid rgba(114, 137, 218, 0.3);
   border-radius: 8px;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text || 'white'};
   font-size: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
@@ -291,6 +308,13 @@ const Button = styled.button`
   &:active {
     transform: translateY(1px);
   }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
 `;
 
 const AuthTitle = styled.h2`
@@ -320,11 +344,12 @@ const AuthLink = styled(Link)`
     text-decoration: underline;
   }
 `;
+
 const HomeButton = styled(Link)`
   position: absolute;
   top: 1rem;
-  right: 8rem;
-  background: ${theme.colors.primary}; /* Use primary color from theme */
+  right: 2rem;
+  background: ${props => props.theme.colors?.primary || '#7289da'};
   color: #FFFFFF;
   border: none;
   padding: 0.5rem 1rem;
@@ -336,11 +361,10 @@ const HomeButton = styled(Link)`
   text-decoration: none;
 
   &:hover {
-    background: ${theme.colors.accent}; /* Use accent color for hover */
+    background: ${props => props.theme.colors?.accent || '#5865f2'};
     transform: translateY(-2px);
   }
 `;
-
 
 const GoogleSignInButton = styled(Button)`
   display: flex;
@@ -364,9 +388,30 @@ const GoogleSignInButton = styled(Button)`
   }
 `;
 
+// Google SVG Icon
+const GoogleIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-1 7.28-2.69l-3.57-2.77c-.99.69-2.26 1.1-3.71 1.1-2.87 0-5.3-1.94-6.16-4.54H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.67-.35-1.39-.35-2.09s.13-1.42.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.66-2.06z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.86-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+  </svg>
+);
 
 const Register = () => {
-  const { login, isAuthenticated } = useContext(AuthContext);
+  // Create a fallback theme object if theme is undefined
+  const fallbackTheme = {
+    colors: {
+      text: 'white',
+      primary: '#7289da',
+      accent: '#5865f2'
+    }
+  };
+
+  // Use either the imported theme or the fallback
+  const appTheme = theme || fallbackTheme;
+
+  const { login, isAuthenticated } = useContext(AuthContext) || { login: () => {}, isAuthenticated: false };
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -375,9 +420,12 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  if (isAuthenticated) {
-    navigate('/dashboard');
-  }
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleGoogleSignIn = async () => {
     const googleProvider = new GoogleAuthProvider();
@@ -480,19 +528,9 @@ const Register = () => {
     }
   };
 
-  // Optional: Google SVG Icon (if you want to use an inline SVG)
-  const GoogleIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-      <path d="M12 23c2.97 0 5.46-1 7.28-2.69l-3.57-2.77c-.99.69-2.26 1.1-3.71 1.1-2.87 0-5.3-1.94-6.16-4.54H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-      <path d="M5.84 14.09c-.22-.67-.35-1.39-.35-2.09s.13-1.42.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.66-2.06z" fill="#FBBC05"/>
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.86-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-    </svg>
-  );
-
   return (
     <>
-      {/* [Previous background and decoration components remain the same] */}
+      <GlobalStyle />
       <Background>
         {/* Gradient Overlay */}
         <GradientOverlay />

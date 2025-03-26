@@ -7,15 +7,16 @@ import { theme } from '../theme';
 import AuthContext from '../context/AuthContext';
 
 // Firebase Configuration
+// koine deto nai kadhi nakhje jyre upload kar tyre
 const firebaseConfig = {
-  apiKey: "get_your_own",
-  authDomain: "get_your_own",
-  projectId: "get_your_own",
-  storageBucket: "get_your_own",
+  apiKey: "get_your_own_key",
+  authDomain: "get_your_own_key",
+  projectId: "get_your_own_key",
+  storageBucket: "get_your_own_key",
   messagingSenderId: "get_your_own",
-  appId: "get_your_own",
-  measurementId: "get-your-own"
-};
+  appId: "  get_your_own",
+  measurementId: "get_your_own"
+}
 
 
 // Initialize Firebase
