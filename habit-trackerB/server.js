@@ -1,8 +1,11 @@
-const express = require('express');
-const Task = require('../models/Task');
-const { verifyToken } = require('../middleware/authMiddleware');
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import dotenv from 'dotenv';
+import connectDB from './config/db.js';
+// Load environment variables
+dotenv.config();
 
-const router = express.Router();
 
 // Get all tasks for a user
 router.get('/', verifyToken, async (req, res) => {
