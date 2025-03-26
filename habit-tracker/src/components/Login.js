@@ -14,7 +14,7 @@ const firebaseConfig = {
   storageBucket: "get_your_own",
   messagingSenderId: "get_your_own",
   appId: "get_your_own",
-  measurementId: "get_your_own"
+  measurementId: "get-your-own"
 };
 
 // Initialize Firebase
