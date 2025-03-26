@@ -7,16 +7,16 @@ import { theme } from '../theme';
 import AuthContext from '../context/AuthContext';
 
 // Firebase Configuration
+// koine deto nai kadhi nakhje jyre upload kar tyre
 const firebaseConfig = {
-  apiKey: "AIzaSyD7JasyKV8fqTNKBiY8Jv4oyEPaBkVrIP0",
-  authDomain: "habit-tracker-6ee53.firebaseapp.com",
-  projectId: "habit-tracker-6ee53",
-  storageBucket: "habit-tracker-6ee53.firebasestorage.app",
-  messagingSenderId: "104092658271",
-  appId: "1:104092658271:web:5b11f78599492587a109ea",
-  measurementId: "G-2CTB5HKS9J"
-};
-
+  apiKey: "get_your_own_key",
+  authDomain: "get_your_own_key",
+  projectId: "get_your_own_key",
+  storageBucket: "get_your_own_key",
+  messagingSenderId: "get_your_own",
+  appId: "  get_your_own",
+  measurementId: "get_your_own"
+}
 
 
 // Initialize Firebase
