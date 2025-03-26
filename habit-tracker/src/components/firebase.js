@@ -1,6 +1,5 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
+import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
     apiKey: "get_your_own",
@@ -11,12 +10,16 @@ const firebaseConfig = {
     appId: "get_your_own",
     measurementId: "get-your-own"
   };
+  
 
-// Initialize Firebase only if no apps exist
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const analytics = getAnalytics(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
-// Export authentication
-export const auth = getAuth(app);
+// Important for Netlify
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
+export { auth, googleProvider };
 export default app;
