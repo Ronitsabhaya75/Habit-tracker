@@ -182,7 +182,6 @@ const AIChat = ({ user }) => {
     const [apiError, setApiError] = useState(null);
   
     const API_KEY = 'get_your_own';
-    const API_KEY = 'get_your_own_key';
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
   
     const scrollToBottom = () => {
