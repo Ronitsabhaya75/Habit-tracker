@@ -1,4 +1,4 @@
-const User = require('../models/User');
+import User from '../models/User.js';
 
 // Get leaderboard (Top 10 users by XP)
 const getLeaderboard = async (req, res) => {
