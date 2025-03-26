@@ -1,4 +1,4 @@
-const Habit = require('../models/Habit');
+import Habit from '../models/Habit.js';
 
 // Get all habits for a user
 const getHabits = async (req, res) => {
