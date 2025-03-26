@@ -1,6 +1,7 @@
-const express = require('express');
-const { spinWheel } = require('../controllers/spinWheelController');
-const { verifyToken } = require('../middleware/authMiddleware');
+import express from 'express';
+import { spinWheel } from '../controllers/spinWheelController.js';
+import { verifyToken } from '../middleware/authMiddleware.js';
+
 
 const router = express.Router();
 
