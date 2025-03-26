@@ -9,13 +9,13 @@ import AuthContext from '../context/AuthContext';
 // Firebase Configuration
 // koine deto nai kadhi nakhje jyre upload kar tyre
 const firebaseConfig = {
-  apiKey: "AIzaSyBw8ivhbvAaAbSuHfIgUkBMXyWdXCh6zL8",
-  authDomain: "habit-tracker-758ec.firebaseapp.com",
-  projectId: "habit-tracker-758ec",
-  storageBucket: "habit-tracker-758ec.firebasestorage.app",
-  messagingSenderId: "527300725104",
-  appId: "1:527300725104:web:6828ab6eef03975c7fe7b5",
-  measurementId: "G-CLYLS1FBZR"
+  apiKey: "get_your_own_key",
+  authDomain: "get_your_own_key",
+  projectId: "get_your_own_key",
+  storageBucket: "get_your_own_key",
+  messagingSenderId: "get_your_own",
+  appId: "  get_your_own",
+  measurementId: "get_your_own"
 }
 
 
