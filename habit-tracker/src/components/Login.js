@@ -1,24 +1,28 @@
-/**
- * O Login Component
- *
- * Performance improvements:
- * - Reduced number of animated elements
- * - GPU-accelerated animations (transform, opacity)
- * - Throttled state updates
- * - Memoized render functions
- * - Simplified visual effects
- * - Reduced number of DOM elements
- * - Optimized CSS properties
- */
-
 import React, { useState, useContext, useEffect, useMemo, useCallback } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
 import styled, { keyframes, css } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import { theme } from '../theme';
 import AuthContext from '../context/AuthContext';
 
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "get_your_own",
+  authDomain: "get_your_own",
+  projectId: "get_your_own",
+  storageBucket: "get_your_own",
+  messagingSenderId: "get_your_own",
+  appId: "get_your_own",
+  measurementId: "get_your_own"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+
 // **OPTIMIZED ANIMATIONS**
-// Using transform and opacity for GPU acceleration
 const floatAnimation = keyframes`
   0% { transform: translateY(0); }
   50% { transform: translateY(-15px); }
@@ -54,17 +58,16 @@ const takeoffAnimation = keyframes`
   100% { transform: translateY(-100px); opacity: 0; }
 `;
 
-// **OPTIMIZED BACKGROUND**
+// **STYLED COMPONENTS** (same as your first code)
 const Background = styled.div`
-  position: fixed; /* Fixed instead of absolute to reduce repaints */
+  position: fixed;
   width: 100%;
   height: 100%;
   background: linear-gradient(135deg, #2b3a67 0%, #1a2233 100%);
   overflow: hidden;
-  will-change: transform; /* Hint to browser for optimization */
+  will-change: transform;
 `;
 
-// Simplified gradient overlay
 const GradientOverlay = styled.div`
   position: absolute;
   width: 100%;
@@ -73,7 +76,6 @@ const GradientOverlay = styled.div`
   z-index: 1;
 `;
 
-// Simplified mountain scenery
 const Scenery = styled.div`
   position: absolute;
   bottom: 0;
@@ -104,7 +106,6 @@ const Scenery = styled.div`
   }
 `;
 
-// Reduced number of stars with simpler styling
 const Star = styled.div`
   position: absolute;
   width: ${props => props.size || '10px'};
@@ -115,10 +116,9 @@ const Star = styled.div`
   animation: ${starTwinkle} ${props => props.duration || '3s'} infinite ease-in-out;
   animation-delay: ${props => props.delay || '0s'};
   opacity: 0.7;
-  will-change: opacity; /* Hint to browser for animation optimization */
+  will-change: opacity;
 `;
 
-// Simplified rocket
 const Rocket = styled.div`
   position: absolute;
   top: 30%;
@@ -127,7 +127,7 @@ const Rocket = styled.div`
   height: 50px;
   z-index: 3;
   animation: ${floatAnimation} 8s infinite ease-in-out;
-  will-change: transform; /* Optimization hint */
+  will-change: transform;
   
   &::before {
     content: '🚀';
@@ -141,7 +141,6 @@ const Rocket = styled.div`
   `}
 `;
 
-// **LOGIN FORM (OPTIMIZED)**
 const LoginContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -152,12 +151,11 @@ const LoginContainer = styled.div`
   z-index: 10;
 `;
 
-// Simplified login form with cleaner styling
 const LoginForm = styled.form`
   background: rgba(30, 39, 73, 0.8);
   padding: 2.5rem;
   border-radius: 16px;
-  backdrop-filter: blur(5px); /* Reduced blur amount */
+  backdrop-filter: blur(5px);
   border: 1px solid rgba(114, 137, 218, 0.2);
   width: 400px;
   max-width: 90%;
@@ -165,14 +163,13 @@ const LoginForm = styled.form`
   box-shadow: 0 10px 25px rgba(14, 21, 47, 0.3);
   text-align: center;
   transition: transform 0.3s ease;
-  will-change: transform; /* Optimization hint */
+  will-change: transform;
 
   &:hover {
     transform: translateY(-5px);
   }
 `;
 
-// Optimized input fields
 const Input = styled.input`
   width: 100%;
   padding: 0.9rem;
@@ -195,7 +192,6 @@ const Input = styled.input`
   }
 `;
 
-// Optimized button
 const Button = styled.button`
   width: 100%;
   padding: 0.9rem;
@@ -210,7 +206,7 @@ const Button = styled.button`
   margin-top: 1.5rem;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 4px 12px rgba(88, 101, 242, 0.4);
-  will-change: transform; /* Optimization hint */
+  will-change: transform;
 
   &:hover {
     transform: translateY(-2px);
@@ -222,7 +218,6 @@ const Button = styled.button`
     transform: translateY(1px);
   }
 
-  // Add loading state
   ${props => props.loading && css`
     color: transparent;
     pointer-events: none;
@@ -240,7 +235,6 @@ const Button = styled.button`
   `}
 `;
 
-// Simplified title styling
 const AuthTitle = styled.h2`
   font-size: 2.2rem;
   color: white;
@@ -291,7 +285,6 @@ const HomeButton = styled(Link)`
   }
 `;
 
-// Simplified social login components
 const SocialLoginContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -318,7 +311,6 @@ const SocialLoginButton = styled.button`
   }
 `;
 
-// Simplified divider
 const Divider = styled.div`
   display: flex;
   align-items: center;
@@ -338,7 +330,6 @@ const Divider = styled.div`
   }
 `;
 
-// Simplified forgot password
 const ForgotPassword = styled.p`
   margin-top: 1rem;
   font-size: 0.85rem;
@@ -355,7 +346,6 @@ const ForgotPassword = styled.p`
   }
 `;
 
-// Simplified avatar preview
 const AvatarPreview = styled.div`
   width: 60px;
   height: 60px;
@@ -370,7 +360,7 @@ const AvatarPreview = styled.div`
   transition: opacity 0.3s ease, transform 0.3s ease;
   opacity: ${props => props.visible ? 1 : 0};
   transform: scale(${props => props.visible ? 1 : 0.7});
-  will-change: opacity, transform; /* Optimization hint */
+  will-change: opacity, transform;
   
   span {
     font-size: 1.8rem;
@@ -378,7 +368,6 @@ const AvatarPreview = styled.div`
   }
 `;
 
-// Simplified motivational quote
 const MotivationQuote = styled.div`
   margin: 1rem 0;
   font-style: italic;
@@ -403,7 +392,6 @@ const RememberMeContainer = styled.div`
   }
 `;
 
-// Simplified progress bar
 const ProgressBar = styled.div`
   position: relative;
   width: 100%;
@@ -436,7 +424,25 @@ const ProgressText = styled.div`
   text-align: center;
 `;
 
-// Optimized Login Component
+const ErrorMessage = styled.div`
+  color: #ff4757;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  background: rgba(255, 71, 87, 0.1);
+  padding: 0.5rem;
+  border-radius: 8px;
+`;
+
+// Google Icon Component
+const GoogleIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.75h3.58c2.08-1.92 3.28-4.74 3.28-8.07z"/>
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-1 7.28-2.69l-3.58-2.75c-.99.67-2.26 1.07-3.7 1.07-2.85 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.67-.35-1.39-.35-2.09s.13-1.42.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.66-2.84z"/>
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.46 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+  </svg>
+);
+
 const Login = () => {
   const { login } = useContext(AuthContext);
   const [email, setEmail] = useState('');
@@ -448,6 +454,7 @@ const Login = () => {
   const [avatarVisible, setAvatarVisible] = useState(false);
   const [motivationQuote, setMotivationQuote] = useState('');
   const [rocketTakeoff, setRocketTakeoff] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   // Array of motivational quotes
@@ -458,71 +465,109 @@ const Login = () => {
     "Your quest continues here!"
   ];
 
-  // Show avatar when email is entered - debounced
+  // Show avatar when email is entered
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       if (email.trim().length > 0) {
         setAvatarVisible(true);
-        
-        // Set a random motivational quote
         const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
         setMotivationQuote(randomQuote);
       } else {
         setAvatarVisible(false);
         setMotivationQuote('');
       }
-    }, 300); // 300ms debounce
+    }, 300);
     
     return () => clearTimeout(debounceTimer);
   }, [email]);
 
-  // Memoized progress update function for better performance
-  const updateProgressWithMessage = useCallback((currentProgress) => {
-    setProgress(currentProgress);
-    
-    // Update progress message less frequently
-    if (currentProgress < 30) {
-      setProgressMessage('Validating credentials...');
-    } else if (currentProgress < 70) {
-      setProgressMessage('Preparing navigation...');
-    } else {
-      setProgressMessage('Almost there...');
-    }
-  }, []);
-
-  // Handle login with optimized progress updates
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (email && password) {
+  // Handle Google login
+  const handleGoogleLogin = async () => {
+    try {
       setIsLoading(true);
       setRocketTakeoff(true);
+      setError(null);
       
-      // Optimize login progress - fewer updates (250ms instead of 100ms)
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      // Simulate progress
       let currentProgress = 0;
-      const progressStep = 10; // Larger steps
       const progressInterval = setInterval(() => {
-        currentProgress += progressStep;
-        updateProgressWithMessage(currentProgress);
+        currentProgress += 10;
+        setProgress(currentProgress);
         
         if (currentProgress >= 100) {
           clearInterval(progressInterval);
-          
-          // Complete login after progress reaches 100%
           setTimeout(() => {
             login();
             navigate('/dashboard');
-          }, 300); // Reduced timeout
+          }, 300);
         }
-      }, 250); // Slower updates for better performance
+      }, 250);
+    } catch (error) {
+      setError(error.message);
+      setIsLoading(false);
+      setRocketTakeoff(false);
+      setProgress(0);
     }
   };
 
-  // Generate a reduced number of stars for better performance - memoized
+  // Handle email/password login - UPDATED TO PREVENT ENTER KEY ISSUE
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setRocketTakeoff(true);
+      setError(null);
+      
+      // Start progress
+      setProgress(10);
+      setProgressMessage('Validating credentials...');
+
+      // Perform actual login
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      // On success
+      setProgress(100);
+      setProgressMessage('Login successful!');
+      
+      setTimeout(() => {
+        login();
+        navigate('/dashboard');
+      }, 500);
+      
+    } catch (error) {
+      setIsLoading(false);
+      setRocketTakeoff(false);
+      setProgress(0);
+      
+      // Handle specific errors
+      switch(error.code) {
+        case 'auth/user-not-found':
+          setError('No account found with this email. Please register first.');
+          break;
+        case 'auth/wrong-password':
+          setError('Incorrect password. Please try again.');
+          break;
+        case 'auth/invalid-email':
+          setError('Please enter a valid email address.');
+          break;
+        default:
+          setError('Login failed. Please try again later.');
+      }
+    }
+  };
+
+  // Generate stars with memoization
   const renderStars = useMemo(() => {
     const stars = [];
-    
-    // Reduced from 15 to 8 stars
     for (let i = 0; i < 8; i++) {
       const size = `${Math.random() * 10 + 5}px`;
       const top = `${Math.random() * 100}%`;
@@ -540,50 +585,31 @@ const Login = () => {
         />
       );
     }
-    
     return stars;
-  }, []); // Empty dependency array means this is calculated once
+  }, []);
 
   return (
     <>
-      {/* Optimized Background */}
       <Background>
-        {/* Gradient Overlay */}
         <GradientOverlay />
-        
-        {/* Mountain Scenery */}
         <Scenery />
-        
-        {/* Reduced number of stars with memoization */}
         {renderStars}
-        
-        {/* Rocket with optimized animation */}
         <Rocket takeoff={rocketTakeoff} />
       </Background>
 
-      {/* Optimized Login Form */}
       <LoginContainer>
         <HomeButton to="/">Home</HomeButton>
         <LoginForm onSubmit={handleSubmit}>
           <AuthTitle>Enter The Portal</AuthTitle>
           <AuthSubtitle>Continue your cosmic journey</AuthSubtitle>
           
-          {/* Avatar Preview */}
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          
           <AvatarPreview visible={avatarVisible}>
             {avatarVisible && <span>{email.charAt(0).toUpperCase()}</span>}
           </AvatarPreview>
           
-          {/* Motivational Quote */}
           <MotivationQuote>{motivationQuote}</MotivationQuote>
-          
-          {/* Social Login Buttons */}
-          <SocialLoginContainer>
-            <SocialLoginButton bg="#4285F4" color="white" title="Login with Google">G</SocialLoginButton>
-            <SocialLoginButton bg="#3b5998" color="white" title="Login with Facebook">f</SocialLoginButton>
-            <SocialLoginButton bg="#000000" color="white" title="Login with Apple">a</SocialLoginButton>
-          </SocialLoginContainer>
-          
-          <Divider><span>or with email</span></Divider>
           
           <Input
             type="email"
@@ -591,6 +617,7 @@ const Login = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isLoading}
           />
           <Input
             type="password"
@@ -598,6 +625,7 @@ const Login = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={isLoading}
           />
           
           <ForgotPassword>
@@ -610,17 +638,34 @@ const Login = () => {
               id="rememberMe" 
               checked={rememberMe}
               onChange={() => setRememberMe(!rememberMe)}
+              disabled={isLoading}
             />
             <label htmlFor="rememberMe">Remember this device</label>
           </RememberMeContainer>
           
-          <Button type="submit" loading={isLoading}>
+          {/* Main submit button comes FIRST */}
+          <Button type="submit" loading={isLoading} disabled={isLoading}>
             {isLoading ? ' ' : 'Launch Adventure'}
           </Button>
           
-          {/* Progress Bar for Login */}
           <ProgressBar visible={isLoading} progress={progress} />
           <ProgressText>{progressMessage}</ProgressText>
+          
+          <Divider><span>or login with</span></Divider>
+          
+          {/* Social login buttons with explicit type="button" */}
+          <SocialLoginContainer>
+            <SocialLoginButton 
+              type="button"
+              bg="#4285F4" 
+              color="white" 
+              title="Login with Google"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+            >
+              <GoogleIcon />
+            </SocialLoginButton>
+          </SocialLoginContainer>
           
           <AuthLink to="/register">New explorer? Register now</AuthLink>
         </LoginForm>
@@ -630,3 +675,4 @@ const Login = () => {
 };
 
 export default Login;
+

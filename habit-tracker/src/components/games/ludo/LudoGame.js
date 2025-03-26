@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../../../theme';
 
-// Animations
 const floatAnimation = keyframes`
   0% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
@@ -96,7 +95,7 @@ const GameContainer = styled.div`
 const GameBoard = styled.div`
   width: 100%;
   aspect-ratio: 1/1;
-  background-image: url('/ludo-bg.jpg');
+  background-image: url('./ludo-bg.jpg');
   background-size: cover;
   background-position: center;
   border-radius: 16px;
@@ -229,15 +228,6 @@ const DiceFace = styled.div`
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 `;
 
-const DiceValue = styled.div`
-  font-size: 1.8rem;
-  font-weight: 700;
-  min-width: 40px;
-  text-align: center;
-  color: white;
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-`;
-
 const ActivePlayer = styled.div`
   font-size: 1.2rem;
   font-weight: 600;
@@ -272,7 +262,6 @@ const ActionButton = styled.button`
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   }
 `;
-
 const LudoGame = () => {
   const navigate = useNavigate();
   

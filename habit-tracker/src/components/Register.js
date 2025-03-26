@@ -1,8 +1,22 @@
 import React, { useState, useContext } from 'react';
-import styled, { keyframes } from 'styled-components';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '../components/firebase'; // Corrected import path
+import styled, { keyframes } from 'styled-components'; // Added keyframes import
 import { useNavigate, Link } from 'react-router-dom';
-import { theme } from '../theme';
-import AuthContext from '../context/AuthContext';
+import { theme } from '../theme'; // Adjusted import path
+import AuthContext from '../context/AuthContext'; // Adjusted import path
+
+// Added ErrorMessage component
+const ErrorMessage = styled.div`
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  text-align: center;
+`;
+
 
 // **ANIMATIONS**
 const floatAnimation = keyframes`
@@ -332,21 +346,67 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   if (isAuthenticated) {
     navigate('/dashboard');
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate inputs
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords don't match");
       return;
     }
-    if (username && email && password) {
-      login();
+    
+    if (password.length < 6) {
+      setError("Password should be at least 6 characters");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Create user with Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Update user profile with username
+      await updateProfile(userCredential.user, {
+        displayName: username
+      });
+      
+      // Update auth context
+      login(userCredential.user);
+      
+      // Redirect to dashboard
       navigate('/dashboard');
+      
+    } catch (error) {
+      setIsLoading(false);
+      
+      // Handle specific Firebase errors
+      switch(error.code) {
+        case 'auth/email-already-in-use':
+          setError('Email already in use. Try logging in instead.');
+          break;
+        case 'auth/invalid-email':
+          setError('Please enter a valid email address.');
+          break;
+        case 'auth/weak-password':
+          setError('Password should be at least 6 characters.');
+          break;
+        case 'auth/operation-not-allowed':
+          setError('Email/password accounts are not enabled.');
+          break;
+        default:
+          setError('Registration failed. Please try again.');
+          console.error('Registration error:', error);
+      }
     }
   };
 
@@ -389,12 +449,16 @@ const Register = () => {
         <RegisterForm onSubmit={handleSubmit}>
           <AuthTitle>Register</AuthTitle>
           <AuthSubtitle>Start your journey today</AuthSubtitle>
+          
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          
           <Input
             type="text"
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            disabled={isLoading}
           />
           <Input
             type="email"
@@ -402,6 +466,7 @@ const Register = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isLoading}
           />
           <Input
             type="password"
@@ -409,6 +474,7 @@ const Register = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={isLoading}
           />
           <Input
             type="password"
@@ -416,8 +482,11 @@ const Register = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
+            disabled={isLoading}
           />
-          <Button type="submit">Create Account</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? 'Creating Account...' : 'Create Account'}
+          </Button>
           <AuthLink to="/login">Already have an account? Login here</AuthLink>
         </RegisterForm>
       </RegisterContainer>
