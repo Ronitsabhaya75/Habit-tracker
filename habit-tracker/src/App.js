@@ -1,4 +1,4 @@
-  import React from 'react';
+import React from 'react';
   import { Routes, Route } from 'react-router-dom';
   import { AuthProvider } from './context/AuthContext';
   import { HabitProvider } from './context/HabitContext';
@@ -13,11 +13,10 @@
   import { theme } from './theme';
   import AddictionRecoveryGame from './components/games/AddictionRecoveryGame';
   import DashboardReview from './components/DashboardReview';
-  import SpinWheel from './components/SpinWheel';
-  import HabitProgressTracker from './components/HabitProgressTracker';
+  import HabitChallengeCenter from './components/HabitChallengeCenter';
   import Chess from './components/games/chess';
   import LudoGame from './components/games/ludo/LudoGame'; // Add this import
-  import HabitQuiz from './components/HabitQuiz';
+  import HabitQuizGame from './components/HabitQuizGame';
 
   function App() {
     return (
@@ -28,9 +27,8 @@
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/spinWheel" element={<SpinWheel />} />
-                <Route path="/habitQuiz" element={<HabitQuiz />} />
-                <Route path="/habitProgressTracker" element={<HabitProgressTracker />} />
+                <Route path="/habitQuizGame" element={<HabitQuizGame />} />
+                <Route path="/habitChallengeCenter" element={<HabitChallengeCenter />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/track" element={<Track />} />
