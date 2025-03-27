@@ -35,6 +35,8 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContai
 import { useNavigate } from 'react-router-dom';
 import { useEventContext } from '../context/EventContext';
 import AIChat from '../components/AIChat';
+import { HabitQuiz } from '../components/HabitQuiz';
+
 
 const HABIT_CATEGORIES = [
   { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
@@ -510,7 +512,7 @@ const Task = styled.li`
   gap: 0.8rem;
   padding: 0.7rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  
+
   &:last-child {
     border-bottom: none;
   }
@@ -527,13 +529,13 @@ const TaskCheckbox = styled.div`
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &::after {
     content: ${props => props.completed ? '"✓"' : '""'};
     color: white;
     font-size: 0.8rem;
   }
-  
+
   &:hover {
     border-color: ${theme.colors.accent};
     transform: scale(1.1);
@@ -607,13 +609,13 @@ const Dashboard = () => {
   // Calculate total XP from progress and completed tasks
   const calculateTotalXP = useCallback(() => {
     const progressXP = Object.values(progress).reduce((sum, p) => sum + p, 0);
-    
+
     // Add XP from completed tasks
     let tasksXP = 0;
     const todayKey = new Date().toISOString().split('T')[0];
     const todayTasks = events[todayKey] || [];
     tasksXP = todayTasks.filter(task => task.completed).length * 10; // 10 XP per completed task
-    
+
     return progressXP + tasksXP;
   }, [progress, events]);
 
@@ -779,10 +781,10 @@ const Dashboard = () => {
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && newHabit.trim()) {
       const todayKey = new Date().toISOString().split('T')[0];
-      addEvent(todayKey, { 
-        id: Date.now(), 
-        title: newHabit.trim(), 
-        completed: false 
+      addEvent(todayKey, {
+        id: Date.now(),
+        title: newHabit.trim(),
+        completed: false
       });
       setNewHabit('');
       setShowInput(false);
@@ -791,10 +793,10 @@ const Dashboard = () => {
 
   const handleTaskCompletion = async (taskId, completed) => {
     const todayKey = new Date().toISOString().split('T')[0];
-    
+
     // Toggle task completion
     await toggleEventCompletion(todayKey, taskId, completed);
-    
+
     // Add XP when task is completed
     if (completed) {
       // Update progress with 10 XP for each completed task
@@ -878,6 +880,7 @@ const Dashboard = () => {
         <NavList>
           <NavItem className="active">Dashboard</NavItem>
           <NavItem onClick={() => navigate('/spinWheel')}>SpinWheel</NavItem>
+          <NavItem onClick={() => navigate('/habitQuiz')}>HabitQuiz</NavItem>
           <NavItem onClick={() => navigate('/habitProgressTracker')}>HabitProgressTracker</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>Games</NavItem>
           <NavItem onClick={() => navigate('/track')}>Events</NavItem>
