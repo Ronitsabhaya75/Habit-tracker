@@ -35,7 +35,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContai
 import { useNavigate } from 'react-router-dom';
 import { useEventContext } from '../context/EventContext';
 import AIChat from '../components/AIChat';
-import { HabitQuiz } from '../components/HabitQuiz';
+import { HabitQuizGame } from './HabitQuizGame';
 
 
 const HABIT_CATEGORIES = [
@@ -879,9 +879,8 @@ const Dashboard = () => {
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem className="active">Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/spinWheel')}>SpinWheel</NavItem>
-          <NavItem onClick={() => navigate('/habitQuiz')}>HabitQuiz</NavItem>
-          <NavItem onClick={() => navigate('/habitProgressTracker')}>HabitProgressTracker</NavItem>
+          <NavItem onClick={() => navigate('/habitQuizGame')}>HabitQuizGame</NavItem>
+          <NavItem onClick={() => navigate('/habitChallengeCenter')}>HabitChallengeCenter</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>Games</NavItem>
           <NavItem onClick={() => navigate('/track')}>Events</NavItem>
           <NavItem onClick={() => navigate('/review')}>Review</NavItem>
