@@ -1,12 +1,14 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '../components/firebase';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth } from './firebase';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import { theme } from '../theme';
 import AuthContext from '../context/AuthContext';
 
-// Add GlobalStyle to ensure styles are applied properly
+const db = getFirestore();
+
 const GlobalStyle = createGlobalStyle`
   body {
     margin: 0;
@@ -18,7 +20,6 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-// Error Message component
 const ErrorMessage = styled.div`
   color: #ff4d4d;
   background: rgba(255, 77, 77, 0.1);
@@ -29,7 +30,7 @@ const ErrorMessage = styled.div`
   text-align: center;
 `;
 
-// **ANIMATIONS**
+// Animation keyframes
 const floatAnimation = keyframes`
   0% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-15px) rotate(2deg); }
@@ -59,7 +60,7 @@ const pulseGlow = keyframes`
   100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
 `;
 
-// **BACKGROUND**
+// Background components
 const Background = styled.div`
   position: absolute;
   top: 0;
@@ -71,7 +72,6 @@ const Background = styled.div`
   z-index: 0;
 `;
 
-// Gradient Overlay
 const GradientOverlay = styled.div`
   position: absolute;
   top: 0;
@@ -83,7 +83,6 @@ const GradientOverlay = styled.div`
   z-index: 1;
 `;
 
-// Scenery
 const Scenery = styled.div`
   position: absolute;
   bottom: 0;
@@ -116,7 +115,6 @@ const Scenery = styled.div`
   }
 `;
 
-// Stars
 const Star = styled.div`
   position: absolute;
   width: ${props => props.size || '30px'};
@@ -139,7 +137,6 @@ const Star = styled.div`
   }
 `;
 
-// Achievement Badge
 const AchievementBadge = styled.div`
   position: absolute;
   width: 60px;
@@ -163,7 +160,6 @@ const AchievementBadge = styled.div`
   }
 `;
 
-// Rocket
 const Rocket = styled.div`
   position: absolute;
   top: 30%;
@@ -182,7 +178,6 @@ const Rocket = styled.div`
   }
 `;
 
-// Rocket Trail
 const RocketTrail = styled.div`
   position: absolute;
   top: 50%;
@@ -198,7 +193,6 @@ const RocketTrail = styled.div`
   animation: ${trailAnimation} 2s infinite;
 `;
 
-// Progress Circle
 const ProgressCircle = styled.div`
   position: absolute;
   bottom: 20%;
@@ -224,7 +218,6 @@ const ProgressCircle = styled.div`
   }
 `;
 
-// XP Orb
 const XPOrb = styled.div`
   position: absolute;
   width: 15px;
@@ -237,7 +230,7 @@ const XPOrb = styled.div`
   z-index: 2;
 `;
 
-// **REGISTER FORM**
+// Form components
 const RegisterContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -366,6 +359,30 @@ const HomeButton = styled(Link)`
   }
 `;
 
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+`;
+
+const ModalContent = styled.div`
+  background: rgba(30, 39, 73, 0.9);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(114, 137, 218, 0.2);
+  width: 350px;
+  max-width: 90%;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(14, 21, 47, 0.3);
+`;
+
 const GoogleSignInButton = styled(Button)`
   display: flex;
   align-items: center;
@@ -388,7 +405,6 @@ const GoogleSignInButton = styled(Button)`
   }
 `;
 
-// Google SVG Icon
 const GoogleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -399,16 +415,7 @@ const GoogleIcon = () => (
 );
 
 const Register = () => {
-  // Create a fallback theme object if theme is undefined
-  const fallbackTheme = {
-    colors: {
-      text: 'white',
-      primary: '#7289da',
-      accent: '#5865f2'
-    }
-  };
-
-  // Use either the imported theme or the fallback
+  const fallbackTheme = { colors: { text: 'white', primary: '#7289da', accent: '#5865f2' } };
   const appTheme = theme || fallbackTheme;
 
   const { login, isAuthenticated } = useContext(AuthContext) || { login: () => {}, isAuthenticated: false };
@@ -418,10 +425,12 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [googleUsername, setGoogleUsername] = useState('');
+  const [googleUser, setGoogleUser] = useState(null);
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
     }
@@ -429,33 +438,53 @@ const Register = () => {
 
   const handleGoogleSignIn = async () => {
     const googleProvider = new GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
     
     try {
       setIsLoading(true);
       setError(null);
-      
-      // Sign in with Google popup
+
+      // Check network connectivity
+      if (!navigator.onLine) {
+        throw new Error('You appear to be offline. Please check your connection and try again.');
+      }
+
       const userCredential = await signInWithPopup(auth, googleProvider);
       const user = userCredential.user;
-      
-      // If the user doesn't have a display name, set a default username
-      if (!user.displayName) {
-        await updateProfile(user, {
-          displayName: user.email.split('@')[0]
-        });
+
+      try {
+        // Check if user exists in Firestore
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+          // New Google user - show username modal
+          setGoogleUser(user);
+          setShowUsernameModal(true);
+        } else {
+          // Existing user - log them in
+          const userData = userDoc.data();
+          login({ 
+            ...user, 
+            name: userData.username || user.displayName 
+          });
+          navigate('/dashboard');
+        }
+      } catch (dbError) {
+        console.error('Database error:', dbError);
+        if (dbError.code === 'unavailable') {
+          // Firestore is offline - proceed with basic login
+          login(user);
+          navigate('/dashboard');
+        } else {
+          throw dbError;
+        }
       }
-      
-      // Update auth context
-      login(user);
-      
-      // Redirect to dashboard
-      navigate('/dashboard');
-      
     } catch (error) {
+      console.error('Google Sign-In error:', error);
       setIsLoading(false);
       
-      // Handle specific Google Sign-In errors
-      switch(error.code) {
+      switch (error.code) {
         case 'auth/account-exists-with-different-credential':
           setError('An account already exists with a different sign-in method.');
           break;
@@ -465,24 +494,23 @@ const Register = () => {
         case 'auth/popup-closed-by-user':
           setError('Sign-in popup was closed before completion.');
           break;
+        case 'unavailable':
+        case 'failed-precondition':
+          setError('Network error. Please check your internet connection and try again.');
+          break;
         default:
-          setError('Google Sign-In failed. Please try again.');
-          console.error('Google Sign-In error:', error);
+          setError(error.message || 'Google Sign-In failed. Please try again.');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleGoogleUsernameSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate inputs
-    if (password !== confirmPassword) {
-      setError("Passwords don't match");
-      return;
-    }
-    
-    if (password.length < 6) {
-      setError("Password should be at least 6 characters");
+    if (!googleUsername.trim()) {
+      setError('Please enter a username');
       return;
     }
 
@@ -490,25 +518,89 @@ const Register = () => {
       setIsLoading(true);
       setError(null);
       
-      // Create user with Firebase
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Update user profile with username
-      await updateProfile(userCredential.user, {
-        displayName: username
+      if (!googleUser) {
+        throw new Error('No authenticated user found');
+      }
+
+      // Update user profile with the chosen username
+      await updateProfile(googleUser, { 
+        displayName: googleUsername.trim() 
+      });
+
+      try {
+        // Try to create user document in Firestore
+        await setDoc(doc(db, 'users', googleUser.uid), {
+          username: googleUsername.trim(),
+          email: googleUser.email,
+          createdAt: new Date().toISOString(),
+          provider: 'google'
+        });
+      } catch (dbError) {
+        console.error('Failed to save user data:', dbError);
+        // Continue even if we couldn't save to Firestore
+      }
+
+      // Log the user in
+      login({ 
+        ...googleUser, 
+        name: googleUsername.trim() 
       });
       
-      // Update auth context
-      login(userCredential.user);
-      
-      // Redirect to dashboard
       navigate('/dashboard');
-      
+    } catch (error) {
+      console.error('Username submission error:', error);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEmailRegister = async (e) => {
+    e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      setError("Passwords don't match");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password should be at least 6 characters");
+      return;
+    }
+    if (!username.trim()) {
+      setError("Please enter a username");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Update user profile with username
+      await updateProfile(user, { 
+        displayName: username.trim() 
+      });
+
+      try {
+        // Create user document in Firestore
+        await setDoc(doc(db, 'users', user.uid), {
+          username: username.trim(),
+          email: user.email,
+          createdAt: new Date().toISOString(),
+          provider: 'email'
+        });
+      } catch (dbError) {
+        console.error('Failed to save user data:', dbError);
+        // Continue even if we couldn't save to Firestore
+      }
+
+      login({ ...user, name: username.trim() });
+      navigate('/dashboard');
     } catch (error) {
       setIsLoading(false);
-      
-      // Handle specific Firebase errors
-      switch(error.code) {
+      switch (error.code) {
         case 'auth/email-already-in-use':
           setError('Email already in use. Try logging in instead.');
           break;
@@ -518,12 +610,8 @@ const Register = () => {
         case 'auth/weak-password':
           setError('Password should be at least 6 characters.');
           break;
-        case 'auth/operation-not-allowed':
-          setError('Email/password accounts are not enabled.');
-          break;
         default:
           setError('Registration failed. Please try again.');
-          console.error('Registration error:', error);
       }
     }
   };
@@ -532,29 +620,14 @@ const Register = () => {
     <>
       <GlobalStyle />
       <Background>
-        {/* Gradient Overlay */}
         <GradientOverlay />
-        
-        {/* Mountain Scenery */}
         <Scenery />
-        
-        {/* Stars */}
         <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
         <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
         <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
-        
-        {/* Rocket with animation */}
-        <Rocket>
-          <RocketTrail />
-        </Rocket>
-        
-        {/* Achievement Badge */}
+        <Rocket><RocketTrail /></Rocket>
         <AchievementBadge />
-        
-        {/* Progress Circle */}
         <ProgressCircle />
-        
-        {/* XP Orbs */}
         <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
         <XPOrb style={{ top: '30%', right: '25%' }} duration="5s" delay="1.2s" />
         <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
@@ -563,12 +636,12 @@ const Register = () => {
 
       <RegisterContainer>
         <HomeButton to="/">Home</HomeButton>
-        <RegisterForm onSubmit={handleSubmit}>
+        <RegisterForm onSubmit={handleEmailRegister}>
           <AuthTitle>Register</AuthTitle>
           <AuthSubtitle>Start your journey today</AuthSubtitle>
-          
+
           {error && <ErrorMessage>{error}</ErrorMessage>}
-          
+
           <Input
             type="text"
             placeholder="Username"
@@ -605,18 +678,35 @@ const Register = () => {
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </Button>
           
-          {/* Google Sign-In Button */}
-          <GoogleSignInButton 
-            type="button" 
-            onClick={handleGoogleSignIn} 
-            disabled={isLoading}
-          >
+          <GoogleSignInButton type="button" onClick={handleGoogleSignIn} disabled={isLoading}>
             <GoogleIcon />
             Continue with Google
           </GoogleSignInButton>
-          
+
           <AuthLink to="/login">Already have an account? Login here</AuthLink>
         </RegisterForm>
+
+        {showUsernameModal && (
+          <ModalOverlay>
+            <ModalContent as="form" onSubmit={handleGoogleUsernameSubmit}>
+              <AuthTitle>Choose a Username</AuthTitle>
+              <AuthSubtitle>This will be your display name</AuthSubtitle>
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+              <Input
+                type="text"
+                placeholder="Enter username"
+                value={googleUsername}
+                onChange={(e) => setGoogleUsername(e.target.value)}
+                required
+                disabled={isLoading}
+                autoFocus
+              />
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? 'Saving...' : 'Continue'}
+              </Button>
+            </ModalContent>
+          </ModalOverlay>
+        )}
       </RegisterContainer>
     </>
   );

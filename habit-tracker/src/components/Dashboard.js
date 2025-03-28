@@ -7,6 +7,26 @@ import { useEventContext } from '../context/EventContext';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from '../components/AIChat';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from './firebase';
+
+
+const POINTS_CONFIG = {
+  TASK_COMPLETION: 10,       // Points for completing a task
+  DAILY_STREAK: 5,           // Bonus points for maintaining a streak
+  GAME_COMPLETION: 20,       // Points for completing a game
+  HABIT_COMPLETION: 15,      // Points for completing a habit
+  LEVEL_UP_BONUS: 50,        // Bonus points when leveling up
+};
+
+// Mock data function for development
+const fakeFetchUserData = async () => {
+  const days = 7;
+  return Array.from({ length: days }, (_, i) => ({
+    date: new Date(Date.now() - (days - i - 1) * 24 * 60 * 60 * 1000).toISOString(),
+    progress: 0 // Start with zero progress
+  }));
+};
 
 const HABIT_CATEGORIES = [
   { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
@@ -617,10 +637,8 @@ const Dashboard = () => {
   const { events, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
 
   const [chartData, setChartData] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [newHabit, setNewHabit] = useState('');
   const [showInput, setShowInput] = useState(false);
-  const [leaderboard, setLeaderboard] = useState([]);
   const [chartType, setChartType] = useState('line');
   const [streak, setLocalStreak] = useState(0);
   const inputRef = useRef(null);
@@ -629,7 +647,10 @@ const Dashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [timeAllocation, setTimeAllocation] = useState('');
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
   const sortedLeaderboard = [...leaderboard].sort((a, b) => b.xp - a.xp);
+
   const addNotification = useCallback((message, actions = []) => {
     const newNotification = {
       id: Date.now(),
@@ -756,7 +777,8 @@ const Dashboard = () => {
       setLoading(true);
       const userProgress = await fakeFetchUserData();
       setChartData(
-        userProgress.map((item, index) => ({
+        userProgress.map((item) => ({
+          day: new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' }),
           progress: getCategoryProgress(item.date) || item.progress,
         }))
       );
@@ -769,55 +791,36 @@ const Dashboard = () => {
 
   const fetchLeaderboard = useCallback(async () => {
     try {
-      const leaderboardData = await fakeFetchLeaderboardData();
+      setLoading(true);
+      const leaderboardQuery = query(
+        collection(db, 'users'), 
+        orderBy('totalXP', 'desc'), 
+        limit(10)
+      );
+  
+      const querySnapshot = await getDocs(leaderboardQuery);
+      
+      const leaderboardData = querySnapshot.docs
+        .filter(doc => doc.data().totalXP > 0)  // Only show users with XP
+        .map((doc, index) => ({
+          rank: index + 1,
+          name: doc.data().displayName || doc.data().email,
+          xp: doc.data().totalXP || 0,
+          userId: doc.id
+        }));
+  
       setLeaderboard(leaderboardData);
     } catch (error) {
-      console.error('Error fetching leaderboard data:', error);
+      console.error('Error fetching leaderboard:', error);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchLeaderboard();
     fetchUserProgress();
-    const streakValue = getStreak();
-    setLocalStreak(streakValue);
-    setStreak(streakValue);
-  }, [fetchLeaderboard, fetchUserProgress, getStreak, setStreak]);
-
-  useEffect(() => {
-    if (user && !leaderboard.some((entry) => entry.name === user.name)) {
-      setLeaderboard((prev) => [...prev, { name: user.name, xp: totalXP }]);
-    }
-  }, [user, totalXP, leaderboard]);
-
-  useEffect(() => {
-    if (showInput && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [showInput]);
-
-  const fakeFetchUserData = async () => {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 6);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(
-          Array.from({ length: 7 }, (_, i) => ({
-            date: new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            progress: Math.floor(Math.random() * 10),
-          }))
-        );
-      }, 1000);
-    });
-  };
-
-  const fakeFetchLeaderboardData = async () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([]);
-      }, 1000);
-    });
-  };
+  }, [fetchLeaderboard, fetchUserProgress]);
 
   const addHabit = () => setShowInput(true);
 
@@ -935,7 +938,7 @@ const Dashboard = () => {
       <MainContent>
         <Header>
           <UserGreeting>
-            <h1>Welcome{user?.name ? `, ${user.name}` : ''}! 👋</h1>
+            <h1>Welcome 👋</h1>
             <LevelBadge>Level {currentLevel} - {totalXP} XP</LevelBadge>
           </UserGreeting>
           <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
@@ -956,14 +959,20 @@ const Dashboard = () => {
 
           <Card>
             <h2>Leaderboard</h2>
-            <LeaderboardList>
-              {sortedLeaderboard.map((player, index) => (
-                <LeaderboardItem key={player.name}>
-                  <div><UserRank>#{index + 1}</UserRank> {player.name}</div>
-                  <UserScore>{player.xp} XP</UserScore>
-                </LeaderboardItem>
-              ))}
-            </LeaderboardList>
+            {loading ? (
+              <p>Loading leaderboard...</p>
+            ) : (
+              <LeaderboardList>
+                {leaderboard.map((player) => (
+                  <LeaderboardItem key={player.userId}>
+                    <div>
+                      <UserRank>#{player.rank}</UserRank> {player.name}
+                    </div>
+                    <UserScore>{player.xp} XP</UserScore>
+                  </LeaderboardItem>
+                ))}
+              </LeaderboardList>
+            )}
           </Card>
 
           <Card>
