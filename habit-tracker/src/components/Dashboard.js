@@ -1,39 +1,11 @@
-/**
- * Dashboard Component
- *
- * This file implements the Dashboard component for the application.
- * It provides an interactive dashboard that includes:
- * - A sidebar with navigation options.
- * - A header displaying user information.
- * - Various cards that display key metrics:
- *    • A progress overview using a responsive chart (Line, Bar) showing all available data.
- *    • A leaderboard ranking users based on performance.
- *    • A section for achievements and milestones.
- *    • A task list for managing activities.
- *    • A streak counter for tracking consistency.
- *    • Habit category progress with stages.
- *
- * The component utilizes React hooks (useState, useEffect, useRef) for state management
- * and side effects. It employs styled-components for CSS-in-JS styling and 
- * integrates with Recharts for data visualization.
- *
- * It also interacts with authentication context (useAuth) and habit context (useHabit) 
- * to fetch the current user's details and habit progress.
- *
- * 🔍 Simulated asynchronous functions (e.g., fetchUserData, fetchLeaderboardData) 
- * are used to mimic API requests.
- *
- * The code follows a modular structure, ensuring readability and maintainability.
- */
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { useHabit } from '../context/HabitContext';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { useNavigate } from 'react-router-dom';
 import { useEventContext } from '../context/EventContext';
+import { useNavigate } from 'react-router-dom';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from '../components/AIChat';
 import { HabitQuiz } from '../components/HabitQuiz';
 
@@ -51,6 +23,7 @@ const HABIT_CATEGORIES = [
   ]},
 ];
 
+// Animation keyframes
 const floatAnimation = keyframes`
   0% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-15px) rotate(2deg); }
@@ -80,6 +53,7 @@ const pulseGlow = keyframes`
   100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
 `;
 
+// Styled components (keeping all styling as is)
 const Background = styled.div`
   position: absolute;
   width: 100%;
@@ -547,7 +521,6 @@ const TaskText = styled.span`
   color: ${props => props.completed ? 'rgba(255, 255, 255, 0.5)' : '#ffffff'};
   text-decoration: ${props => props.completed ? 'line-through' : 'none'};
 `;
-;
 
 const CoachCard = styled(Card)`
   background: rgba(30, 39, 73, 0.9);
@@ -588,40 +561,154 @@ const SuggestionIcon = styled.span`
   color: ${theme.colors.accent};
 `;
 
+const NotificationContainer = styled.div`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+`;
+
+const NotificationCard = styled.div`
+  background: ${theme.colors.glassWhite};
+  border: 1px solid ${theme.colors.accent};
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
+const NotificationMessage = styled.span`
+  flex-grow: 1;
+  margin-right: 1rem;
+`;
+
+const NotificationActions = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const TimeAllocationModal = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: ${theme.colors.glassWhite};
+  border: 1px solid ${theme.colors.accent};
+  border-radius: 16px;
+  padding: 2rem;
+  z-index: 200;
+  width: 400px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+`;
+
+const TimeInput = styled.input`
+  width: 100%;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border: 1px solid ${theme.colors.borderWhite};
+  border-radius: 8px;
+`;
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { progress, getStreak, getCategoryProgress, setStreak, updateProgress } = useHabit();
   const { events, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
 
-  // State declarations moved to the top
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newHabit, setNewHabit] = useState('');
   const [showInput, setShowInput] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [chartType, setChartType] = useState('line');
-  const [streak, setLocalStreak] = useState(0); // Moved up
+  const [streak, setLocalStreak] = useState(0);
   const inputRef = useRef(null);
   const [showAllAchievements, setShowAllAchievements] = useState(false);
-  const [coachSuggestions, setCoachSuggestions] = useState([]); // Moved down
+  const [coachSuggestions, setCoachSuggestions] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [timeAllocation, setTimeAllocation] = useState('');
 
-  // Calculate total XP from progress and completed tasks
+  const addNotification = useCallback((message, actions = []) => {
+    const newNotification = {
+      id: Date.now(),
+      message,
+      actions
+    };
+    setNotifications(prev => [...prev, newNotification]);
+
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== newNotification.id));
+    }, 5000);
+  }, []);
+
+  const handleTaskCompletion = async (taskId, completed) => {
+    const todayKey = new Date().toISOString().split('T')[0];
+
+    await toggleEventCompletion(todayKey, taskId, completed);
+
+    if (completed) {
+      await updateProgress('tasks', 10);
+      addNotification(`Great job! You completed the task "${events[todayKey].find(t => t.id === taskId)?.title}".`, [
+        { 
+          label: 'Track Progress', 
+          onClick: () => navigate('/review') 
+        }
+      ]);
+    }
+  };
+
+  const openTimeAllocationModal = (task) => {
+    setSelectedTask(task);
+  };
+
+  const saveTimeAllocation = () => {
+    if (!selectedTask || !timeAllocation) return;
+
+    const todayKey = new Date().toISOString().split('T')[0];
+    const updatedTask = {
+      ...selectedTask,
+      estimatedTime: parseInt(timeAllocation, 10)
+    };
+
+    updateEvent(todayKey, selectedTask.id, updatedTask);
+    addNotification(`Time allocated for "${selectedTask.title}": ${timeAllocation} minutes`);
+    setSelectedTask(null);
+    setTimeAllocation('');
+  };
+
+  useEffect(() => {
+    const todayKey = new Date().toISOString().split('T')[0];
+    const todayTasks = events[todayKey] || [];
+    const incompleteTasks = todayTasks.filter(task => !task.completed);
+
+    if (incompleteTasks.length > 0) {
+      addNotification(`You have ${incompleteTasks.length} tasks pending today!`, [
+        { 
+          label: 'View Tasks', 
+          onClick: () => window.scrollTo({ 
+            top: document.body.scrollHeight, 
+            behavior: 'smooth' 
+          }) 
+        }
+      ]);
+    }
+  }, [events, addNotification]);
+
   const calculateTotalXP = useCallback(() => {
     const progressXP = Object.values(progress).reduce((sum, p) => sum + p, 0);
-
-    // Add XP from completed tasks
     let tasksXP = 0;
     const todayKey = new Date().toISOString().split('T')[0];
     const todayTasks = events[todayKey] || [];
-    tasksXP = todayTasks.filter(task => task.completed).length * 10; // 10 XP per completed task
-
+    tasksXP = todayTasks.filter(task => task.completed).length * 10;
     return progressXP + tasksXP;
   }, [progress, events]);
 
   const [totalXP, setTotalXP] = useState(calculateTotalXP());
 
-  // Update total XP whenever progress or tasks change
   useEffect(() => {
     setTotalXP(calculateTotalXP());
   }, [calculateTotalXP]);
@@ -637,7 +724,6 @@ const Dashboard = () => {
     { id: 4, title: 'Task Champion', description: 'Completed 5 tasks in a day', earned: false },
   ];
 
-  // Now that streak is defined, we can use it in generateCoachSuggestions
   const generateCoachSuggestions = useCallback(() => {
     const suggestions = [];
     const todayKey = new Date().toISOString().split('T')[0];
@@ -645,60 +731,30 @@ const Dashboard = () => {
     const completedTasks = todayTasks.filter(task => task.completed).length;
     const totalTasks = todayTasks.length;
 
-    // Suggestion based on streak
     if (streak >= 7) {
-      suggestions.push({
-        text: "Amazing job maintaining a 7+ day streak! Try adding a new challenging habit to level up.",
-        icon: "🌟"
-      });
+      suggestions.push({ text: "Amazing job maintaining a 7+ day streak! Try adding a new challenging habit to level up.", icon: "🌟" });
     } else if (streak < 3 && streak > 0) {
-      suggestions.push({
-        text: "You're building a streak! Keep it up for 3 more days to solidify this habit.",
-        icon: "🔥"
-      });
+      suggestions.push({ text: "You're building a streak! Keep it up for 3 more days to solidify this habit.", icon: "🔥" });
     } else if (streak === 0) {
-      suggestions.push({
-        text: "Start small today with one easy task to kick off your streak!",
-        icon: "🚀"
-      });
+      suggestions.push({ text: "Start small today with one easy task to kick off your streak!", icon: "🚀" });
     }
 
-    // Suggestion based on task completion
     if (totalTasks > 0 && completedTasks / totalTasks < 0.5) {
-      suggestions.push({
-        text: "Try breaking your tasks into smaller steps to boost completion rates.",
-        icon: "📝"
-      });
+      suggestions.push({ text: "Try breaking your tasks into smaller steps to boost completion rates.", icon: "📝" });
     } else if (completedTasks === totalTasks && totalTasks > 0) {
-      suggestions.push({
-        text: "Perfect day! Consider adding a bonus task to stretch your potential.",
-        icon: "🏆"
-      });
+      suggestions.push({ text: "Perfect day! Consider adding a bonus task to stretch your potential.", icon: "🏆" });
     }
 
-    // Suggestion based on total XP
     if (totalXP >= 100 && totalXP < 200) {
-      suggestions.push({
-        text: "You're making great progress! Focus on consistency to hit 200 XP soon.",
-        icon: "📈"
-      });
+      suggestions.push({ text: "You're making great progress! Focus on consistency to hit 200 XP soon.", icon: "📈" });
     } else if (totalXP < 50) {
-      suggestions.push({
-        text: "Every step counts! Complete a task now to earn 10 XP and get rolling.",
-        icon: "✨"
-      });
+      suggestions.push({ text: "Every step counts! Complete a task now to earn 10 XP and get rolling.", icon: "✨" });
     }
 
-    // General optimization tip
-    suggestions.push({
-      text: "Review your habits weekly to adjust goals and stay motivated!",
-      icon: "🗓️"
-    });
-
+    suggestions.push({ text: "Review your habits weekly to adjust goals and stay motivated!", icon: "🗓️" });
     setCoachSuggestions(suggestions);
   }, [streak, events, totalXP]);
 
-  // Update suggestions when relevant data changes
   useEffect(() => {
     generateCoachSuggestions();
   }, [generateCoachSuggestions]);
@@ -791,19 +847,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleTaskCompletion = async (taskId, completed) => {
-    const todayKey = new Date().toISOString().split('T')[0];
-
-    // Toggle task completion
-    await toggleEventCompletion(todayKey, taskId, completed);
-
-    // Add XP when task is completed
-    if (completed) {
-      // Update progress with 10 XP for each completed task
-      await updateProgress('tasks', 10); // 'tasks' can be a category or you can use another key
-    }
-  };
-
   const toggleEdit = (taskId) => {
     const todayKey = new Date().toISOString().split('T')[0];
     const task = events[todayKey]?.find(t => t.id === taskId);
@@ -875,6 +918,21 @@ const Dashboard = () => {
         <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
       </Background>
 
+      <NotificationContainer>
+        {notifications.map(notification => (
+          <NotificationCard key={notification.id}>
+            <NotificationMessage>{notification.message}</NotificationMessage>
+            <NotificationActions>
+              {notification.actions.map((action, index) => (
+                <Button key={index} onClick={action.onClick}>
+                  {action.label}
+                </Button>
+              ))}
+            </NotificationActions>
+          </NotificationCard>
+        ))}
+      </NotificationContainer>
+
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
@@ -921,6 +979,7 @@ const Dashboard = () => {
               ))}
             </LeaderboardList>
           </Card>
+
           <Card>
             <h2>Achievements</h2>
             <AchievementList>
@@ -937,6 +996,22 @@ const Dashboard = () => {
               {showAllAchievements ? "Collapse" : "View All Achievements"}
             </Button>
           </Card>
+
+          {selectedTask && (
+            <TimeAllocationModal>
+              <h3>Allocate Time for "{selectedTask.title}"</h3>
+              <TimeInput 
+                type="number" 
+                placeholder="Estimated time in minutes" 
+                value={timeAllocation}
+                onChange={(e) => setTimeAllocation(e.target.value)}
+              />
+              <Button onClick={saveTimeAllocation}>Save Time</Button>
+              <Button onClick={() => setSelectedTask(null)} style={{ marginLeft: '0.5rem', background: theme.colors.secondary }}>
+                Cancel
+              </Button>
+            </TimeAllocationModal>
+          )}
 
           <Card>
             <h2>Today's Tasks</h2>
