@@ -7,8 +7,6 @@ import { useEventContext } from '../context/EventContext';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from '../components/AIChat';
-import { HabitQuiz } from '../components/HabitQuiz';
-
 
 const HABIT_CATEGORIES = [
   { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
@@ -631,32 +629,28 @@ const Dashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [timeAllocation, setTimeAllocation] = useState('');
-
+  const sortedLeaderboard = [...leaderboard].sort((a, b) => b.xp - a.xp);
   const addNotification = useCallback((message, actions = []) => {
     const newNotification = {
       id: Date.now(),
       message,
-      actions
+      actions,
     };
-    setNotifications(prev => [...prev, newNotification]);
+    setNotifications((prev) => [...prev, newNotification]);
 
     setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== newNotification.id));
+      setNotifications((prev) => prev.filter((n) => n.id !== newNotification.id));
     }, 5000);
   }, []);
 
   const handleTaskCompletion = async (taskId, completed) => {
     const todayKey = new Date().toISOString().split('T')[0];
-
     await toggleEventCompletion(todayKey, taskId, completed);
 
     if (completed) {
       await updateProgress('tasks', 10);
-      addNotification(`Great job! You completed the task "${events[todayKey].find(t => t.id === taskId)?.title}".`, [
-        { 
-          label: 'Track Progress', 
-          onClick: () => navigate('/review') 
-        }
+      addNotification(`Great job! You completed the task "${events[todayKey].find((t) => t.id === taskId)?.title}".`, [
+        { label: 'Track Progress', onClick: () => navigate('/review') },
       ]);
     }
   };
@@ -671,7 +665,7 @@ const Dashboard = () => {
     const todayKey = new Date().toISOString().split('T')[0];
     const updatedTask = {
       ...selectedTask,
-      estimatedTime: parseInt(timeAllocation, 10)
+      estimatedTime: parseInt(timeAllocation, 10),
     };
 
     updateEvent(todayKey, selectedTask.id, updatedTask);
@@ -683,27 +677,20 @@ const Dashboard = () => {
   useEffect(() => {
     const todayKey = new Date().toISOString().split('T')[0];
     const todayTasks = events[todayKey] || [];
-    const incompleteTasks = todayTasks.filter(task => !task.completed);
+    const incompleteTasks = todayTasks.filter((task) => !task.completed);
 
     if (incompleteTasks.length > 0) {
       addNotification(`You have ${incompleteTasks.length} tasks pending today!`, [
-        { 
-          label: 'View Tasks', 
-          onClick: () => window.scrollTo({ 
-            top: document.body.scrollHeight, 
-            behavior: 'smooth' 
-          }) 
-        }
+        { label: 'View Tasks', onClick: () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }) },
       ]);
     }
   }, [events, addNotification]);
 
   const calculateTotalXP = useCallback(() => {
     const progressXP = Object.values(progress).reduce((sum, p) => sum + p, 0);
-    let tasksXP = 0;
     const todayKey = new Date().toISOString().split('T')[0];
     const todayTasks = events[todayKey] || [];
-    tasksXP = todayTasks.filter(task => task.completed).length * 10;
+    const tasksXP = todayTasks.filter((task) => task.completed).length * 10;
     return progressXP + tasksXP;
   }, [progress, events]);
 
@@ -728,30 +715,30 @@ const Dashboard = () => {
     const suggestions = [];
     const todayKey = new Date().toISOString().split('T')[0];
     const todayTasks = events[todayKey] || [];
-    const completedTasks = todayTasks.filter(task => task.completed).length;
+    const completedTasks = todayTasks.filter((task) => task.completed).length;
     const totalTasks = todayTasks.length;
 
     if (streak >= 7) {
-      suggestions.push({ text: "Amazing job maintaining a 7+ day streak! Try adding a new challenging habit to level up.", icon: "🌟" });
+      suggestions.push({ text: 'Amazing job maintaining a 7+ day streak! Try adding a new challenging habit to level up.', icon: '🌟' });
     } else if (streak < 3 && streak > 0) {
-      suggestions.push({ text: "You're building a streak! Keep it up for 3 more days to solidify this habit.", icon: "🔥" });
+      suggestions.push({ text: "You're building a streak! Keep it up for 3 more days to solidify this habit.", icon: '🔥' });
     } else if (streak === 0) {
-      suggestions.push({ text: "Start small today with one easy task to kick off your streak!", icon: "🚀" });
+      suggestions.push({ text: 'Start small today with one easy task to kick off your streak!', icon: '🚀' });
     }
 
     if (totalTasks > 0 && completedTasks / totalTasks < 0.5) {
-      suggestions.push({ text: "Try breaking your tasks into smaller steps to boost completion rates.", icon: "📝" });
+      suggestions.push({ text: 'Try breaking your tasks into smaller steps to boost completion rates.', icon: '📝' });
     } else if (completedTasks === totalTasks && totalTasks > 0) {
-      suggestions.push({ text: "Perfect day! Consider adding a bonus task to stretch your potential.", icon: "🏆" });
+      suggestions.push({ text: 'Perfect day! Consider adding a bonus task to stretch your potential.', icon: '🏆' });
     }
 
     if (totalXP >= 100 && totalXP < 200) {
-      suggestions.push({ text: "You're making great progress! Focus on consistency to hit 200 XP soon.", icon: "📈" });
+      suggestions.push({ text: "You're making great progress! Focus on consistency to hit 200 XP soon.", icon: '📈' });
     } else if (totalXP < 50) {
-      suggestions.push({ text: "Every step counts! Complete a task now to earn 10 XP and get rolling.", icon: "✨" });
+      suggestions.push({ text: 'Every step counts! Complete a task now to earn 10 XP and get rolling.', icon: '✨' });
     }
 
-    suggestions.push({ text: "Review your habits weekly to adjust goals and stay motivated!", icon: "🗓️" });
+    suggestions.push({ text: 'Review your habits weekly to adjust goals and stay motivated!', icon: '🗓️' });
     setCoachSuggestions(suggestions);
   }, [streak, events, totalXP]);
 
@@ -768,9 +755,11 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const userProgress = await fakeFetchUserData();
-      setChartData(userProgress.map((item, index) => ({
-        progress: getCategoryProgress(item.date) || item.progress,
-      })));
+      setChartData(
+        userProgress.map((item, index) => ({
+          progress: getCategoryProgress(item.date) || item.progress,
+        }))
+      );
     } catch (error) {
       console.error('Error fetching user progress:', error);
     } finally {
@@ -796,12 +785,10 @@ const Dashboard = () => {
   }, [fetchLeaderboard, fetchUserProgress, getStreak, setStreak]);
 
   useEffect(() => {
-    if (user && !leaderboard.some(entry => entry.name === user.name)) {
-      setLeaderboard(prev => [...prev, { name: user.name, xp: totalXP }]);
+    if (user && !leaderboard.some((entry) => entry.name === user.name)) {
+      setLeaderboard((prev) => [...prev, { name: user.name, xp: totalXP }]);
     }
   }, [user, totalXP, leaderboard]);
-
-  const sortedLeaderboard = [...leaderboard].sort((a, b) => b.xp - a.xp);
 
   useEffect(() => {
     if (showInput && inputRef.current) {
@@ -812,7 +799,7 @@ const Dashboard = () => {
   const fakeFetchUserData = async () => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 6);
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         resolve(
           Array.from({ length: 7 }, (_, i) => ({
@@ -825,7 +812,7 @@ const Dashboard = () => {
   };
 
   const fakeFetchLeaderboardData = async () => {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         resolve([]);
       }, 1000);
@@ -840,7 +827,7 @@ const Dashboard = () => {
       addEvent(todayKey, {
         id: Date.now(),
         title: newHabit.trim(),
-        completed: false
+        completed: false,
       });
       setNewHabit('');
       setShowInput(false);
@@ -849,7 +836,7 @@ const Dashboard = () => {
 
   const toggleEdit = (taskId) => {
     const todayKey = new Date().toISOString().split('T')[0];
-    const task = events[todayKey]?.find(t => t.id === taskId);
+    const task = events[todayKey]?.find((t) => t.id === taskId);
     if (task) {
       updateEvent(todayKey, taskId, { isEditing: !task.isEditing });
     }
@@ -938,7 +925,6 @@ const Dashboard = () => {
         <NavList>
           <NavItem className="active">Dashboard</NavItem>
           <NavItem onClick={() => navigate('/spinWheel')}>SpinWheel</NavItem>
-          <NavItem onClick={() => navigate('/habitQuiz')}>HabitQuiz</NavItem>
           <NavItem onClick={() => navigate('/habitProgressTracker')}>HabitProgressTracker</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>Games</NavItem>
           <NavItem onClick={() => navigate('/track')}>Events</NavItem>
