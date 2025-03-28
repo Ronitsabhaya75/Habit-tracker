@@ -1,6 +1,26 @@
+/**
+ * HabitQuizGame Component
+ *
+ * This interactive game component allows users to test their knowledge
+ * about habits through 3 rounds of multiple-choice questions. It awards XP,
+ * offers feedback, and provides SpinWheel XP bonuses between rounds.
+ *
+ * Features:
+ * - 3 rounds of randomized habit-related questions.
+ * - XP awarded for each correct answer (10 XP each).
+ * - SpinWheel modal popup for bonus XP before each round.
+ * - XP stored in localStorage across sessions.
+ * - Visual feedback on correct/incorrect answers.
+ * - Final game summary with total XP and performance emojis.
+ *
+ * React hooks used: useState, useEffect.
+ * Components used: SpinWheelPopup.
+ */
+
 import React, { useState, useEffect } from 'react';
 import SpinWheelPopup from './SpinWheelPopup';
 
+// Full questions for the Quiz (randomly shuffled in loadQuestions)
 const fullQuestionSet = [
   { question: 'What is the ideal time to build a habit?', options: ['Morning', 'Night', 'When motivated', 'Anytime'], correctAnswer: 0 },
   { question: 'Which strategy helps you stay consistent?', options: ['Reminders', 'Relying on willpower', 'Avoiding routine', 'Multitasking'], correctAnswer: 0 },
@@ -70,6 +90,7 @@ const fullQuestionSet = [
 ];
 
 
+/** Main Component of the Habit Quiz Game */
 const HabitQuizGame = () => {
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -78,6 +99,7 @@ const HabitQuizGame = () => {
   const [selected, setSelected] = useState(null);
   const [gameEnded, setGameEnded] = useState(false);
   const [started, setStarted] = useState(false);
+// This shows the Round tracking
   const [correctCount, setCorrectCount] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
   const [roundNumber, setRoundNumber] = useState(1);
@@ -88,6 +110,7 @@ const HabitQuizGame = () => {
 
   const [initialSpinDone, setInitialSpinDone] = useState(false);
 
+// Load questions when quiz starts or next round begins
   useEffect(() => {
     if (started && !showSpinWheel && !initialSpinDone) {
       setShowSpinWheel(true);
@@ -100,6 +123,7 @@ const HabitQuizGame = () => {
     }
   }, [started, roundNumber, showSpinWheel, initialSpinDone]);
 
+/** Load and shuffle questions for each round */
   const loadQuestions = () => {
     const questionCount = Math.floor(Math.random() * 3) + 6;
     const shuffled = [...fullQuestionSet].sort(() => 0.5 - Math.random());
@@ -112,10 +136,12 @@ const HabitQuizGame = () => {
     setShowSummary(false);
   };
 
+ /** This handles the answer selection */
   const handleAnswer = (index) => {
     if (answered || gameEnded) return;
     setSelected(index);
     const currentQuestion = questions[currentIndex];
+// If correct,it adds XP and increase correct count
     if (index === currentQuestion.correctAnswer) {
       const newXP = xp + 10;
       setXP(newXP);
@@ -123,6 +149,7 @@ const HabitQuizGame = () => {
       setCorrectCount(prev => prev + 1);
     }
     setAnswered(true);
+// Moves to the next question after short delay of split seconds
     setTimeout(() => {
       if (currentIndex + 1 >= questions.length) {
         setGameEnded(true);
@@ -134,6 +161,7 @@ const HabitQuizGame = () => {
     }, 1000);
   };
 
+/** This returns emojis message based on round score */
   const getEmoji = () => {
     const ratio = correctCount / questions.length;
     if (ratio === 1) return "🏆 Perfect!";
@@ -142,6 +170,7 @@ const HabitQuizGame = () => {
     return "💡 Keep practicing!";
   };
 
+/** Proceeds to next round or final summary */
   const handleNextRound = () => {
     setTotalCorrect(prev => prev + correctCount);
     if (roundNumber < 3) {
@@ -152,6 +181,7 @@ const HabitQuizGame = () => {
     }
   };
 
+/** Restart the quiz from the beginning */
   const handleReplay = () => {
     setRoundNumber(1);
     setXP(0);
@@ -161,6 +191,7 @@ const HabitQuizGame = () => {
     setInitialSpinDone(false);
   };
 
+/** Add XP from SpinWheel rewards */
   const handleXPReward = (reward) => {
     const newXP = xp + reward;
     setXP(newXP);
@@ -181,6 +212,7 @@ const HabitQuizGame = () => {
   };
 
   if (!started) {
+ // Welcome screen with Start button present
     return (
       <div style={welcomeStyle}>
         <h1>🎯 Welcome to the Habit Quiz Game!</h1>
