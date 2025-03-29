@@ -1,6 +1,29 @@
+/**
+ * SpinWheelPopup Component
+ *
+ * This file implements a modal-style spinning reward wheel component.
+ * It allows users to spin once per day to earn XP rewards randomly.
+ *
+ * Key Features:
+ * - Interactive SVG-based wheel with animated spin.
+ * - 6 colorful segments offering different XP values.
+ * - Spin can be triggered once daily and is stored via localStorage.
+ * - Visual pointer to indicate the winning segment.
+ * - Callback props: `onClose()` to close the popup, and `onXPReward(value)` to update earned XP.
+ *
+ * The wheel leverages CSS transitions for spin animation and calculates reward based on rotation.
+ * Styled-components are used for modular and themeable UI styling.
+ *
+ * Props:
+ * - onClose: Function to close the modal.
+ * - roundNumber: Number indicating the quiz/game round.
+ * - onXPReward: Function to pass back the rewarded XP.
+ */
+
 import React, { useState } from 'react';
 import styled from 'styled-components';
 
+// Styled container for the full spin wheel layout
 const SpinWheelContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -10,6 +33,7 @@ const SpinWheelContainer = styled.div`
   font-family: 'Arial, sans-serif';
 `;
 
+// Header at the top of the popup
 const WheelHeader = styled.h1`
   font-size: 2.5rem;
   font-weight: bold;
@@ -17,12 +41,14 @@ const WheelHeader = styled.h1`
   color: #333;
 `;
 
+// Wrapper to hold the SVG wheel and pointer
 const WheelWrapper = styled.div`
   position: relative;
   width: 400px;
   height: 430px;
 `;
 
+// Button to trigger the spin animation
 const SpinButton = styled.button`
   margin-top: 1.5rem;
   padding: 1rem 2rem;
@@ -36,13 +62,14 @@ const SpinButton = styled.button`
   width: 200px;
   text-align: center;
   transition: all 0.2s;
-  
+
   &:hover:not(:disabled) {
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 `;
 
+// Button to close the popup
 const CloseButton = styled.button`
   position: absolute;
   top: 10px;
@@ -60,10 +87,12 @@ const CloseButton = styled.button`
   cursor: pointer;
 `;
 
+// Main SpinWheel component
 const SpinWheel = ({ onClose, roundNumber, onXPReward }) => {
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
 
+// Define reward segments with color and XP
   const segments = [
     { color: '#FFDDC1', reward: 'XP 10' },
     { color: '#C1FFD7', reward: 'XP 20' },
@@ -73,10 +102,12 @@ const SpinWheel = ({ onClose, roundNumber, onXPReward }) => {
     { color: '#E1C1FF', reward: 'XP 60' }
   ];
 
+// Daily spin check using localStorage
   const today = new Date().toISOString().split('T')[0];
   const lastSpinDate = localStorage.getItem('quizSpinDate');
   const alreadySpunToday = lastSpinDate === today;
 
+// Function to trigger the wheel spin
   const spinWheel = () => {
     if (spinning || alreadySpunToday) return;
     setSpinning(true);
@@ -103,6 +134,7 @@ const SpinWheel = ({ onClose, roundNumber, onXPReward }) => {
     }, 3000);
   };
 
+// Create SVG path for each wheel segment
   const createSegmentPath = (index, total) => {
     const angle = 360 / total;
     const startAngle = index * angle;
