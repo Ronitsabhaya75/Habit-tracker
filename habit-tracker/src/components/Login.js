@@ -1,13 +1,29 @@
 import React, { useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
-import styled, { keyframes, css } from 'styled-components';
+import styled, { keyframes, css, createGlobalStyle } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import { theme } from '../theme';
 import AuthContext from '../context/AuthContext';
 
-// Firebase Configuration
+// Add Global Style to remove default margins and padding
+const GlobalStyle = createGlobalStyle`
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html, body, #root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+`;
 
+// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyD7JasyKV8fqTNKBiY8Jv4oyEPaBkVrIP0",
   authDomain: "habit-tracker-6ee53.firebaseapp.com",
@@ -59,14 +75,18 @@ const takeoffAnimation = keyframes`
   100% { transform: translateY(-100px); opacity: 0; }
 `;
 
-// **STYLED COMPONENTS** (same as your first code)
+// **STYLED COMPONENTS** (updated to fix white border)
 const Background = styled.div`
   position: fixed;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   background: linear-gradient(135deg, #2b3a67 0%, #1a2233 100%);
   overflow: hidden;
   will-change: transform;
+  margin: 0;
+  padding: 0;
 `;
 
 const GradientOverlay = styled.div`
@@ -591,6 +611,7 @@ const Login = () => {
 
   return (
     <>
+      <GlobalStyle />
       <Background>
         <GradientOverlay />
         <Scenery />
@@ -676,4 +697,3 @@ const Login = () => {
 };
 
 export default Login;
-

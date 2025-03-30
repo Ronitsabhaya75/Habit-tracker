@@ -1,7 +1,39 @@
+/**
+ * Habit Challenge Center Component
+ *
+ * This file implements the HabitChallengeDashboard component, which serves as an engaging 
+ * challenge hub within the habit tracking application. It provides two interactive sections:
+ *
+ * -  Hourly Challenges:
+ *    • 10 short, productivity-boosting activities.
+ *    • Users can select a difficulty level (easy/moderate/hard) to earn XP.
+ *    • Feedback messages reinforce motivation and habit strength.
+ *    • XP is tracked and stored in localStorage.
+ *
+ * -  Weekly Challenge:
+ *    • Seven-day habit planner with three tasks per day.
+ *    • Users toggle task status: unchecked → checked → crossed → unchecked.
+ *    • XP rewards are granted for successful habit completions.
+ *    • Weekly level progression and visual badges are displayed.
+ *
+ * The component tracks XP across three categories (hourly, weekly, and total) and features:
+ * - Persistent XP storage via localStorage.
+ * - Visual feedback through styled-components (XP bar, badges, colored buttons).
+ * - Dynamic habit generation and streak recognition.
+ * - Reset functions for all XP and challenge states.
+ *
+ * The code emphasizes modularity and readability, reusing helper functions like 
+ * `getWeeklyHabits()` and `getBadges()` to maintain clean logic separation.
+ *
+ *  Themed styling is applied using `styled-components`, adhering to a consistent color palette.
+ */
+
+// Import necessary React and styled-components modules
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { theme } from '../theme';
 
+// Main layout container for the Habit Challenge Center
 const Container = styled.div`
   min-height: 100vh;
   background: ${theme.colors.background};
@@ -12,16 +44,19 @@ const Container = styled.div`
   align-items: center;
 `;
 
+// Styled title for page header
 const Title = styled.h1`
   margin-bottom: 1rem;
 `;
 
+// Button container for switching between Hourly and Weekly tabs
 const Tabs = styled.div`
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
 `;
 
+// Tab button style — visually highlights active tab
 const TabButton = styled.button`
   padding: 0.6rem 1rem;
   background: ${({ active }) => (active ? theme.colors.secondary : theme.colors.glassWhite)};
@@ -47,6 +82,7 @@ const HabitCard = styled.div`
   box-shadow: ${theme.shadows.card};
 `;
 
+// Bold title inside each habit card, with color based on index
 const HabitTitle = styled.strong`
   display: block;
   margin-bottom: 0.5rem;
@@ -54,6 +90,7 @@ const HabitTitle = styled.strong`
   font-size: 1.1rem;
 `;
 
+// Button for marking difficulty levels and granting XP
 const Button = styled.button`
   margin: 0.5rem 0.25rem;
   background: ${({ selected, difficulty }) =>
@@ -84,6 +121,7 @@ const Button = styled.button`
   }
 `;
 
+// Message box for showing feedback after habit completion
 const MessageBox = styled.div`
   margin-top: 0.5rem;
   font-size: 0.9rem;
@@ -103,6 +141,7 @@ const SectionTitle = styled.h2`
   margin-top: 2rem;
 `;
 
+// XP progress bar container for weekly XP tracking
 const XPBar = styled.div`
   background: ${theme.colors.glassWhite};
   border-radius: 8px;
@@ -140,6 +179,7 @@ const Badge = styled.span`
   font-size: 0.8rem;
 `;
 
+// Container and button style for XP reset controls
 const ResetXPButtons = styled.div`
   display: flex;
   gap: 1rem;
@@ -173,6 +213,7 @@ const allWeeklyHabits = [
   "Watch a motivational video", "Fix one small annoyance"
 ];
 
+// Generate a new random weekly habit set with 7 days × 3 habits/day
 const getWeeklyHabits = () => {
   const shuffled = [...allWeeklyHabits].sort(() => 0.5 - Math.random());
   const weeklySet = [];
@@ -217,6 +258,7 @@ const HabitChallengeDashboard = () => {
     '#48D1CC'  // Medium Turquoise
   ];
 
+// Sync XP to localStorage anytime XP changes
   useEffect(() => {
     localStorage.setItem('hourlyXP', hourlyXP);
     localStorage.setItem('weeklyXP', weeklyXP);
@@ -244,6 +286,7 @@ const HabitChallengeDashboard = () => {
     setHourlyFeedback((prev) => ({ ...prev, [index]: { type: difficulty, message } }));
   };
 
+// Toggle weekly habit between checked, crossed, or none
   const toggleDaily = (dayIdx, habitIdx) => {
     const updatedStatus = [...dailyStatus];
     const day = { ...updatedStatus[dayIdx] };
@@ -269,6 +312,7 @@ const HabitChallengeDashboard = () => {
     }
   };
 
+// Reset weekly challenge data
   const resetWeekly = () => {
     setWeeklyHabits(getWeeklyHabits());
     setDailyStatus(Array(7).fill(null).map(() => ({})));
@@ -276,12 +320,14 @@ const HabitChallengeDashboard = () => {
     setWeeklyXP(0);
   };
 
+// Reset hourly XP data
   const resetHourlyXP = () => {
     setHourlyXP(0);
     setSelectedDifficulty({});
     setHourlyFeedback({});
   };
 
+// Reset everything (XP, progress, habits)
   const resetTotalXP = () => {
     setHourlyXP(0);
     setWeeklyXP(0);
