@@ -36,7 +36,6 @@ import React from 'react';
                 <Route path="/breakthrough-game" element={<BreakthroughGame />} />
                 <Route path="/addiction-recovery" element={<AddictionRecoveryGame />} />
                 <Route path="/chess" element={<Chess />} />
-                <Route path="/ludo" element={<LudoGame />} /> {/* Add this route */}
                 <Route path="/word-scrambler" element={<WordScramblerGame />} />
               </Routes>
             </EventProvider>
