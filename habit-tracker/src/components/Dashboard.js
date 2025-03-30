@@ -8,14 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from '../components/AIChat';
 
-const POINTS_CONFIG = {
-  TASK_COMPLETION: 10,
-  DAILY_STREAK: 5,
-  GAME_COMPLETION: 20,
-  HABIT_COMPLETION: 15,
-  LEVEL_UP_BONUS: 50,
-};
-
 const HABIT_CATEGORIES = [
   { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
     { level: 1, goal: 'First Week Clean', points: 50, reward: 'Self-Care Package' },
@@ -59,7 +51,7 @@ const pulseGlow = keyframes`
   100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
 `;
 
-// Styled components
+// Styled components (keeping all styling as is)
 const Background = styled.div`
   position: absolute;
   width: 100%;
@@ -492,7 +484,7 @@ const Task = styled.li`
   gap: 0.8rem;
   padding: 0.7rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
+  
   &:last-child {
     border-bottom: none;
   }
@@ -509,13 +501,13 @@ const TaskCheckbox = styled.div`
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-
+  
   &::after {
     content: ${props => props.completed ? '"✓"' : '""'};
     color: white;
     font-size: 0.8rem;
   }
-
+  
   &:hover {
     border-color: ${theme.colors.accent};
     transform: scale(1.1);
@@ -625,8 +617,10 @@ const Dashboard = () => {
   const { events, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
 
   const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [newHabit, setNewHabit] = useState('');
   const [showInput, setShowInput] = useState(false);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [chartType, setChartType] = useState('line');
   const [streak, setLocalStreak] = useState(0);
   const inputRef = useRef(null);
@@ -635,152 +629,35 @@ const Dashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [timeAllocation, setTimeAllocation] = useState('');
-  
-  // Leaderboard state with proper initialization
-  const [leaderboard, setLeaderboard] = useState(() => {
-    const saved = localStorage.getItem('habitQuestLeaderboard');
-    const initialData = saved ? JSON.parse(saved) : [];
-    
-    // Add ranks to existing data
-    return initialData
-      .sort((a, b) => b.xp - a.xp)
-      .map((user, index) => ({ ...user, rank: index + 1 }));
-  });
-
-  const [loading, setLoading] = useState(false);
-
-  // Calculate current user's XP and rank
-  const currentUserXP = leaderboard.find(u => u.userId === user?.uid)?.xp || 0;
-  const currentUserRank = leaderboard.findIndex(u => u.userId === user?.uid) + 1;
-  const sortedLeaderboard = [...leaderboard].sort((a, b) => b.xp - a.xp);
-
-  // Initialize user in leaderboard on login
-  useEffect(() => {
-    if (user?.uid) {
-      const userExists = leaderboard.some(u => u.userId === user.uid);
-      if (!userExists) {
-        const newUser = {
-          userId: user.uid,
-          name: user.displayName || user.email.split('@')[0],
-          xp: 0,
-          email: user.email,
-          rank: leaderboard.length + 1
-        };
-        
-        const updatedLeaderboard = [...leaderboard, newUser]
-          .sort((a, b) => b.xp - a.xp)
-          .map((user, index) => ({ ...user, rank: index + 1 }));
-        
-        setLeaderboard(updatedLeaderboard);
-        localStorage.setItem('habitQuestLeaderboard', JSON.stringify(updatedLeaderboard));
-      }
-    }
-  }, [user]);
 
   const addNotification = useCallback((message, actions = []) => {
     const newNotification = {
       id: Date.now(),
       message,
-      actions,
+      actions
     };
-    setNotifications((prev) => [...prev, newNotification]);
+    setNotifications(prev => [...prev, newNotification]);
 
     setTimeout(() => {
-      setNotifications((prev) => prev.filter((n) => n.id !== newNotification.id));
+      setNotifications(prev => prev.filter(n => n.id !== newNotification.id));
     }, 5000);
   }, []);
 
-  // Generate chart data based on actual completion history
-  const generateChartData = useCallback(() => {
-    const days = 7;
-    const data = [];
-    
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateKey = date.toISOString().split('T')[0];
-      const dayTasks = events[dateKey] || [];
-      
-      let completion = 0;
-      if (dayTasks.length > 0) {
-        const completedCount = dayTasks.filter(task => task.completed).length;
-        completion = Math.round((completedCount / dayTasks.length) * 100);
-      }
-      
-      data.push({
-        day: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        progress: completion,
-        date: dateKey
-      });
-    }
-    
-    return data;
-  }, [events]);
-
-  const fetchUserProgress = useCallback(async () => {
-    try {
-      setLoading(true);
-      const chartData = generateChartData();
-      setChartData(chartData);
-      
-      // Calculate current streak
-      let currentStreak = 0;
-      const today = new Date();
-      
-      while (currentStreak < 14) {
-        const checkDate = new Date(today);
-        checkDate.setDate(checkDate.getDate() - currentStreak);
-        const dateKey = checkDate.toISOString().split('T')[0];
-        
-        const dayTasks = events[dateKey] || [];
-        if (dayTasks.length === 0) break;
-        
-        const allCompleted = dayTasks.every(task => task.completed);
-        if (!allCompleted) break;
-        
-        currentStreak++;
-      }
-      
-      setLocalStreak(currentStreak);
-    } catch (error) {
-      console.error('Error fetching user progress:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [generateChartData, events]);
-
-  useEffect(() => {
-    fetchUserProgress();
-  }, [fetchUserProgress]);
-
   const handleTaskCompletion = async (taskId, completed) => {
     const todayKey = new Date().toISOString().split('T')[0];
+
     await toggleEventCompletion(todayKey, taskId, completed);
 
-    if (completed && user?.uid) {
-      // Update leaderboard with XP and proper ranking
-      const updatedLeaderboard = leaderboard.map(userEntry => {
-        if (userEntry.userId === user.uid) {
-          return {
-            ...userEntry,
-            xp: userEntry.xp + POINTS_CONFIG.TASK_COMPLETION
-          };
+    if (completed) {
+      await updateProgress('tasks', 10);
+      addNotification(`Great job! You completed the task "${events[todayKey].find(t => t.id === taskId)?.title}".`, [
+        { 
+          label: 'Track Progress', 
+          onClick: () => navigate('/review') 
         }
-        return userEntry;
-      })
-      .sort((a, b) => b.xp - a.xp)
-      .map((user, index) => ({ ...user, rank: index + 1 }));
-      
-      setLeaderboard(updatedLeaderboard);
-      localStorage.setItem('habitQuestLeaderboard', JSON.stringify(updatedLeaderboard));
-      
-      addNotification(`+${POINTS_CONFIG.TASK_COMPLETION} XP earned!`);
-      
-      // Refresh progress data
-      fetchUserProgress();
+      ]);
     }
   };
-
 
   const openTimeAllocationModal = (task) => {
     setSelectedTask(task);
@@ -792,7 +669,7 @@ const Dashboard = () => {
     const todayKey = new Date().toISOString().split('T')[0];
     const updatedTask = {
       ...selectedTask,
-      estimatedTime: parseInt(timeAllocation, 10),
+      estimatedTime: parseInt(timeAllocation, 10)
     };
 
     updateEvent(todayKey, selectedTask.id, updatedTask);
@@ -804,20 +681,29 @@ const Dashboard = () => {
   useEffect(() => {
     const todayKey = new Date().toISOString().split('T')[0];
     const todayTasks = events[todayKey] || [];
-    const incompleteTasks = todayTasks.filter((task) => !task.completed);
+    const incompleteTasks = todayTasks.filter(task => !task.completed);
 
     if (incompleteTasks.length > 0) {
       addNotification(`You have ${incompleteTasks.length} tasks pending today!`, [
-        { label: 'View Tasks', onClick: () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }) },
+        { 
+          label: 'View Tasks', 
+          onClick: () => window.scrollTo({ 
+            top: document.body.scrollHeight, 
+            behavior: 'smooth' 
+          }) 
+        }
       ]);
     }
   }, [events, addNotification]);
 
   const calculateTotalXP = useCallback(() => {
-    if (!user?.uid) return 0;
-    const userEntry = leaderboard.find(u => u.userId === user.uid);
-    return userEntry ? userEntry.xp : 0;
-  }, [leaderboard, user]);
+    const progressXP = Object.values(progress).reduce((sum, p) => sum + p, 0);
+    let tasksXP = 0;
+    const todayKey = new Date().toISOString().split('T')[0];
+    const todayTasks = events[todayKey] || [];
+    tasksXP = todayTasks.filter(task => task.completed).length * 10;
+    return progressXP + tasksXP;
+  }, [progress, events]);
 
   const [totalXP, setTotalXP] = useState(calculateTotalXP());
 
@@ -836,46 +722,34 @@ const Dashboard = () => {
     { id: 4, title: 'Task Champion', description: 'Completed 5 tasks in a day', earned: false },
   ];
 
-  // Mock data function for development
-  const fakeFetchUserData = useCallback(async () => {
-    const days = 7;
-    return Array.from({ length: days }, (_, i) => ({
-      date: new Date(Date.now() - (days - i - 1) * 24 * 60 * 60 * 1000).toISOString(),
-      progress: Math.floor(Math.random() * 100) // Random progress for demo
-    }));
-  }, []);
-  useEffect(() => {
-    fetchUserProgress();
-  }, [fetchUserProgress]);
-
   const generateCoachSuggestions = useCallback(() => {
     const suggestions = [];
     const todayKey = new Date().toISOString().split('T')[0];
     const todayTasks = events[todayKey] || [];
-    const completedTasks = todayTasks.filter((task) => task.completed).length;
+    const completedTasks = todayTasks.filter(task => task.completed).length;
     const totalTasks = todayTasks.length;
 
     if (streak >= 7) {
-      suggestions.push({ text: 'Amazing job maintaining a 7+ day streak! Try adding a new challenging habit to level up.', icon: '🌟' });
+      suggestions.push({ text: "Amazing job maintaining a 7+ day streak! Try adding a new challenging habit to level up.", icon: "🌟" });
     } else if (streak < 3 && streak > 0) {
-      suggestions.push({ text: "You're building a streak! Keep it up for 3 more days to solidify this habit.", icon: '🔥' });
+      suggestions.push({ text: "You're building a streak! Keep it up for 3 more days to solidify this habit.", icon: "🔥" });
     } else if (streak === 0) {
-      suggestions.push({ text: 'Start small today with one easy task to kick off your streak!', icon: '🚀' });
+      suggestions.push({ text: "Start small today with one easy task to kick off your streak!", icon: "🚀" });
     }
 
     if (totalTasks > 0 && completedTasks / totalTasks < 0.5) {
-      suggestions.push({ text: 'Try breaking your tasks into smaller steps to boost completion rates.', icon: '📝' });
+      suggestions.push({ text: "Try breaking your tasks into smaller steps to boost completion rates.", icon: "📝" });
     } else if (completedTasks === totalTasks && totalTasks > 0) {
-      suggestions.push({ text: 'Perfect day! Consider adding a bonus task to stretch your potential.', icon: '🏆' });
+      suggestions.push({ text: "Perfect day! Consider adding a bonus task to stretch your potential.", icon: "🏆" });
     }
 
     if (totalXP >= 100 && totalXP < 200) {
-      suggestions.push({ text: "You're making great progress! Focus on consistency to hit 200 XP soon.", icon: '📈' });
+      suggestions.push({ text: "You're making great progress! Focus on consistency to hit 200 XP soon.", icon: "📈" });
     } else if (totalXP < 50) {
-      suggestions.push({ text: 'Every step counts! Complete a task now to earn 10 XP and get rolling.', icon: '✨' });
+      suggestions.push({ text: "Every step counts! Complete a task now to earn 10 XP and get rolling.", icon: "✨" });
     }
 
-    suggestions.push({ text: 'Review your habits weekly to adjust goals and stay motivated!', icon: '🗓️' });
+    suggestions.push({ text: "Review your habits weekly to adjust goals and stay motivated!", icon: "🗓️" });
     setCoachSuggestions(suggestions);
   }, [streak, events, totalXP]);
 
@@ -888,15 +762,83 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  const fetchUserProgress = useCallback(async () => {
+    try {
+      setLoading(true);
+      const userProgress = await fakeFetchUserData();
+      setChartData(userProgress.map((item, index) => ({
+        progress: getCategoryProgress(item.date) || item.progress,
+      })));
+    } catch (error) {
+      console.error('Error fetching user progress:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [getCategoryProgress]);
+
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      const leaderboardData = await fakeFetchLeaderboardData();
+      setLeaderboard(leaderboardData);
+    } catch (error) {
+      console.error('Error fetching leaderboard data:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLeaderboard();
+    fetchUserProgress();
+    const streakValue = getStreak();
+    setLocalStreak(streakValue);
+    setStreak(streakValue);
+  }, [fetchLeaderboard, fetchUserProgress, getStreak, setStreak]);
+
+  useEffect(() => {
+    if (user && !leaderboard.some(entry => entry.name === user.name)) {
+      setLeaderboard(prev => [...prev, { name: user.name, xp: totalXP }]);
+    }
+  }, [user, totalXP, leaderboard]);
+
+  const sortedLeaderboard = [...leaderboard].sort((a, b) => b.xp - a.xp);
+
+  useEffect(() => {
+    if (showInput && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [showInput]);
+
+  const fakeFetchUserData = async () => {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 6);
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(
+          Array.from({ length: 7 }, (_, i) => ({
+            date: new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000).toLocaleDateString(),
+            progress: Math.floor(Math.random() * 10),
+          }))
+        );
+      }, 1000);
+    });
+  };
+
+  const fakeFetchLeaderboardData = async () => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve([]);
+      }, 1000);
+    });
+  };
+
   const addHabit = () => setShowInput(true);
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && newHabit.trim()) {
       const todayKey = new Date().toISOString().split('T')[0];
-      addEvent(todayKey, {
-        id: Date.now(),
-        title: newHabit.trim(),
-        completed: false,
+      addEvent(todayKey, { 
+        id: Date.now(), 
+        title: newHabit.trim(), 
+        completed: false 
       });
       setNewHabit('');
       setShowInput(false);
@@ -905,7 +847,7 @@ const Dashboard = () => {
 
   const toggleEdit = (taskId) => {
     const todayKey = new Date().toISOString().split('T')[0];
-    const task = events[todayKey]?.find((t) => t.id === taskId);
+    const task = events[todayKey]?.find(t => t.id === taskId);
     if (task) {
       updateEvent(todayKey, taskId, { isEditing: !task.isEditing });
     }
@@ -1004,7 +946,7 @@ const Dashboard = () => {
       <MainContent>
         <Header>
           <UserGreeting>
-            <h1>Welcome 👋</h1>
+            <h1>Welcome{user?.name ? `, ${user.name}` : ''}! 👋</h1>
             <LevelBadge>Level {currentLevel} - {totalXP} XP</LevelBadge>
           </UserGreeting>
           <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
@@ -1025,24 +967,14 @@ const Dashboard = () => {
 
           <Card>
             <h2>Leaderboard</h2>
-            {loading ? (
-              <p>Loading leaderboard...</p>
-            ) : (
-              <>
-                <LeaderboardList>
-                  {sortedLeaderboard.map((player) => (
-                    <LeaderboardItem key={player.userId}>
-                      <div>
-                        <UserRank>#{player.rank}</UserRank> {player.name}
-                        {player.userId === user?.uid && ' (You)'}
-                      </div>
-                      <UserScore>{player.xp} XP</UserScore>
-                    </LeaderboardItem>
-                  ))}
-                </LeaderboardList>
-                {leaderboard.length === 0 && <p>No users on the leaderboard yet</p>}
-              </>
-            )}
+            <LeaderboardList>
+              {sortedLeaderboard.map((player, index) => (
+                <LeaderboardItem key={player.name}>
+                  <div><UserRank>#{index + 1}</UserRank> {player.name}</div>
+                  <UserScore>{player.xp} XP</UserScore>
+                </LeaderboardItem>
+              ))}
+            </LeaderboardList>
           </Card>
 
           <Card>
