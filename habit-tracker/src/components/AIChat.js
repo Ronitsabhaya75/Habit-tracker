@@ -181,7 +181,7 @@ const AIChat = ({ user }) => {
     // Enhanced error handling state
     const [apiError, setApiError] = useState(null);
   
-    const API_KEY = 'get_your_own';
+    const API_KEY = 'AIzaSyBV0qxLrQb4bwaiChhBVXcdXW85-BLsO7E';
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
   
     const scrollToBottom = () => {
