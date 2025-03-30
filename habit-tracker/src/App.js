@@ -16,6 +16,7 @@ import React from 'react';
   import HabitChallengeCenter from './components/HabitChallengeCenter';
   import Chess from './components/games/chess';
   import HabitQuizGame from './components/HabitQuizGame';
+  import WordScramblerGame from './components/games/WordScramblerGame';
 
   function App() {
     return (
@@ -35,7 +36,8 @@ import React from 'react';
                 <Route path="/breakthrough-game" element={<BreakthroughGame />} />
                 <Route path="/addiction-recovery" element={<AddictionRecoveryGame />} />
                 <Route path="/chess" element={<Chess />} />
-
+                <Route path="/ludo" element={<LudoGame />} /> {/* Add this route */}
+                <Route path="/word-scrambler" element={<WordScramblerGame />} />
               </Routes>
             </EventProvider>
           </HabitProvider>
