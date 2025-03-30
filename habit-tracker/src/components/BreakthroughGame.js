@@ -559,6 +559,11 @@ const GamesHub = () => {
       title: "ludo",
       description: "Play a game of ludo with your friends and family.",
       path: "/ludo"
+    },
+    {
+      title: 'Word Scrambler',
+      description: 'Unscramble or unjumble habit words and earn XP!',
+      path: '/word-scrambler',
     }
   ];
 
