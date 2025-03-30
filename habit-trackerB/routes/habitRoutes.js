@@ -1,6 +1,6 @@
-const express = require('express');
-const Habit = require('../models/Habit');
-const { verifyToken } = require('../middleware/authMiddleware');
+import express from 'express';
+import { verifyToken } from '../middleware/authMiddleware.js';
+import Habit from '../models/Habit.js';
 
 const router = express.Router();
 

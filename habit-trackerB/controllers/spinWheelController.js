@@ -1,4 +1,4 @@
-const User = require('../models/User');
+import User from '../models/User.js';
 
 const rewards = [
   { xp: 10 }, { xp: 20 }, { xp: 30 }, { xp: 40 }, { xp: 50 }, { xp: 60 }

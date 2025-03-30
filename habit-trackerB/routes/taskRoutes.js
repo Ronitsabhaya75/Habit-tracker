@@ -1,6 +1,6 @@
-const express = require('express');
-const Task = require('../models/Task');
-const { verifyToken } = require('../middleware/authMiddleware');
+import express from 'express';
+import { verifyToken } from '../middleware/authMiddleware.js';
+import Task from '../models/Task.js';
 
 const router = express.Router();
 

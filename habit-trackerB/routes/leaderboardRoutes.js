@@ -1,5 +1,5 @@
-const express = require('express');
-const { getLeaderboard } = require('../controllers/leaderboardController');
+import express from 'express';
+import { getLeaderboard } from '../controllers/leaderboardController.js';
 
 const router = express.Router();
 

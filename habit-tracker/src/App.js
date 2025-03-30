@@ -15,7 +15,6 @@ import React from 'react';
   import DashboardReview from './components/DashboardReview';
   import HabitChallengeCenter from './components/HabitChallengeCenter';
   import Chess from './components/games/chess';
-  import LudoGame from './components/games/ludo/LudoGame'; // Add this import
   import HabitQuizGame from './components/HabitQuizGame';
   import WordScramblerGame from './components/games/WordScramblerGame';
 
