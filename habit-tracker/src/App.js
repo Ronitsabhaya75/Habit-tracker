@@ -17,6 +17,7 @@ import React from 'react';
   import Chess from './components/games/chess';
   import LudoGame from './components/games/ludo/LudoGame'; // Add this import
   import HabitQuizGame from './components/HabitQuizGame';
+  import WordScramblerGame from './components/games/WordScramblerGame';
 
   function App() {
     return (
@@ -37,6 +38,7 @@ import React from 'react';
                 <Route path="/addiction-recovery" element={<AddictionRecoveryGame />} />
                 <Route path="/chess" element={<Chess />} />
                 <Route path="/ludo" element={<LudoGame />} /> {/* Add this route */}
+                <Route path="/word-scrambler" element={<WordScramblerGame />} />
               </Routes>
             </EventProvider>
           </HabitProvider>
