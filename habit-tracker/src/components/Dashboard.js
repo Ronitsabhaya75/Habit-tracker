@@ -19,10 +19,10 @@ const HABIT_CATEGORIES = [
     { level: 2, goal: 'Nutrition Tracking', points: 250, reward: 'Fitness Gear' },
     { level: 3, goal: 'Body Composition Change', points: 600, reward: 'Personal Training' },
   ]},
-  { 
-    id: 'games', 
-    name: 'Game Achievements', 
-    icon: '🎮', 
+  {
+    id: 'games',
+    name: 'Game Achievements',
+    icon: '🎮',
     description: 'Earn XP by playing and winning games',
     stages: [
       { level: 1, goal: 'First Game Win', points: 10, reward: 'Gamer Badge' },
@@ -495,7 +495,7 @@ const Task = styled.li`
   gap: 0.8rem;
   padding: 0.7rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  
+
   &:last-child {
     border-bottom: none;
   }
@@ -512,13 +512,13 @@ const TaskCheckbox = styled.div`
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &::after {
     content: ${props => props.completed ? '"✓"' : '""'};
     color: white;
     font-size: 0.8rem;
   }
-  
+
   &:hover {
     border-color: ${theme.colors.accent};
     transform: scale(1.1);
@@ -662,9 +662,9 @@ const Dashboard = () => {
     if (completed) {
       await updateProgress('tasks', 10);
       addNotification(`Great job! You completed the task "${events[todayKey].find(t => t.id === taskId)?.title}".`, [
-        { 
-          label: 'Track Progress', 
-          onClick: () => navigate('/review') 
+        {
+          label: 'Track Progress',
+          onClick: () => navigate('/review')
         }
       ]);
     }
@@ -696,12 +696,12 @@ const Dashboard = () => {
 
     if (incompleteTasks.length > 0) {
       addNotification(`You have ${incompleteTasks.length} tasks pending today!`, [
-        { 
-          label: 'View Tasks', 
-          onClick: () => window.scrollTo({ 
-            top: document.body.scrollHeight, 
-            behavior: 'smooth' 
-          }) 
+        {
+          label: 'View Tasks',
+          onClick: () => window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+          })
         }
       ]);
     }
@@ -846,10 +846,10 @@ const Dashboard = () => {
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && newHabit.trim()) {
       const todayKey = new Date().toISOString().split('T')[0];
-      addEvent(todayKey, { 
-        id: Date.now(), 
-        title: newHabit.trim(), 
-        completed: false 
+      addEvent(todayKey, {
+        id: Date.now(),
+        title: newHabit.trim(),
+        completed: false
       });
       setNewHabit('');
       setShowInput(false);
@@ -946,8 +946,6 @@ const Dashboard = () => {
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem className="active">Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/spinWheel')}>SpinWheel</NavItem>
-          <NavItem onClick={() => navigate('/habitProgressTracker')}>HabitProgressTracker</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>Games</NavItem>
           <NavItem onClick={() => navigate('/track')}>Events</NavItem>
           <NavItem onClick={() => navigate('/review')}>Review</NavItem>
@@ -1008,9 +1006,9 @@ const Dashboard = () => {
           {selectedTask && (
             <TimeAllocationModal>
               <h3>Allocate Time for "{selectedTask.title}"</h3>
-              <TimeInput 
-                type="number" 
-                placeholder="Estimated time in minutes" 
+              <TimeInput
+                type="number"
+                placeholder="Estimated time in minutes"
                 value={timeAllocation}
                 onChange={(e) => setTimeAllocation(e.target.value)}
               />
