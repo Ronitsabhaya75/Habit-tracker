@@ -8,4 +8,4 @@ const UserSchema = new mongoose.Schema({
   level: { type: Number, default: 1 },
 });
 
-module.exports = mongoose.model('User', UserSchema);
+export default mongoose.model('User', UserSchema);
