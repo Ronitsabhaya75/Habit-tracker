@@ -13,9 +13,9 @@ import React from 'react';
   import { theme } from './theme';
   import AddictionRecoveryGame from './components/games/AddictionRecoveryGame';
   import DashboardReview from './components/DashboardReview';
-  import HabitChallengeCenter from './components/games/HabitChallengeCenter';
+  import HabitChallengeDashboard from './components/games/HabitChallengeCenter';
   import Chess from './components/games/chess';
-  // import HabitQuizGame from './components/games/HabitQuizGame';
+  import HabitQuizGame from './components/games/HabitQuizGame';
   import WordScramblerGame from './components/games/WordScramblerGame';
   import PacmanGame from './components/games/pacman/PacmanGame';
 
@@ -36,8 +36,8 @@ import React from 'react';
                 <Route path="/addiction-recovery" element={<AddictionRecoveryGame />} />
                 <Route path="/chess" element={<Chess />} />
                 <Route path="/word-scrambler" element={<WordScramblerGame />} />
-                {/* <Route path="/habitQuizGame" element={<HabitQuizGame />} /> */}
-                <Route path="/habitChallengeCenter" element={<HabitChallengeCenter />} />
+                <Route path="/habit-quiz" element={<HabitQuizGame />} />
+                <Route path="/habit-challenge" element={<HabitChallengeDashboard />} />
                 <Route path="/pacman" element={<PacmanGame />} />
               </Routes>
             </EventProvider>
