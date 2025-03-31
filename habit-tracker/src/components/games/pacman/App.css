@@ -1,0 +1,104 @@
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', cursive;
+    margin: 20px auto;
+    max-width: 800px;
+  }
+  
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #000;
+    color: #fff;
+    border-radius: 10px;
+  }
+  
+  .score, .lives, .level {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .game-board {
+    display: flex;
+    flex-direction: column;
+    border: 5px solid #2121de;
+    border-radius: 5px;
+    background-color: black;
+  }
+  
+  .row {
+    display: flex;
+  }
+  
+  .wall, .coin, .power-pill, .empty {
+    width: 30px;
+    height: 30px;
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .wall {
+    background-color: #2121de;
+  }
+  
+  .coin {
+    background-color: black;
+  }
+  
+  .power-pill {
+    background-color: black;
+  }
+  
+  .empty {
+    background-color: black;
+  }
+  
+  .game-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    z-index: 10;
+  }
+  
+  .game-message button {
+    background-color: #ffcc00;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 16px;
+    margin-top: 15px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .game-message button:hover {
+    background-color: #ffdb4d;
+  }
+  
+  /* Animation for Pacman mouth */
+  @keyframes chomp {
+    0% { clip-path: circle(50% at 50% 50%); }
+    50% { clip-path: polygon(50% 50%, 100% 0%, 100% 100%); }
+    100% { clip-path: circle(50% at 50% 50%); }
+  }
+  
+  /* Animation for ghosts */
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-3px); }
+    100% { transform: translateY(0px); }
+  }

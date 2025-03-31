@@ -19,6 +19,17 @@ const HABIT_CATEGORIES = [
     { level: 2, goal: 'Nutrition Tracking', points: 250, reward: 'Fitness Gear' },
     { level: 3, goal: 'Body Composition Change', points: 600, reward: 'Personal Training' },
   ]},
+  { 
+    id: 'games', 
+    name: 'Game Achievements', 
+    icon: '🎮', 
+    description: 'Earn XP by playing and winning games',
+    stages: [
+      { level: 1, goal: 'First Game Win', points: 10, reward: 'Gamer Badge' },
+      { level: 2, goal: 'Five Wins', points: 50, reward: 'Pro Gamer Status' },
+      { level: 3, goal: 'Master Player', points: 200, reward: 'Elite Gaming Package' },
+    ]
+  },
 ];
 
 // Animation keyframes

@@ -557,8 +557,13 @@ const GamesHub = () => {
     },
     {
       title: 'Word Scrambler',
-      description: 'Unscramble or unjumble habit words and earn XP!',
+      description: 'Unscramble the word and find the XP! Unjumble your mind with this fun game.',
       path: '/word-scrambler',
+    },
+    {
+      title: 'pacman',
+      description: 'Navigate through a maze and collect points while avoiding ghosts.',
+      path: '/pacman',
     }
   ];
 

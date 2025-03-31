@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { useHabit } from '../../context/HabitContext';
 
 // Chess pieces (Unicode characters)
 const pieces = {
@@ -245,16 +246,17 @@ const CoordinateLabel = styled.div`
 // Chess Game Component
 const Chess = () => {
   const navigate = useNavigate();
+  const { updateProgress } = useHabit();
   const [board, setBoard] = useState(initializeBoard());
   const [selectedPiece, setSelectedPiece] = useState(null);
   const [validMoves, setValidMoves] = useState([]);
   const [isWhiteTurn, setIsWhiteTurn] = useState(true);
   const [capturedPieces, setCapturedPieces] = useState({ white: [], black: [] });
   const [playerScore, setPlayerScore] = useState(0);
-  const [gameStatus, setGameStatus] = useState(null); // null, 'victory', 'defeat'
+  const [gameStatus, setGameStatus] = useState(null);
   const [isComputerTurn, setIsComputerTurn] = useState(false);
-  const [lastMove, setLastMove] = useState(null); // Track last move for highlighting
-  const [isThinking, setIsThinking] = useState(false); // Computer thinking indicator
+  const [lastMove, setLastMove] = useState(null);
+  const [isThinking, setIsThinking] = useState(false);
   
   // Initialize the chessboard with pieces
   function initializeBoard() {
@@ -444,6 +446,7 @@ const Chess = () => {
   };
   
   // Make a move on the board
+  // Updated makeMove function with leaderboard integration
   const makeMove = (fromRow, fromCol, toRow, toCol) => {
     const newBoard = [...board.map(row => [...row])];
     const movingPiece = {...newBoard[fromRow][fromCol]};
@@ -459,11 +462,13 @@ const Chess = () => {
         };
       });
       
-      // Check for victory (king capture for simplicity)
+      // Check for victory (king capture)
       if (capturedPiece.type === 'king') {
         if (capturedPiece.color === 'black') {
           setGameStatus('victory');
           setPlayerScore(prevScore => prevScore + 10);
+          // Update leaderboard by adding points to the 'games' category
+          updateProgress('games', 10); // Add 10 XP for winning
         } else {
           setGameStatus('defeat');
         }
@@ -477,7 +482,16 @@ const Chess = () => {
     
     // Handle pawn promotion
     if (movingPiece.type === 'pawn' && (toRow === 7 || toRow === 0)) {
-      movingPiece.type = 'queen'; // Auto-promote to queen
+      const promotionChoice = window.prompt(
+        "Promote your pawn! Choose one: queen, rook, bishop, knight",
+        "queen"
+      );
+    
+      if (['queen', 'rook', 'bishop', 'knight'].includes(promotionChoice)) {
+        movingPiece.type = promotionChoice;
+      } else {
+        movingPiece.type = 'queen'; // Default to queen if the input is invalid
+      }
     }
     
     // Update the board

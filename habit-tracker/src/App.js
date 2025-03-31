@@ -13,10 +13,11 @@ import React from 'react';
   import { theme } from './theme';
   import AddictionRecoveryGame from './components/games/AddictionRecoveryGame';
   import DashboardReview from './components/DashboardReview';
-  import HabitChallengeCenter from './components/HabitChallengeCenter';
+  import HabitChallengeCenter from './components/games/HabitChallengeCenter';
   import Chess from './components/games/chess';
-  import HabitQuizGame from './components/HabitQuizGame';
+  // import HabitQuizGame from './components/games/HabitQuizGame';
   import WordScramblerGame from './components/games/WordScramblerGame';
+  import PacmanGame from './components/games/pacman/PacmanGame';
 
   function App() {
     return (
@@ -27,8 +28,6 @@ import React from 'react';
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/habitQuizGame" element={<HabitQuizGame />} />
-                <Route path="/habitChallengeCenter" element={<HabitChallengeCenter />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/track" element={<Track />} />
@@ -37,6 +36,9 @@ import React from 'react';
                 <Route path="/addiction-recovery" element={<AddictionRecoveryGame />} />
                 <Route path="/chess" element={<Chess />} />
                 <Route path="/word-scrambler" element={<WordScramblerGame />} />
+                {/* <Route path="/habitQuizGame" element={<HabitQuizGame />} /> */}
+                <Route path="/habitChallengeCenter" element={<HabitChallengeCenter />} />
+                <Route path="/pacman" element={<PacmanGame />} />
               </Routes>
             </EventProvider>
           </HabitProvider>

@@ -31,7 +31,7 @@
 // Import necessary React and styled-components modules
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { theme } from '../theme';
+import { theme } from '../../theme';;
 
 // Main layout container for the Habit Challenge Center
 const Container = styled.div`

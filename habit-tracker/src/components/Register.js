@@ -1,13 +1,13 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import {  doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth } from './firebase';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import { theme } from '../theme';
 import AuthContext from '../context/AuthContext';
 
-const db = getFirestore();
+
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -452,33 +452,18 @@ const Register = () => {
       const userCredential = await signInWithPopup(auth, googleProvider);
       const user = userCredential.user;
 
-      try {
-        // Check if user exists in Firestore
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
-          // New Google user - show username modal
-          setGoogleUser(user);
-          setShowUsernameModal(true);
-        } else {
-          // Existing user - log them in
-          const userData = userDoc.data();
-          login({ 
-            ...user, 
-            name: userData.username || user.displayName 
-          });
-          navigate('/dashboard');
-        }
-      } catch (dbError) {
-        console.error('Database error:', dbError);
-        if (dbError.code === 'unavailable') {
-          // Firestore is offline - proceed with basic login
-          login(user);
-          navigate('/dashboard');
-        } else {
-          throw dbError;
-        }
+      // Since we're not using Firestore, just check if the user has a display name
+      if (!user.displayName) {
+        // New Google user - show username modal
+        setGoogleUser(user);
+        setShowUsernameModal(true);
+      } else {
+        // Existing user - log them in
+        login({ 
+          ...user, 
+          name: user.displayName 
+        });
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error('Google Sign-In error:', error);
@@ -493,10 +478,6 @@ const Register = () => {
           break;
         case 'auth/popup-closed-by-user':
           setError('Sign-in popup was closed before completion.');
-          break;
-        case 'unavailable':
-        case 'failed-precondition':
-          setError('Network error. Please check your internet connection and try again.');
           break;
         default:
           setError(error.message || 'Google Sign-In failed. Please try again.');
@@ -526,19 +507,6 @@ const Register = () => {
       await updateProfile(googleUser, { 
         displayName: googleUsername.trim() 
       });
-
-      try {
-        // Try to create user document in Firestore
-        await setDoc(doc(db, 'users', googleUser.uid), {
-          username: googleUsername.trim(),
-          email: googleUser.email,
-          createdAt: new Date().toISOString(),
-          provider: 'google'
-        });
-      } catch (dbError) {
-        console.error('Failed to save user data:', dbError);
-        // Continue even if we couldn't save to Firestore
-      }
 
       // Log the user in
       login({ 
@@ -583,23 +551,12 @@ const Register = () => {
         displayName: username.trim() 
       });
 
-      try {
-        // Create user document in Firestore
-        await setDoc(doc(db, 'users', user.uid), {
-          username: username.trim(),
-          email: user.email,
-          createdAt: new Date().toISOString(),
-          provider: 'email'
-        });
-      } catch (dbError) {
-        console.error('Failed to save user data:', dbError);
-        // Continue even if we couldn't save to Firestore
-      }
-
       login({ ...user, name: username.trim() });
       navigate('/dashboard');
     } catch (error) {
       setIsLoading(false);
+      console.error('Registration error:', error);
+      
       switch (error.code) {
         case 'auth/email-already-in-use':
           setError('Email already in use. Try logging in instead.');
