@@ -65,30 +65,27 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
+    background: rgba(0, 0, 0, 0.9);
     padding: 20px;
-    border-radius: 10px;
+    border: 2px solid yellow;
+    color: white;
     text-align: center;
-    z-index: 10;
+    z-index: 100;
   }
   
   .game-message button {
-    background-color: #ffcc00;
-    color: #000;
+    background: yellow;
+    color: black;
     border: none;
     padding: 10px 20px;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 16px;
-    margin-top: 15px;
+    margin-top: 10px;
     cursor: pointer;
-    border-radius: 5px;
+    font-weight: bold;
   }
   
   .game-message button:hover {
-    background-color: #ffdb4d;
+    background: #ffcc00;
   }
-  
   /* Animation for Pacman mouth */
   @keyframes chomp {
     0% { clip-path: circle(50% at 50% 50%); }

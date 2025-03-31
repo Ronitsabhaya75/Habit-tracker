@@ -1,18 +1,90 @@
+/**
+
+PacManGame Component
+
+A classic Pac-Man arcade game implementation with React that rewards players with XP
+
+for completing levels and achieving milestones. The game features:
+
+Authentic Pac-Man gameplay with ghosts, pellets, and power pills
+
+Multiple levels with increasing difficulty
+
+Score tracking and lives system
+
+Ghost AI with different behaviors (chase and scatter modes)
+
+Power-up system that temporarily allows Pac-Man to eat ghosts
+
+XP rewards system integrated with a habit tracking context
+
+Game Mechanics:
+
+Player controls Pac-Man using arrow keys to navigate the maze
+
+Collect all pellets to advance to the next level
+
+Power pills make ghosts vulnerable for a limited time
+
+Colliding with ghosts costs a life (game ends after 3 lives)
+
+Earn XP for eating pellets (10 XP), power pills (50 XP), and ghosts (200 XP)
+
+Technical Implementation:
+
+Uses React hooks (useState, useEffect, useCallback) for game state management
+
+Implements a game loop with intervals for character movement
+
+Features collision detection between Pac-Man, ghosts, and maze elements
+
+Includes responsive controls with keyboard event listeners
+
+Provides visual feedback through sprite animations and game state messages
+
+Integrates with a habit tracking context to update player progress
+
+The component maintains clean separation of concerns with:
+
+Game state management
+
+Rendering logic
+
+Movement and collision systems
+
+XP reward system
+
+Game reset functionality
+
+Assets include:
+
+Custom sprites for Pac-Man in all directions
+
+Unique ghost sprites with different colors
+
+Maze walls and pellet graphics
+
+Background elements for empty spaces
+*/
+
 import React, { useState, useEffect, useCallback } from "react";
+import { useHabit } from '../../../context/HabitContext';
 import wall from "./wall.png";
 import coin from "./coin.png";
-import pacmanRight from "./pacman-right.png"; // You'll need these additional directional sprites
+import pacmanRight from "./pacman-right.png";
 import pacmanLeft from "./pacman-left.png";
 import pacmanUp from "./pacman-up.png";
 import pacmanDown from "./pacman-down.png";
 import bg from "./bg.png";
-import ghost1 from "./ghost1.png"; // Multiple ghost sprites for different ghosts
+import ghost1 from "./ghost1.png";
 import ghost2 from "./ghost2.png";
 import ghost3 from "./ghost3.png";
 import ghost4 from "./ghost4.png";
 import "./App.css";
 
 const PacManGame = () => {
+  const { updateProgress } = useHabit();
+  
   // Game states
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -20,9 +92,9 @@ const PacManGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
   const [gamePaused, setGamePaused] = useState(false);
-  const [direction, setDirection] = useState("right"); // Track Pacman's direction
+  const [direction, setDirection] = useState("right");
   
-  // Pacman and ghost positions
+  // Positions
   const [pacman, setPacman] = useState({ x: 6, y: 4 });
   const [ghosts, setGhosts] = useState([
     { id: 1, x: 1, y: 1, direction: "right", sprite: ghost1, scared: false },
@@ -31,11 +103,11 @@ const PacManGame = () => {
     { id: 4, x: 11, y: 7, direction: "down", sprite: ghost4, scared: false }
   ]);
   
-  // Power pill state
+  // Power pill
   const [powerPillActive, setPowerPillActive] = useState(false);
   const [powerPillTimer, setPowerPillTimer] = useState(null);
   
-  // Initial map - 0=empty, 1=wall, 2=coin, 3=power pill, G=ghost start positions
+  // Map configuration
   const initialMap = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1],
@@ -60,29 +132,20 @@ const PacManGame = () => {
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   ];
   
-  const [map, setMap] = useState(() => {
-    // Deep copy the initialMap to avoid reference issues
-    return JSON.parse(JSON.stringify(initialMap));
-  });
-  
-  // Count total coins for winning condition
-  const [totalCoins, setTotalCoins] = useState(() => {
-    return initialMap.flat().filter(cell => cell === 2 || cell === 3).length;
-  });
-  
+  const [map, setMap] = useState(() => JSON.parse(JSON.stringify(initialMap)));
+  const [totalCoins, setTotalCoins] = useState(() => initialMap.flat().filter(cell => cell === 2 || cell === 3).length);
   const [collectedCoins, setCollectedCoins] = useState(0);
 
-  // Get the appropriate Pacman sprite based on direction
+  // Helper functions
   const getPacmanSprite = () => {
     switch (direction) {
       case "left": return pacmanLeft;
       case "up": return pacmanUp;
       case "down": return pacmanDown;
-      default: return pacmanRight; // right is default
+      default: return pacmanRight;
     }
   };
 
-  // Function to reset the game
   const resetGame = () => {
     setPacman({ x: 6, y: 4 });
     setGhosts([
@@ -108,14 +171,12 @@ const PacManGame = () => {
     }
   };
 
-  // Function to handle PacMan movement
   const movePacman = useCallback((newDirection) => {
     if (gameOver || gameWon || gamePaused) return;
     
     let newX = pacman.x;
     let newY = pacman.y;
     
-    // Calculate new position based on direction
     if (newDirection === "left" && pacman.x > 0 && map[pacman.y][pacman.x - 1] !== 1) {
       newX = pacman.x - 1;
       setDirection("left");
@@ -129,7 +190,6 @@ const PacManGame = () => {
       newY = pacman.y + 1;
       setDirection("down");
     } else {
-      // If the new direction is blocked, try to continue in the current direction
       if (direction === "left" && pacman.x > 0 && map[pacman.y][pacman.x - 1] !== 1) {
         newX = pacman.x - 1;
       } else if (direction === "up" && pacman.y > 0 && map[pacman.y - 1][pacman.x] !== 1) {
@@ -141,25 +201,21 @@ const PacManGame = () => {
       }
     }
     
-    // If position changed, update the map
     if (newX !== pacman.x || newY !== pacman.y) {
       setMap(prevMap => {
         const newMap = [...prevMap];
         
-        // Handle coin collection
         if (newMap[newY][newX] === 2) {
           setScore(prevScore => prevScore + 10);
           setCollectedCoins(prev => prev + 1);
         }
         
-        // Handle power pill collection
         if (newMap[newY][newX] === 3) {
           setScore(prevScore => prevScore + 50);
           setCollectedCoins(prev => prev + 1);
           activatePowerPill();
         }
         
-        // Clear the new position (remove coin or power pill)
         if (newMap[newY][newX] === 2 || newMap[newY][newX] === 3) {
           newMap[newY][newX] = 0;
         }
@@ -170,7 +226,6 @@ const PacManGame = () => {
     }
   }, [pacman, map, direction, gameOver, gameWon, gamePaused]);
 
-  // Function to handle keyboard input
   const handleKeyDown = useCallback((event) => {
     if (gameOver || gameWon) {
       if (event.key === " " || event.key === "Enter") {
@@ -187,55 +242,28 @@ const PacManGame = () => {
     if (gamePaused) return;
     
     switch (event.key) {
-      case "ArrowLeft":
-        movePacman("left");
-        break;
-      case "ArrowUp":
-        movePacman("up");
-        break;
-      case "ArrowRight":
-        movePacman("right");
-        break;
-      case "ArrowDown":
-        movePacman("down");
-        break;
-      default:
-        break;
+      case "ArrowLeft": movePacman("left"); break;
+      case "ArrowUp": movePacman("up"); break;
+      case "ArrowRight": movePacman("right"); break;
+      case "ArrowDown": movePacman("down"); break;
+      default: break;
     }
   }, [movePacman, gameOver, gameWon, gamePaused, resetGame]);
 
-  // Function to activate power pill
   const activatePowerPill = () => {
     setPowerPillActive(true);
+    setGhosts(prevGhosts => prevGhosts.map(ghost => ({ ...ghost, scared: true })));
     
-    // Make all ghosts scared
-    setGhosts(prevGhosts => 
-      prevGhosts.map(ghost => ({
-        ...ghost,
-        scared: true
-      }))
-    );
+    if (powerPillTimer) clearTimeout(powerPillTimer);
     
-    // Clear existing timer if there is one
-    if (powerPillTimer) {
-      clearTimeout(powerPillTimer);
-    }
-    
-    // Set timer for power pill duration (10 seconds)
     const timer = setTimeout(() => {
       setPowerPillActive(false);
-      setGhosts(prevGhosts => 
-        prevGhosts.map(ghost => ({
-          ...ghost,
-          scared: false
-        }))
-      );
+      setGhosts(prevGhosts => prevGhosts.map(ghost => ({ ...ghost, scared: false })));
     }, 10000);
     
     setPowerPillTimer(timer);
   };
 
-  // Function to move ghosts
   const moveGhosts = useCallback(() => {
     if (gameOver || gameWon || gamePaused) return;
     
@@ -244,36 +272,25 @@ const PacManGame = () => {
         const { x, y, direction, scared } = ghost;
         const possibleDirections = [];
         
-        // Check all four directions
         if (y > 0 && map[y - 1][x] !== 1) possibleDirections.push("up");
         if (y < map.length - 1 && map[y + 1][x] !== 1) possibleDirections.push("down");
         if (x > 0 && map[y][x - 1] !== 1) possibleDirections.push("left");
         if (x < map[0].length - 1 && map[y][x + 1] !== 1) possibleDirections.push("right");
         
-        // Remove opposite direction to avoid back-and-forth movement
-        // unless it's the only option
         const oppositeDirections = {
-          up: "down",
-          down: "up",
-          left: "right",
-          right: "left"
+          up: "down", down: "up", left: "right", right: "left"
         };
         
         const filteredDirections = possibleDirections.filter(
           dir => dir !== oppositeDirections[direction] || possibleDirections.length === 1
         );
         
-        // When not scared, prefer moving towards Pacman
         let newDirection = direction;
         let newX = x;
         let newY = y;
         
         if (filteredDirections.length > 0) {
           if (!scared && Math.random() > 0.3) {
-            // Try to move towards Pacman with 70% probability
-            const distanceToTarget = (dx, dy) => 
-              Math.sqrt(Math.pow(pacman.x - dx, 2) + Math.pow(pacman.y - dy, 2));
-            
             let bestDirection = filteredDirections[0];
             let bestDistance = Infinity;
             
@@ -286,7 +303,7 @@ const PacManGame = () => {
               else if (dir === "left") testX--;
               else if (dir === "right") testX++;
               
-              const distance = distanceToTarget(testX, testY);
+              const distance = Math.sqrt(Math.pow(pacman.x - testX, 2) + Math.pow(pacman.y - testY, 2));
               if (distance < bestDistance) {
                 bestDistance = distance;
                 bestDirection = dir;
@@ -295,37 +312,28 @@ const PacManGame = () => {
             
             newDirection = bestDirection;
           } else {
-            // Random movement
             newDirection = filteredDirections[Math.floor(Math.random() * filteredDirections.length)];
           }
           
-          // Calculate new position
           if (newDirection === "up") newY--;
           else if (newDirection === "down") newY++;
           else if (newDirection === "left") newX--;
           else if (newDirection === "right") newX++;
         }
         
-        return {
-          ...ghost,
-          x: newX,
-          y: newY,
-          direction: newDirection
-        };
+        return { ...ghost, x: newX, y: newY, direction: newDirection };
       });
     });
   }, [map, pacman, gameOver, gameWon, gamePaused]);
 
-  // Check for collisions between PacMan and ghosts
   const checkCollisions = useCallback(() => {
     if (gameOver || gameWon || gamePaused) return;
     
-    // Check each ghost for collision with PacMan
     ghosts.forEach(ghost => {
       if (ghost.x === pacman.x && ghost.y === pacman.y) {
         if (powerPillActive && ghost.scared) {
-          // PacMan eats the ghost, ghost returns to starting position
           setScore(prev => prev + 200);
+          updateProgress('games', 5); // 5 XP for eating a ghost
           setGhosts(prevGhosts => 
             prevGhosts.map(g => 
               g.id === ghost.id 
@@ -334,87 +342,63 @@ const PacManGame = () => {
             )
           );
         } else {
-          // Ghost catches PacMan, lose a life
           setLives(prev => prev - 1);
           if (lives <= 1) {
             setGameOver(true);
           } else {
-            // Reset positions but continue game
             setPacman({ x: 9, y: 15 });
             setDirection("right");
           }
         }
       }
     });
-  }, [pacman, ghosts, powerPillActive, lives, gameOver, gameWon, gamePaused]);
+  }, [pacman, ghosts, powerPillActive, lives, gameOver, gameWon, gamePaused, updateProgress]);
 
-  // Check win condition
   const checkWinCondition = useCallback(() => {
     if (collectedCoins >= totalCoins) {
+      updateProgress('games', 20); // Award 20 XP for winning a level
       setGameWon(true);
-      // Level up after a delay
       setTimeout(() => {
         setLevel(prev => prev + 1);
         setPacman({ x: 9, y: 15 });
         setMap(JSON.parse(JSON.stringify(initialMap)));
         setCollectedCoins(0);
         setGameWon(false);
-        // Increase difficulty by making ghosts faster (handled in useEffect)
       }, 3000);
     }
-  }, [collectedCoins, totalCoins]);
+  }, [collectedCoins, totalCoins, updateProgress]);
 
-  // Set up keyboard event listener
+  // Set up event listeners and game loops
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  // Ghost movement interval
   useEffect(() => {
     if (gameOver || gameWon || gamePaused) return;
-    
-    // Adjust ghost speed based on level
     const ghostSpeed = Math.max(300 - (level - 1) * 50, 100);
-    
-    const ghostInterval = setInterval(() => {
-      moveGhosts();
-    }, ghostSpeed);
-    
+    const ghostInterval = setInterval(moveGhosts, ghostSpeed);
     return () => clearInterval(ghostInterval);
   }, [moveGhosts, level, gameOver, gameWon, gamePaused]);
 
-  // Pacman movement interval (for continuous movement)
   useEffect(() => {
     if (gameOver || gameWon || gamePaused) return;
-    
-    const pacmanInterval = setInterval(() => {
-      movePacman(direction);
-    }, 200); // Pacman moves every 200ms
-    
+    const pacmanInterval = setInterval(() => movePacman(direction), 200);
     return () => clearInterval(pacmanInterval);
   }, [movePacman, direction, gameOver, gameWon, gamePaused]);
 
-  // Collision detection interval
   useEffect(() => {
     if (gameOver || gameWon || gamePaused) return;
-    
     const collisionInterval = setInterval(() => {
       checkCollisions();
       checkWinCondition();
     }, 100);
-    
     return () => clearInterval(collisionInterval);
   }, [checkCollisions, checkWinCondition, gameOver, gameWon, gamePaused]);
 
-  // Clean up power pill timer on unmount
   useEffect(() => {
     return () => {
-      if (powerPillTimer) {
-        clearTimeout(powerPillTimer);
-      }
+      if (powerPillTimer) clearTimeout(powerPillTimer);
     };
   }, [powerPillTimer]);
 
@@ -427,41 +411,30 @@ const PacManGame = () => {
       </div>
       
       <div className="game-board" style={{ backgroundColor: "black" }}>
-        {/* Render the game map */}
         {map.map((row, rowIndex) => (
           <div key={rowIndex} className="row">
             {row.map((cell, colIndex) => {
-              // Check if there's a ghost at this position
               const ghostAtPosition = ghosts.find(
                 ghost => ghost.x === colIndex && ghost.y === rowIndex
               );
-              
-              // Check if pacman is at this position
               const pacmanAtPosition = pacman.x === colIndex && pacman.y === rowIndex;
               
               return (
                 <div
                   key={colIndex}
                   className={
-                    cell === 1
-                      ? "wall"
-                      : cell === 2
-                      ? "coin"
-                      : cell === 3
-                      ? "power-pill"
-                      : "empty"
+                    cell === 1 ? "wall" :
+                    cell === 2 ? "coin" :
+                    cell === 3 ? "power-pill" : "empty"
                   }
                   style={{
                     backgroundImage: pacmanAtPosition
                       ? `url(${getPacmanSprite()})`
                       : ghostAtPosition
                       ? `url(${ghostAtPosition.scared ? 'ghostScared.png' : ghostAtPosition.sprite})`
-                      : cell === 1
-                      ? `url(${wall})`
-                      : cell === 2
-                      ? `url(${coin})`
-                      : cell === 3
-                      ? `url(powerPill.png)` // You'll need this image
+                      : cell === 1 ? `url(${wall})`
+                      : cell === 2 ? `url(${coin})`
+                      : cell === 3 ? `url(powerPill.png)`
                       : `url(${bg})`
                   }}
                 ></div>
@@ -471,7 +444,6 @@ const PacManGame = () => {
         ))}
       </div>
       
-      {/* Game messages */}
       {gameOver && (
         <div className="game-message">
           <h2>Game Over</h2>
@@ -483,6 +455,7 @@ const PacManGame = () => {
       {gameWon && (
         <div className="game-message">
           <h2>Level Complete!</h2>
+          <p>+20 XP Awarded</p>
           <p>Moving to Level {level + 1}</p>
         </div>
       )}

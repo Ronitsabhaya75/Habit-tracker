@@ -1,3 +1,39 @@
+/*
+The Login component provides a visually engaging authentication interface for your habit-tracking application. It features a space-themed design with interactive elements and supports both email/password and Google authentication methods.
+
+Key Features
+1. Authentication Methods
+Email/Password Login: Traditional form-based authentication
+
+Google Sign-In: OAuth integration with Firebase
+
+Remember Me: Option to persist login session
+
+Password Recovery: Link to forgot password flow
+
+2. User Experience Enhancements
+Dynamic Avatar: Shows user initial when email is entered
+
+Motivational Quotes: Randomly displayed messages
+
+Progress Indicators: Visual feedback during authentication
+
+Rocket Animation: Visual feedback on login actions
+
+3. Error Handling
+Form validation
+
+Specific error messages for common auth failures
+
+Visual error display
+
+4. Performance Optimizations
+Memoized star rendering
+
+Optimized animations
+
+Loading states for async operations
+*/
 import React, { useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
@@ -25,14 +61,15 @@ const GlobalStyle = createGlobalStyle`
 
 // Firebase Configuration
 const firebaseConfig = {
-  apiKey: "get_your_own_key",
-  authDomain: "get_your_own_key",
-  projectId: "get_your_own_key",
-  storageBucket: "get_your_own_key",
-  messagingSenderId: "get_your_own",
-  appId: "  get_your_own",
-  measurementId: "get_your_own"
+  apiKey: "AIzaSyD7JasyKV8fqTNKBiY8Jv4oyEPaBkVrIP0",
+  authDomain: "habit-tracker-6ee53.firebaseapp.com",
+  projectId: "habit-tracker-6ee53",
+  storageBucket: "habit-tracker-6ee53.firebasestorage.app",
+  messagingSenderId: "104092658271",
+  appId: "1:104092658271:web:5b11f78599492587a109ea",
+  measurementId: "G-2CTB5HKS9J"
 };
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

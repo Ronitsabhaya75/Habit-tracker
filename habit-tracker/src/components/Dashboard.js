@@ -1,3 +1,210 @@
+/*
+Dashboard Component Documentation
+Overview
+The Dashboard component serves as the central hub for the HabitQuest application, providing users with a comprehensive view of their habit tracking progress, tasks, achievements, and gamification elements. The dashboard features:
+
+Visual progress tracking with interactive charts
+
+Task management system
+
+Achievement tracking
+
+Leaderboard display
+
+AI-powered habit coaching
+
+Gamification elements (XP, levels, streaks)
+
+Key Features
+1. User Progress Tracking
+Visual Charts: Line and bar charts showing progress over time
+
+XP System: Tracks user experience points across all activities
+
+Level Progression: Calculates user level based on accumulated XP
+
+Streak Tracking: Maintains and displays current habit streak
+
+2. Task Management
+Daily Task List: Shows tasks for the current day
+
+Task Operations: Add, edit, complete, and delete tasks
+
+Time Allocation: Estimate and track time spent on tasks
+
+Task Completion Rewards: Awards XP for completed tasks
+
+3. Gamification Elements
+Achievements System: Tracks and displays earned milestones
+
+Leaderboard: Shows user ranking compared to others
+
+XP Rewards: Awards points for various activities
+
+Visual Feedback: Animated elements celebrate progress
+
+4. AI Integration
+Habit Coach: Provides personalized suggestions
+
+Task Assistance: Helps manage and organize tasks
+
+Progress Analysis: Offers insights based on user data
+
+5. Navigation
+Sidebar Menu: Quick access to all application features
+
+Responsive Design: Adapts to different screen sizes
+
+Technical Implementation
+Component Structure
+Styled Components: Uses styled-components for all UI elements
+
+Custom Animations: Keyframe animations for interactive elements
+
+Context Integration: Connects to Auth, Habit, and Event contexts
+
+Recharts Integration: For data visualization
+
+State Management
+Local State: Manages UI state (chart type, notifications, etc.)
+
+Context State: Accesses user data, habits, and events
+
+Derived State: Calculates XP, levels, and streaks
+
+Key Functions
+fetchUserProgress: Loads user progress data
+
+fetchLeaderboard: Retrieves leaderboard data
+
+handleTaskCompletion: Manages task completion logic
+
+addNotification: Displays temporary notifications
+
+generateCoachSuggestions: Creates personalized recommendations
+
+Data Flow
+On mount, fetches user progress and leaderboard data
+
+Calculates derived state (XP, level, streak)
+
+Renders interactive UI components
+
+Handles user interactions through event callbacks
+
+Updates state and persists changes through context
+
+Integration Points
+Context Dependencies
+useAuth: For user authentication and data
+
+useHabit: For habit tracking functionality
+
+useEventContext: For task/event management
+
+Child Components
+AIChat: Embedded AI assistant component
+
+Recharts Components: For data visualization
+
+Navigation
+Links to all major application sections:
+
+SpinWheel
+
+HabitProgressTracker
+
+Games
+
+Events
+
+Review
+
+UI Elements
+Visual Components
+Animated Background: Space-themed with floating elements
+
+Progress Charts: Interactive data visualization
+
+Task List: Editable and completable items
+
+Achievement Cards: Display earned milestones
+
+Leaderboard: Shows competitive ranking
+
+Notifications System: Temporary message display
+
+Interactive Elements
+Buttons: For all primary actions
+
+Checkboxes: For task completion
+
+Input Fields: For adding/editing tasks
+
+Chart Controls: Switch between visualization types
+
+Navigation Menu: Access to all app sections
+
+Data Structure
+Key State Variables
+chartData: Array of progress data points
+
+leaderboard: Array of user ranking objects
+
+notifications: Array of active notifications
+
+todayTasks: Array of tasks for current day
+
+totalXP: Calculated experience points
+
+currentLevel: Derived from totalXP
+
+streak: Current habit streak count
+
+Performance Considerations
+Memoized calculations for derived state
+
+Efficient rendering with virtualized lists
+
+Debounced input handlers
+
+Optimized animations using CSS transforms
+
+Accessibility Features
+Keyboard navigable interface
+
+Sufficient color contrast
+
+ARIA labels for interactive elements
+
+Responsive design for various devices
+
+Error Handling
+API error catching and user feedback
+
+Graceful fallbacks for missing data
+
+Input validation for user entries
+
+Usage Example
+jsx
+Copy
+<Dashboard />
+The Dashboard component is designed to be self-contained and only requires the proper context providers to be wrapped around it in the application hierarchy.
+
+Dependencies
+React
+
+styled-components
+
+recharts
+
+React Router
+
+Various context providers (Auth, Habit, Event)
+
+This comprehensive dashboard brings together all aspects of the HabitQuest application into a cohesive, interactive interface that motivates users through gamification and visual feedback while providing powerful tools for habit formation and task management.
+*/
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
@@ -28,6 +235,17 @@ const HABIT_CATEGORIES = [
       { level: 1, goal: 'First Game Win', points: 10, reward: 'Gamer Badge' },
       { level: 2, goal: 'Five Wins', points: 50, reward: 'Pro Gamer Status' },
       { level: 3, goal: 'Master Player', points: 200, reward: 'Elite Gaming Package' },
+    ]
+  },
+  { 
+    id: 'pacman', 
+    name: 'Pac-Man', 
+    icon: '👻', 
+    description: 'Earn XP by playing Pac-Man',
+    stages: [
+      { level: 1, goal: 'First Level Complete', points: 20, reward: 'Pac-Star' },
+      { level: 2, goal: 'Complete 5 Levels', points: 100, reward: 'Ghost Hunter' },
+      { level: 3, goal: 'Score 5000 Points', points: 500, reward: 'Pac-Master' },
     ]
   },
 ];
@@ -1021,7 +1239,7 @@ const Dashboard = () => {
             </TimeAllocationModal>
           )}
 
-          <Card>
+<Card>
             <h2>Today's Tasks</h2>
             <TaskList>
               {todayTasks.map((task) => (
@@ -1068,7 +1286,15 @@ const Dashboard = () => {
           </Card>
         </GridContainer>
       </MainContent>
-      <AIChat user={user} />
+      <AIChat 
+  user={user} 
+  tasks={todayTasks} 
+  onTaskUpdate={handleTaskCompletion}
+  onAddTaskWithDate={(date, task) => {
+    const dateKey = date.toISOString().split('T')[0];
+    addEvent(dateKey, task);
+  }}
+/>
     </DashboardContainer>
   );
 };

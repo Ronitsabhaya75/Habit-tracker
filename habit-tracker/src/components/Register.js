@@ -1,3 +1,51 @@
+/*
+This Register component is a visually rich authentication form that allows users to:
+
+Create a new account with email/password
+
+Sign up using Google authentication
+
+Provides animated background elements for an engaging user experience
+
+Key Features
+Authentication Methods
+Email/Password Registration
+
+Validates password matching and length
+
+Stores username as displayName in Firebase
+
+Google Sign-In
+
+Handles new users requiring a username
+
+Provides error handling for various Google auth scenarios
+
+UI Elements
+Animated Space Theme Background with:
+
+Floating stars
+
+Rocket animation
+
+XP orbs
+
+Achievement badge
+
+Progress circle
+
+Modal Dialog for Google users to choose a username
+
+Responsive Form with:
+
+Input validation
+
+Loading states
+
+Error messages
+*/ 
+
+
 import React, { useState, useContext, useEffect } from 'react';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import {  doc, setDoc, getDoc } from 'firebase/firestore';

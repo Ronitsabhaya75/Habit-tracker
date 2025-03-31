@@ -1,3 +1,100 @@
+/**
+
+Chess Component
+
+A fully interactive chess game implementation with React that features:
+
+Complete chess rules including special moves (castling, en passant, promotion)
+
+Player vs. Computer AI with adjustable difficulty
+
+Visual move indicators and game state tracking
+
+Score system with XP rewards integrated with habit tracking
+
+Responsive design with elegant chessboard styling
+
+Game state persistence and reset functionality
+
+Game Features:
+
+Standard chess pieces with Unicode character representations
+
+Valid move highlighting and selection indicators
+
+Last move visualization
+
+Captured pieces display
+
+Turn indicators and game status messages
+
+Victory/defeat detection (king capture)
+
+Pawn promotion dialog
+
+Technical Implementation:
+
+Uses React hooks (useState, useEffect) for game state management
+
+Implements a recursive move calculation algorithm for each piece type
+
+Computer AI with basic move prioritization (captures, piece values)
+
+Custom styled-components for all UI elements
+
+React Router integration for navigation
+
+Habit context integration for XP rewards
+
+The component is organized into several key sections:
+
+Initial board setup and piece placement
+
+Move validation and game state updates
+
+Computer AI decision making
+
+UI rendering with interactive elements
+
+Game state management (scores, captures, turn tracking)
+
+Key Functions:
+
+initializeBoard(): Sets up the initial chess piece positions
+
+calculateValidMoves(): Determines legal moves for any piece
+
+makeMove(): Handles piece movement and game state updates
+
+makeComputerMove(): AI logic for computer's turn
+
+handleSquareClick(): Player interaction handler
+
+Visual Elements:
+
+Chessboard with coordinate labels
+
+Piece symbols using Unicode characters
+
+Selected piece highlighting
+
+Valid move indicators
+
+Last move visualization
+
+Captured pieces display
+
+Game status modals
+
+The game rewards players with:
+
+10 XP for winning a game (via updateProgress)
+
+Visual score tracking
+
+Progress towards habit goals
+*/
+
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';

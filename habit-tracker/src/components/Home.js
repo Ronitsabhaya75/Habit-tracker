@@ -1,4 +1,41 @@
-// NEW HOMEPAGE.JS 
+/*
+The Homepage component serves as the main landing page for your habit-tracking application, featuring an immersive space-themed design with interactive elements and smooth animations. This component combines visual appeal with functional UI elements to create an engaging user experience.
+
+Key Features
+1. Immersive Space Theme
+Animated Background: Deep space gradient with parallax scrolling effect
+
+Starfield Animation: Dynamic particle system with twinkling stars
+
+Interactive Elements: Rocket, planets, and achievement badges with animations
+
+Dark/Light Mode: Smooth theme transition toggle
+
+2. Performance Optimizations
+Memoized Particles: Reduced particle count with performance considerations
+
+Throttled Scroll Handlers: Optimized for smooth parallax effects
+
+Will-Change Properties: Strategic use for animation performance
+
+Reduced Animation Complexity: Simplified animations for better performance
+
+3. Interactive UI Components
+CTA Buttons: With hover effects and animations
+
+Feature Cards: Glassmorphism design with 3D hover effects
+
+Progress Indicators: Animated circles and bars
+
+Dark Mode Toggle: Custom animated switch
+
+4. Content Sections
+Hero Section: Main headline and call-to-action
+
+Features Grid: Highlighting key application features
+
+Stats Section: Community metrics with animations
+*/
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import styled, { keyframes, css, createGlobalStyle } from 'styled-components';

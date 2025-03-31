@@ -1,3 +1,65 @@
+/*
+The Track component is a feature-rich calendar and habit tracking system that allows users to:
+
+View and navigate through months
+
+Add, edit, and delete events/habits
+
+Mark tasks as complete
+
+Visualize their progress with an engaging space-themed UI
+
+Key Features
+Calendar Functionality
+Month Navigation: Previous/next month buttons
+
+Day Selection: Clickable days that show events
+
+Visual Indicators:
+
+Current day highlighting
+
+Selected day highlighting
+
+Event markers (dots) on days with events
+
+Event Management
+Add Events: Title and description fields
+
+Edit Events: Modify existing events
+
+Delete Events: Remove unwanted events
+
+Completion Tracking: Checkbox to mark tasks as complete
+
+UI Elements
+Animated Space Theme Background with:
+
+Floating stars
+
+Rocket animation
+
+Achievement badge
+
+Progress circle
+
+XP orbs
+
+Sidebar Navigation to other app sections
+
+Responsive Calendar Grid with:
+
+Day labels
+
+Current month days
+
+Adjacent month days (grayed out)
+
+Event Modal for adding/editing events
+
+Event List showing tasks for selected day
+
+ */
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
