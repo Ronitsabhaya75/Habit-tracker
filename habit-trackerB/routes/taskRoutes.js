@@ -34,4 +34,4 @@ router.delete('/:taskId', verifyToken, async (req, res) => {
   res.json({ message: 'Task deleted' });
 });
 
-module.exports = router;
+export default router;

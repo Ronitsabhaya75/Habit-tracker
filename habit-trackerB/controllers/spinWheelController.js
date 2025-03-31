@@ -5,7 +5,7 @@ const rewards = [
 ];
 
 // Spin the wheel and assign a reward
-const spinWheel = async (req, res) => {
+export const spinWheel = async (req, res) => {
   try {
     const reward = rewards[Math.floor(Math.random() * rewards.length)];
     
@@ -18,5 +18,3 @@ const spinWheel = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-module.exports = { spinWheel };

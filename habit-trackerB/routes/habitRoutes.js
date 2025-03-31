@@ -21,4 +21,4 @@ router.post('/', verifyToken, async (req, res) => {
   res.status(201).json({ message: 'Habit created', habit: newHabit });
 });
 
-module.exports = router;
+export default router;

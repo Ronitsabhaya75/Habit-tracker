@@ -8,4 +8,4 @@ const router = express.Router();
 // Spin the wheel to earn XP
 router.post('/', verifyToken, spinWheel);
 
-module.exports = router;
+export default router;

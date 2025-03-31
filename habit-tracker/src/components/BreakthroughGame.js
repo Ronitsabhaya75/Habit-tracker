@@ -564,6 +564,16 @@ const GamesHub = () => {
       title: 'pacman',
       description: 'Navigate through a maze and collect points while avoiding ghosts.',
       path: '/pacman',
+    },
+    {
+      title: 'habitQuizGame',
+      description: 'Test your habit knowledge through 3 exciting quiz rounds with XP rewards.',
+      path: '/habit-quiz',
+    },
+    {
+      title: 'habitChallengeCenter',
+      description: 'Take on hourly and weekly habit challenges to earn XP and build consistency.',
+      path: '/habit-challenge',
     }
   ];
 

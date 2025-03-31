@@ -25,114 +25,112 @@ import styled from 'styled-components';
 
 // Array of word objects used across modes
 const scrambledWords = [
-    { word: 'focus', meaning: 'The center of interest or activity.' },
-    { word: 'discipline', meaning: 'Training to act in accordance with rules.' },
-    { word: 'habit', meaning: 'A regular practice, especially one that is hard to give up.' },
-    { word: 'routine', meaning: 'A sequence of actions regularly followed.' },
-    { word: 'goal', meaning: 'The object of a person\'s ambition or effort.' },
-    { word: 'mindfulness', meaning: 'The quality of being conscious or aware of something.' },
-    { word: 'exercise', meaning: 'Activity requiring physical effort.' },
-    { word: 'journaling', meaning: 'The act of writing in a journal.' },
-    { word: 'gratitude', meaning: 'The quality of being thankful.' },
-    { word: 'consistency', meaning: 'Conformity in the application of something.' },
-    { word: 'positivity', meaning: 'The practice of being positive.' },
-    { word: 'planning', meaning: 'The process of making plans.' },
-    { word: 'reading', meaning: 'The action or skill of reading written or printed matter.' },
-    { word: 'hydration', meaning: 'The process of causing something to absorb water.' },
-    { word: 'nutrition', meaning: 'The process of providing or obtaining food.' },
-    { word: 'walking', meaning: 'The activity of going for walks.' },
-    { word: 'learning', meaning: 'The acquisition of knowledge or skills.' },
-    { word: 'sleep', meaning: 'A condition of body and mind which typically recurs for several hours every night.' },
-    { word: 'reflection', meaning: 'Serious thought or consideration.' },
-    { word: 'meditation', meaning: 'The action of meditating.' },
-    { word: 'visualization', meaning: 'The formation of a mental image.' },
-    { word: 'affirmation', meaning: 'The action or process of affirming something.' },
-    { word: 'decluttering', meaning: 'Removing unnecessary items from an untidy place.' },
-    { word: 'organization', meaning: 'The action of organizing something.' },
-    { word: 'accountability', meaning: 'The fact of being responsible for actions.' },
-    { word: 'breathing', meaning: 'The process of taking air into and expelling it from the lungs.' },
-    { word: 'structure', meaning: 'The arrangement of and relations between parts.' },
-    { word: 'balance', meaning: 'An even distribution of weight enabling someone to remain upright.' },
-    { word: 'selfcare', meaning: 'The practice of taking action to preserve health.' },
-    { word: 'practice', meaning: 'Repeated exercise in an activity.' },
-    { word: 'skill', meaning: 'The ability to do something well.' },
-    { word: 'motivation', meaning: 'The reason for acting in a particular way.' },
-    { word: 'awareness', meaning: 'Knowledge or perception of a situation or fact.' },
-    { word: 'action', meaning: 'The process of doing something.' },
-    { word: 'patience', meaning: 'The capacity to accept delay without getting angry.' },
-    { word: 'growth', meaning: 'The process of increasing in size or development.' },
-    { word: 'challenge', meaning: 'A call to take part in a contest or competition.' },
-    { word: 'energy', meaning: 'The strength required for sustained activity.' },
-    { word: 'intention', meaning: 'A thing intended; an aim or plan.' },
-    { word: 'commitment', meaning: 'The state of being dedicated to a cause.' },
-    { word: 'support', meaning: 'Giving assistance to someone.' },
-    { word: 'kindness', meaning: 'The quality of being friendly and considerate.' },
-    { word: 'confidence', meaning: 'The feeling of self-assurance.' },
-    { word: 'tracking', meaning: 'Observing the progress of something.' },
-    { word: 'scheduling', meaning: 'Planning when something should happen.' },
-    { word: 'goalsetting', meaning: 'The process of identifying objectives.' },
-    { word: 'mindset', meaning: 'The established set of attitudes held by someone.' },
-    { word: 'resilience', meaning: 'The capacity to recover quickly.' },
-    { word: 'adaptability', meaning: 'Being able to adjust to new conditions.' },
-    { word: 'simplicity', meaning: 'The quality of being easy to understand.' },
-    { word: 'efficiency', meaning: 'Achieving maximum productivity.' },
-    { word: 'reward', meaning: 'A thing given in recognition.' },
-    { word: 'effort', meaning: 'A vigorous or determined attempt.' },
-    { word: 'achievement', meaning: 'A thing done successfully.' },
-    { word: 'review', meaning: 'Evaluation of performance.' },
-    { word: 'habitloop', meaning: 'Cue-Routine-Reward cycle.' },
-    { word: 'habitstack', meaning: 'Attaching new habits to existing ones.' },
-    { word: 'trigger', meaning: 'Something that initiates behavior.' },
-    { word: 'routinecheck', meaning: 'Assessing regular tasks.' },
-    { word: 'reflectiontime', meaning: 'A period for introspection.' },
-    { word: 'focuszone', meaning: 'A distraction-free time block.' },
-    { word: 'winddown', meaning: 'Preparing to relax or sleep.' },
-    { word: 'earlystart', meaning: 'Waking up early for a head start.' },
-    { word: 'deepwork', meaning: 'Focused, undistracted work time.' },
-    { word: 'sleeptrack', meaning: 'Monitoring sleep patterns.' },
-    { word: 'watertrack', meaning: 'Tracking water intake.' },
-    { word: 'positivethink', meaning: 'Optimistic and constructive thought process.' },
-    { word: 'habitlog', meaning: 'A record of your habits.' },
-    { word: 'selftalk', meaning: 'Talking to oneself positively or reflectively.' },
-    { word: 'stretching', meaning: 'Gentle exercises to improve flexibility.' }
-  ];
+  { word: 'focus', meaning: 'The center of interest or activity.' },
+  { word: 'discipline', meaning: 'Training to act in accordance with rules.' },
+  { word: 'habit', meaning: 'A regular practice, especially one that is hard to give up.' },
+  { word: 'routine', meaning: 'A sequence of actions regularly followed.' },
+  { word: 'goal', meaning: 'The object of a person\'s ambition or effort.' },
+  { word: 'mindfulness', meaning: 'The quality of being conscious or aware of something.' },
+  { word: 'exercise', meaning: 'Activity requiring physical effort.' },
+  { word: 'journaling', meaning: 'The act of writing in a journal.' },
+  { word: 'gratitude', meaning: 'The quality of being thankful.' },
+  { word: 'consistency', meaning: 'Conformity in the application of something.' },
+  { word: 'positivity', meaning: 'The practice of being positive.' },
+  { word: 'planning', meaning: 'The process of making plans.' },
+  { word: 'reading', meaning: 'The action or skill of reading written or printed matter.' },
+  { word: 'hydration', meaning: 'The process of causing something to absorb water.' },
+  { word: 'nutrition', meaning: 'The process of providing or obtaining food.' },
+  { word: 'walking', meaning: 'The activity of going for walks.' },
+  { word: 'learning', meaning: 'The acquisition of knowledge or skills.' },
+  { word: 'sleep', meaning: 'A condition of body and mind which typically recurs for several hours every night.' },
+  { word: 'reflection', meaning: 'Serious thought or consideration.' },
+  { word: 'meditation', meaning: 'The action of meditating.' },
+  { word: 'visualization', meaning: 'The formation of a mental image.' },
+  { word: 'affirmation', meaning: 'The action or process of affirming something.' },
+  { word: 'decluttering', meaning: 'Removing unnecessary items from an untidy place.' },
+  { word: 'organization', meaning: 'The action of organizing something.' },
+  { word: 'accountability', meaning: 'The fact of being responsible for actions.' },
+  { word: 'breathing', meaning: 'The process of taking air into and expelling it from the lungs.' },
+  { word: 'structure', meaning: 'The arrangement of and relations between parts.' },
+  { word: 'balance', meaning: 'An even distribution of weight enabling someone to remain upright.' },
+  { word: 'selfcare', meaning: 'The practice of taking action to preserve health.' },
+  { word: 'practice', meaning: 'Repeated exercise in an activity.' },
+  { word: 'skill', meaning: 'The ability to do something well.' },
+  { word: 'motivation', meaning: 'The reason for acting in a particular way.' },
+  { word: 'awareness', meaning: 'Knowledge or perception of a situation or fact.' },
+  { word: 'action', meaning: 'The process of doing something.' },
+  { word: 'patience', meaning: 'The capacity to accept delay without getting angry.' },
+  { word: 'growth', meaning: 'The process of increasing in size or development.' },
+  { word: 'challenge', meaning: 'A call to take part in a contest or competition.' },
+  { word: 'energy', meaning: 'The strength required for sustained activity.' },
+  { word: 'intention', meaning: 'A thing intended; an aim or plan.' },
+  { word: 'commitment', meaning: 'The state of being dedicated to a cause.' },
+  { word: 'support', meaning: 'Giving assistance to someone.' },
+  { word: 'kindness', meaning: 'The quality of being friendly and considerate.' },
+  { word: 'confidence', meaning: 'The feeling of self-assurance.' },
+  { word: 'tracking', meaning: 'Observing the progress of something.' },
+  { word: 'scheduling', meaning: 'Planning when something should happen.' },
+  { word: 'goalsetting', meaning: 'The process of identifying objectives.' },
+  { word: 'mindset', meaning: 'The established set of attitudes held by someone.' },
+  { word: 'resilience', meaning: 'The capacity to recover quickly.' },
+  { word: 'adaptability', meaning: 'Being able to adjust to new conditions.' },
+  { word: 'simplicity', meaning: 'The quality of being easy to understand.' },
+  { word: 'efficiency', meaning: 'Achieving maximum productivity.' },
+  { word: 'reward', meaning: 'A thing given in recognition.' },
+  { word: 'effort', meaning: 'A vigorous or determined attempt.' },
+  { word: 'achievement', meaning: 'A thing done successfully.' },
+  { word: 'review', meaning: 'Evaluation of performance.' },
+  { word: 'habitloop', meaning: 'Cue-Routine-Reward cycle.' },
+  { word: 'habitstack', meaning: 'Attaching new habits to existing ones.' },
+  { word: 'trigger', meaning: 'Something that initiates behavior.' },
+  { word: 'routinecheck', meaning: 'Assessing regular tasks.' },
+  { word: 'reflectiontime', meaning: 'A period for introspection.' },
+  { word: 'focuszone', meaning: 'A distraction-free time block.' },
+  { word: 'winddown', meaning: 'Preparing to relax or sleep.' },
+  { word: 'earlystart', meaning: 'Waking up early for a head start.' },
+  { word: 'deepwork', meaning: 'Focused, undistracted work time.' },
+  { word: 'sleeptrack', meaning: 'Monitoring sleep patterns.' },
+  { word: 'watertrack', meaning: 'Tracking water intake.' },
+  { word: 'positivethink', meaning: 'Optimistic and constructive thought process.' },
+  { word: 'habitlog', meaning: 'A record of your habits.' },
+  { word: 'selftalk', meaning: 'Talking to oneself positively or reflectively.' },
+  { word: 'stretching', meaning: 'Gentle exercises to improve flexibility.' }
+];
 
-// To generate missing-letter patterns by hiding every second character
-const generateMissingLetters = (word) => {
-  return word
-    .split('')
-    .map((char, i) => (i % 2 === 0 ? char : '_'))
-    .join('');
-};
+// Function to create "Missing Letters" version of words
+const generateMissingLetters = (word) =>
+  word.split('').map((char, i) => (i % 2 === 0 ? char : '_')).join('');
 
-// Transform full word list into "missing letter" word format
+// Create "missingWords" array based on scrambledWords
 const missingWords = scrambledWords.map(({ word, meaning }) => ({
   word,
   display: generateMissingLetters(word),
   meaning
 }));
 
+// Shuffles array elements randomly
 const shuffleArray = (array) => array.sort(() => Math.random() - 0.5);
 
 const WordScramblerGame = () => {
-// UI/game state
-  const [tab, setTab] = useState('scrambled'); // Mode toggle: scrambled or missing
-  const [round, setRound] = useState(1); // Current round (1-3)
-  const [index, setIndex] = useState(0);
-  const [guess, setGuess] = useState(''); // User's input
+  const [tab, setTab] = useState('scrambled');
+  const [round, setRound] = useState(1);// Current round number
+  const [index, setIndex] = useState(0); // Current question index
+  const [guess, setGuess] = useState(''); // User input
   const [message, setMessage] = useState('');
-  const [showMeaning, setShowMeaning] = useState(false); // Toggle for definition view
-  const [scrambled, setScrambled] = useState('');
+  const [showMeaning, setShowMeaning] = useState(false);
+  const [scrambled, setScrambled] = useState('');// Shuffled/masked word to show
   const [xp, setXP] = useState(() => parseInt(localStorage.getItem('scrambledXP')) || 0);
-  const [attempts, setAttempts] = useState(0);
-  const [currentSet, setCurrentSet] = useState([]);
+  const [attempts, setAttempts] = useState(0);// Attempt count for current word
+  const [currentSet, setCurrentSet] = useState([]);// Current randomized list of questions
   const [showRoundMessage, setShowRoundMessage] = useState(false);
-  const navigate = useNavigate(); // To redirect after completion
+  const [maxAttemptsReached, setMaxAttemptsReached] = useState(false);// Lock after 3 attempts
+  const navigate = useNavigate();// React Router navigation
 
   const totalRounds = 3;
   const questionsPerRound = 5;
   const totalQuestions = totalRounds * questionsPerRound;
 
+  // Initialize new set of questions whenever tab changes
   useEffect(() => {
     const baseWords = tab === 'scrambled' ? scrambledWords : missingWords;
     const randomized = shuffleArray([...baseWords]).slice(0, totalQuestions);
@@ -143,48 +141,58 @@ const WordScramblerGame = () => {
     setShowMeaning(false);
     setMessage('');
     setAttempts(0);
+    setMaxAttemptsReached(false);
     setShowRoundMessage(false);
     setRound(1);
   }, [tab]);
 
+  // Set new scrambled/missing word based on index and tab
   useEffect(() => {
     if (currentSet.length > 0) {
-      if (tab === 'scrambled') {
-        setScrambled(scrambleWord(currentSet[index].word));
-      } else {
-        setScrambled(currentSet[index].display);
-      }
+      setScrambled(
+        tab === 'scrambled'
+          ? scrambleWord(currentSet[index].word)
+          : currentSet[index].display
+      );
     }
   }, [index, currentSet, tab]);
 
-// Scrambles letters of a word
   const scrambleWord = (word) => word.split('').sort(() => Math.random() - 0.5).join('');
 
+  // Navigate back to breakthrough game
+  const navigateBack = () => {
+    navigate('/breakthrough-game');
+  };
+
   const handleCheck = () => {
+    // Don't allow more checks if max attempts reached
+    if (maxAttemptsReached) return;
+
     if (guess.trim().toLowerCase() === currentSet[index].word.toLowerCase()) {
       setMessage('✅ Correct!');
       setShowMeaning(true);
       const gainedXP = xp + 10;
       setXP(gainedXP);
       localStorage.setItem(`${tab}XP`, gainedXP);
-// Update total XP from both modes
       localStorage.setItem('totalWordGameXP',
         (parseInt(localStorage.getItem('scrambledXP')) || 0) +
         (parseInt(localStorage.getItem('missingXP')) || 0)
       );
     } else {
       const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
       if (newAttempts >= 3) {
         setMessage(`❌ Incorrect! The correct word is: ${currentSet[index].word}`);
         setShowMeaning(true);
+        setAttempts(3); // Cap attempts at 3
+        setMaxAttemptsReached(true); // Mark that max attempts have been reached
       } else {
         setMessage(`❌ Try Again! (${newAttempts}/3 attempts)`);
+        setAttempts(newAttempts);
       }
     }
   };
 
-// Proceeds to next question or round
+  // Moves to next question or shows round message
   const handleNext = () => {
     const nextIndex = index + 1;
     if (nextIndex % questionsPerRound === 0 && nextIndex < totalQuestions) {
@@ -193,12 +201,14 @@ const WordScramblerGame = () => {
         setShowRoundMessage(false);
         moveToNextQuestion(nextIndex);
       }, 1500);
+    } else if (nextIndex === totalQuestions) {
+      setShowRoundMessage(true);
     } else {
       moveToNextQuestion(nextIndex);
     }
   };
 
-// Handles all logic to clean up and go to next question
+  // Updates state to begin new question
   const moveToNextQuestion = (nextIndex) => {
     if (nextIndex < totalQuestions) {
       setIndex(nextIndex);
@@ -206,10 +216,8 @@ const WordScramblerGame = () => {
       setShowMeaning(false);
       setMessage('');
       setAttempts(0);
+      setMaxAttemptsReached(false); // Reset the max attempts flag
       setRound(Math.floor(nextIndex / questionsPerRound) + 1);
-    } else {
-      alert("🎉 You've completed all rounds!");
-      navigate('/dashboard');
     }
   };
 
@@ -218,6 +226,7 @@ const WordScramblerGame = () => {
     setXP(0);
   };
 
+  // Resets all XP (scrambled, missing, total)
   const resetTotalXP = () => {
     localStorage.setItem('scrambledXP', '0');
     localStorage.setItem('missingXP', '0');
@@ -225,121 +234,224 @@ const WordScramblerGame = () => {
     setXP(0);
   };
 
-// Game UI container with mode toggle, XP, question/answer inputs and navigation buttons
-
   return (
-    <Container>
-      <Title>🔤 Word Scrambler Game</Title>
-      <XPDisplay>
-        ⭐ {tab} XP: {xp} | 🌟 Total XP: {parseInt(localStorage.getItem('totalWordGameXP')) || 0}
-      </XPDisplay>
-      <TabWrapper>
-        <Tab active={tab === 'scrambled'} onClick={() => setTab('scrambled')}>Scrambled</Tab>
-        <Tab active={tab === 'missing'} onClick={() => setTab('missing')}>Missing Letters</Tab>
-      </TabWrapper>
+    <Wrapper>
+      <GameHeader>
+        <Title>🔤 Word Scrambler Game</Title>
+        <XPDisplay>
+          ⭐ {tab} XP: {xp} | 🌟 Total XP: {parseInt(localStorage.getItem('totalWordGameXP')) || 0}
+        </XPDisplay>
+        <TabSelector>
+          <Tab active={tab === 'scrambled'} onClick={() => setTab('scrambled')}>Scrambled</Tab>
+          <Tab active={tab === 'missing'} onClick={() => setTab('missing')}>Missing Letters</Tab>
+        </TabSelector>
+        <BackButton onClick={navigateBack}>Back to Breakthrough</BackButton>
+      </GameHeader>
+
       <Card>
-        {showRoundMessage && <h3 style={{ color: '#27ae60' }}>🎉 Round {round - 1} Complete!</h3>}
-        {!showRoundMessage && (
-          <>
-            <p style={{ fontWeight: 'bold', fontSize: '1rem', marginBottom: '0.5rem' }}>
-              🌀 Round {round} of {totalRounds} | ❓ Question {index % questionsPerRound + 1} of {questionsPerRound} | Attempt {attempts + 1} of 3
-            </p>
-            <h3>{tab === 'scrambled' ? 'Unscramble this:' : 'Fill in the missing letters:'}</h3>
-            <h2>{scrambled}</h2>
-            <input
-              type="text"
-              value={guess}
-              placeholder="Type your guess..."
-              onChange={(e) => setGuess(e.target.value)}
-              style={inputStyle}
-            />
-            <button onClick={handleCheck} style={buttonStyle}>Check</button>
-            {message && <p style={{ fontSize: '1.1rem', marginTop: '1rem' }}>{message}</p>}
-            {showMeaning && (
-              <div style={meaningStyle}>
-                <p><strong>{currentSet[index].word}</strong>: {currentSet[index].meaning}</p>
-                <button onClick={handleNext} style={buttonStyle}>Next</button>
-              </div>
+        {showRoundMessage ? (
+          <RoundMessage>
+            {index + 1 === totalQuestions ? (
+              <>
+                🎉 All Rounds Completed!
+                <ButtonGroup>
+                  <ActionButton onClick={() => window.location.reload()}>Retry</ActionButton>
+                  <ActionButton onClick={() => navigate('/dashboard')}>Home</ActionButton>
+                  <ActionButton onClick={navigateBack} style={{ background: '#3498db' }}>
+                    Back to Breakthrough
+                  </ActionButton>
+                </ButtonGroup>
+              </>
+            ) : (
+              <>🎉 Round {round} Complete!</>
             )}
-            <button onClick={resetXP} style={{ ...buttonStyle, background: '#e67e22' }}>Reset {tab} XP</button>
-            <button onClick={resetTotalXP} style={{ ...buttonStyle, background: '#c0392b', marginTop: '0.5rem' }}>Reset Total XP</button>
+          </RoundMessage>
+        ) : (
+          <>
+            <ProgressText>
+              🌀 Round {round} of {totalRounds} | ❓ Question {index % questionsPerRound + 1} of {questionsPerRound} | Attempt {Math.min(attempts + 1, 3)} of 3
+            </ProgressText>
+            <Prompt>{tab === 'scrambled' ? 'Unscramble this:' : 'Fill in the missing letters:'}</Prompt>
+            <WordDisplay>{scrambled}</WordDisplay>
+            <InputField
+              value={guess}
+              onChange={(e) => setGuess(e.target.value)}
+              placeholder="Type your guess..."
+              disabled={maxAttemptsReached || showMeaning}
+            />
+            {!showMeaning && (
+              <ActionButton
+                onClick={handleCheck}
+                disabled={maxAttemptsReached}
+                style={{ opacity: maxAttemptsReached ? 0.5 : 1 }}
+              >
+                Check
+              </ActionButton>
+            )}
+            {message && <Feedback>{message}</Feedback>}
+            {showMeaning && (
+              <Definition>
+                <strong>{currentSet[index].word}</strong>: {currentSet[index].meaning}
+                <ActionButton onClick={handleNext}>Next</ActionButton>
+              </Definition>
+            )}
+            <ButtonGroup>
+              <ActionButton onClick={resetXP} style={{ background: '#e67e22' }}>Reset {tab} XP</ActionButton>
+              <ActionButton onClick={resetTotalXP} style={{ background: '#c0392b' }}>Reset Total XP</ActionButton>
+            </ButtonGroup>
           </>
         )}
       </Card>
-    </Container>
+    </Wrapper>
   );
 };
 
-  const Container = styled.div`
-    min-height: 100vh;
-    background: linear-gradient(to bottom right, #1e3c72, #2a5298);
-    color: white;
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  `;
+const Wrapper = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #1a2038, #293462);
+  color: white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Montserrat', sans-serif;
+`;
 
-  const Title = styled.h1`
-    margin-bottom: 1rem;
-  `;
+const GameHeader = styled.div`
+  text-align: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+`;
 
-  const XPDisplay = styled.p`
-    font-weight: bold;
-  `;
+const Title = styled.h1`
+  font-size: 2.5rem;
+  background: linear-gradient(to right, #e6c200, #ffeb99);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+`;
 
-  const TabWrapper = styled.div`
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-  `;
+const XPDisplay = styled.p`
+  font-size: 1.2rem;
+  margin-top: 0.5rem;
+`;
 
-  const Tab = styled.button`
-    padding: 0.7rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    background: ${({ active }) => (active ? '#4CAF50' : '#ccc')};
-    color: ${({ active }) => (active ? 'white' : 'black')};
-    cursor: pointer;
-  `;
+const TabSelector = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+`;
 
-  const Card = styled.div`
-    background: #2c3e50;
-    color: white;
-    padding: 2rem;
-    border-radius: 20px;
-    max-width: 600px;
-    text-align: center;
-    box-shadow: 0 0 15px rgba(0,0,0,0.15);
-  `;
+const Tab = styled.button`
+  background: ${({ active }) => (active ? '#4CAF50' : '#ccc')};
+  color: ${({ active }) => (active ? 'white' : 'black')};
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+`;
 
-  const inputStyle = {
-    padding: '0.75rem',
-    fontSize: '1.1rem',
-    borderRadius: '8px',
-    border: '1px solid #ccc',
-    width: '80%',
-    marginBottom: '1rem'
-  };
+const BackButton = styled.button`
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 
-  const buttonStyle = {
-    padding: '0.75rem 1.5rem',
-    fontSize: '1.1rem',
-    background: '#4CAF50',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    marginTop: '0.5rem'
-  };
+  &:hover {
+    background: #2980b9;
+  }
+`;
 
-  const meaningStyle = {
-    marginTop: '1.5rem',
-    background: '#34495e',
-    color: '#ecf0f1',
-    padding: '1rem',
-    borderRadius: '10px'
-  };
+const Card = styled.div`
+  background: #2c3e50;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+`;
 
-  export default WordScramblerGame;
+const RoundMessage = styled.h3`
+  font-size: 1.8rem;
+  color: #27ae60;
+`;
+
+const ProgressText = styled.p`
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+`;
+
+const Prompt = styled.h3`
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+`;
+
+const WordDisplay = styled.h2`
+  font-size: 2rem;
+  margin-bottom: 1rem;
+`;
+
+const InputField = styled.input`
+  padding: 0.75rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 80%;
+  margin-bottom: 1rem;
+  opacity: ${props => props.disabled ? 0.7 : 1};
+`;
+
+const ActionButton = styled.button`
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  margin-top: 0.5rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: ${props => props.disabled ? 'none' : 'translateY(-3px)'};
+    box-shadow: ${props => props.disabled ? 'none' : '0 6px 12px rgba(0, 0, 0, 0.3)'};
+  }
+
+  &:active {
+    transform: ${props => props.disabled ? 'none' : 'translateY(1px)'};
+  }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+`;
+
+const Feedback = styled.p`
+  font-size: 1.1rem;
+  margin-top: 1rem;
+`;
+
+const Definition = styled.div`
+  background: #34495e;
+  color: #ecf0f1;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-top: 1.5rem;
+`;
+
+export default WordScramblerGame;

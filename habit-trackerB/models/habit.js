@@ -7,4 +7,4 @@ const HabitSchema = new mongoose.Schema({
   xp: { type: Number, default: 10 },
 });
 
-module.exports = mongoose.model('Habit', HabitSchema);
+export default mongoose.model('Habit', HabitSchema);
