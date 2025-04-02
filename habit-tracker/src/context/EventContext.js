@@ -1,32 +1,58 @@
-// src/contexts/EventContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const EventContext = createContext();
 
 export const EventProvider = ({ children }) => {
   const [events, setEvents] = useState(() => {
-    const savedEvents = localStorage.getItem('events');
-    return savedEvents ? JSON.parse(savedEvents) : {};
+    try {
+      const savedEvents = localStorage.getItem('events');
+      return savedEvents ? JSON.parse(savedEvents) : {};
+    } catch (error) {
+      console.error('Failed to load events from localStorage:', error);
+      return {};
+    }
   });
   const [userExp, setUserExp] = useState(() => {
-    const savedExp = localStorage.getItem('userExp');
-    return savedExp ? parseInt(savedExp, 10) : 0;
+    try {
+      const savedExp = localStorage.getItem('userExp');
+      return savedExp ? parseInt(savedExp, 10) : 0;
+    } catch (error) {
+      console.error('Failed to load userExp from localStorage:', error);
+      return 0;
+    }
   });
   const [progressHistory, setProgressHistory] = useState(() => {
-    const savedHistory = localStorage.getItem('progressHistory');
-    return savedHistory ? JSON.parse(savedHistory) : [];
+    try {
+      const savedHistory = localStorage.getItem('progressHistory');
+      return savedHistory ? JSON.parse(savedHistory) : [];
+    } catch (error) {
+      console.error('Failed to load progressHistory from localStorage:', error);
+      return [];
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('events', JSON.stringify(events));
+    try {
+      localStorage.setItem('events', JSON.stringify(events));
+    } catch (error) {
+      console.error('Failed to save events to localStorage:', error);
+    }
   }, [events]);
 
   useEffect(() => {
-    localStorage.setItem('userExp', userExp);
+    try {
+      localStorage.setItem('userExp', userExp);
+    } catch (error) {
+      console.error('Failed to save userExp to localStorage:', error);
+    }
   }, [userExp]);
 
   useEffect(() => {
-    localStorage.setItem('progressHistory', JSON.stringify(progressHistory));
+    try {
+      localStorage.setItem('progressHistory', JSON.stringify(progressHistory));
+    } catch (error) {
+      console.error('Failed to save progressHistory to localStorage:', error);
+    }
   }, [progressHistory]);
 
   const addEvent = (dateKey, event) => {
@@ -46,14 +72,19 @@ export const EventProvider = ({ children }) => {
   };
 
   const deleteEvent = (dateKey, eventId) => {
-    setEvents(prev => ({
-      ...prev,
-      [dateKey]: prev[dateKey].filter(event => event.id !== eventId),
-    }));
+    setEvents(prev => {
+      const updatedEvents = {
+        ...prev,
+        [dateKey]: prev[dateKey].filter(event => event.id !== eventId),
+      };
+      if (updatedEvents[dateKey].length === 0) {
+        delete updatedEvents[dateKey];
+      }
+      return updatedEvents;
+    });
   };
 
   const toggleEventCompletion = (dateKey, eventId, isCompleted) => {
-    console.log(`Toggling completion for event ${eventId} on ${dateKey} to ${isCompleted}`);
     setEvents(prev => {
       const updatedEvents = {
         ...prev,
@@ -61,31 +92,25 @@ export const EventProvider = ({ children }) => {
           event.id === eventId ? { ...event, completed: isCompleted } : event
         ),
       };
-      console.log('Updated events:', updatedEvents);
       return updatedEvents;
     });
 
-    if (isCompleted) {
-      setUserExp(prevExp => {
-        const newExp = prevExp + 20;
-        console.log(`Adding 20 points. New userExp: ${newExp}`);
-        setProgressHistory(prevHistory => {
-          const today = new Date().toISOString().split('T')[0];
-          const updatedHistory = [...prevHistory];
-          const todayEntry = updatedHistory.find(entry => entry.date === today);
-          if (todayEntry) {
-            todayEntry.points = (todayEntry.points || 0) + 20;
-          } else {
-            updatedHistory.push({ date: today, points: 20 });
-          }
-          // Keep only the last 7 days
-          const newHistory = updatedHistory.slice(-7);
-          console.log('Updated progressHistory:', newHistory);
-          return newHistory;
-        });
-        return newExp;
+    setUserExp(prevExp => {
+      const expChange = isCompleted ? 20 : -20;
+      const newExp = Math.max(0, prevExp + expChange);
+      setProgressHistory(prevHistory => {
+        const today = new Date().toISOString().split('T')[0];
+        const updatedHistory = [...prevHistory];
+        const todayEntry = updatedHistory.find(entry => entry.date === today);
+        if (todayEntry) {
+          todayEntry.points = Math.max(0, (todayEntry.points || 0) + expChange);
+        } else if (isCompleted) {
+          updatedHistory.push({ date: today, points: 20 });
+        }
+        return updatedHistory.slice(-7);
       });
-    }
+      return newExp;
+    });
   };
 
   return (

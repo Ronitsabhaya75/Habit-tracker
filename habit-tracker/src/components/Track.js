@@ -1,72 +1,11 @@
-/*
-The Track component is a feature-rich calendar and habit tracking system that allows users to:
-
-View and navigate through months
-
-Add, edit, and delete events/habits
-
-Mark tasks as complete
-
-Visualize their progress with an engaging space-themed UI
-
-Key Features
-Calendar Functionality
-Month Navigation: Previous/next month buttons
-
-Day Selection: Clickable days that show events
-
-Visual Indicators:
-
-Current day highlighting
-
-Selected day highlighting
-
-Event markers (dots) on days with events
-
-Event Management
-Add Events: Title and description fields
-
-Edit Events: Modify existing events
-
-Delete Events: Remove unwanted events
-
-Completion Tracking: Checkbox to mark tasks as complete
-
-UI Elements
-Animated Space Theme Background with:
-
-Floating stars
-
-Rocket animation
-
-Achievement badge
-
-Progress circle
-
-XP orbs
-
-Sidebar Navigation to other app sections
-
-Responsive Calendar Grid with:
-
-Day labels
-
-Current month days
-
-Adjacent month days (grayed out)
-
-Event Modal for adding/editing events
-
-Event List showing tasks for selected day
-
- */
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { theme } from '../theme';
+import { theme } from '../theme'; // Assuming this exists
 import { useNavigate } from 'react-router-dom';
 import { useEventContext } from '../context/EventContext';
+import AIChat from './AIChat';
 
-// **ANIMATIONS**
+// Animations
 const floatAnimation = keyframes`
   0% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-15px) rotate(2deg); }
@@ -96,7 +35,7 @@ const pulseGlow = keyframes`
   100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
 `;
 
-// **BACKGROUND**
+// Styled Components (unchanged from your original)
 const Background = styled.div`
   position: absolute;
   width: 100%;
@@ -105,7 +44,6 @@ const Background = styled.div`
   overflow: hidden;
 `;
 
-// Gradient Overlay
 const GradientOverlay = styled.div`
   position: absolute;
   width: 100%;
@@ -115,7 +53,6 @@ const GradientOverlay = styled.div`
   z-index: 1;
 `;
 
-// Mountain scenery in the background
 const Scenery = styled.div`
   position: absolute;
   bottom: 0;
@@ -148,7 +85,6 @@ const Scenery = styled.div`
   }
 `;
 
-// **STARS**
 const Star = styled.div`
   position: absolute;
   width: ${props => props.size || '30px'};
@@ -171,7 +107,6 @@ const Star = styled.div`
   }
 `;
 
-// **ACHIEVEMENT ICON**
 const AchievementBadge = styled.div`
   position: absolute;
   width: 60px;
@@ -195,7 +130,6 @@ const AchievementBadge = styled.div`
   }
 `;
 
-// **ROCKET WITH TRAIL**
 const Rocket = styled.div`
   position: absolute;
   top: 30%;
@@ -229,7 +163,6 @@ const RocketTrail = styled.div`
   animation: ${trailAnimation} 2s infinite;
 `;
 
-// **PROGRESS CIRCLE**
 const ProgressCircle = styled.div`
   position: absolute;
   bottom: 20%;
@@ -255,7 +188,6 @@ const ProgressCircle = styled.div`
   }
 `;
 
-// **XP ORB**
 const XPOrb = styled.div`
   position: absolute;
   width: 15px;
@@ -306,7 +238,6 @@ const NavItem = styled.li`
   }
 `;
 
-// **TRACK COMPONENT**
 const TrackContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -561,6 +492,8 @@ const Track = () => {
   const { events, userExp, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
   const navigate = useNavigate();
 
+  const user = { name: 'User', habits: [] }; // Define user here; replace with actual auth data if available
+
   const handleTaskCompletion = (eventId, isCompleted) => {
     const dateKey = formatDate(selectedDate);
     toggleEventCompletion(dateKey, eventId, isCompleted);
@@ -748,6 +681,30 @@ const Track = () => {
     );
   };
 
+  const handleTaskUpdate = (action, task, date = null) => {
+    if (date) {
+      const dateKey = formatDate(date);
+      switch (action) {
+        case 'add':
+          addEvent(dateKey, task);
+          break;
+        case 'edit':
+          updateEvent(dateKey, task.id, task);
+          break;
+        case 'remove':
+          deleteEvent(dateKey, task.id);
+          break;
+        default:
+          toggleEventCompletion(dateKey, task.id, task.completed);
+      }
+    }
+  };
+
+  const handleAddTaskWithDate = (date, task) => {
+    const dateKey = formatDate(date);
+    addEvent(dateKey, task);
+  };
+
   return (
     <>
       <Background>
@@ -774,11 +731,13 @@ const Track = () => {
           <NavItem onClick={() => navigate('/review')}>Review</NavItem>
         </NavList>
       </Sidebar>
+      
       <TrackContainer>
         <h1 style={{ fontSize: '2.5rem', color: theme.colors.accent, marginBottom: '1rem' }}>Track Your Habits</h1>
         <div style={{ marginBottom: '1rem', fontSize: '1.2rem', color: theme.colors.text }}>
           <strong>EXP:</strong> {userExp}
         </div>
+        
         <CalendarContainer>
           <CalendarHeader>
             <MonthNavButton onClick={previousMonth}>← Prev</MonthNavButton>
@@ -808,6 +767,14 @@ const Track = () => {
             </div>
           )}
         </CalendarContainer>
+
+        <AIChat 
+          user={user} 
+          onTaskUpdate={handleTaskUpdate}
+          onAddTaskWithDate={handleAddTaskWithDate}
+          tasks={[]} // Replace with actual tasks if available
+          events={events}
+        />
 
         {showEventModal && (
           <EventModal>

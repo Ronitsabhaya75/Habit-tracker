@@ -61,13 +61,13 @@ const GlobalStyle = createGlobalStyle`
 
 // Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyD7JasyKV8fqTNKBiY8Jv4oyEPaBkVrIP0",
-  authDomain: "habit-tracker-6ee53.firebaseapp.com",
-  projectId: "habit-tracker-6ee53",
-  storageBucket: "habit-tracker-6ee53.firebasestorage.app",
-  messagingSenderId: "104092658271",
-  appId: "1:104092658271:web:5b11f78599492587a109ea",
-  measurementId: "G-2CTB5HKS9J"
+  apiKey: "getFirebaseConfigAPIKey",
+  authDomain: "getFirebaseConfigAuthDomain",
+  databaseURL: "getFirebaseConfigDatabaseURL",
+  storageBucket: "getFirebaseConfigStorageBucket",
+  messagingSenderId: "getFirebaseConfigMessagingSenderID",
+  appId: "getFirebaseConfigAppID",
+  measurementId: "getFirebaseConfigMeasurementID"
 };
 
 

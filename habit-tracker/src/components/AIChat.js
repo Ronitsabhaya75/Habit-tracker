@@ -146,30 +146,37 @@ const ChatContainer = styled.div`
 `;
 
 const ChatButton = styled.button`
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 60px;
-  height: 60px;
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  background: ${theme.colors.accent};
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
   color: white;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  transition: all 0.3s ease;
-  z-index: 1001;
+  font-size: 28px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 1000;
+  outline: none;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 14px;
 
   &:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05) translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: scale(0.98) translateY(0);
   }
 `;
-
 const ChatWindow = styled.div`
   width: 350px;
   height: 500px;
@@ -399,7 +406,7 @@ const AIChat = ({ user, onTaskUpdate, tasks = [], onAddTaskWithDate }) => {
   const messagesEndRef = useRef(null);
   const [apiError, setApiError] = useState(null);
 
-  const API_KEY = 'AIzaSyAcE4ZbgOGLQsrS8ihpODooTDdNZXQMTTo';
+  const API_KEY = 'get_your_own_api_key';
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
   const scrollToBottom = () => {
@@ -956,7 +963,7 @@ const AIChat = ({ user, onTaskUpdate, tasks = [], onAddTaskWithDate }) => {
         </ChatWindow>
       )}
       <ChatButton onClick={() => setIsOpen(!isOpen)}>
-        {isOpen ? '✕' : '💬'}
+        {isOpen ? '✕' : 'Coach'}
       </ChatButton>
     </ChatContainer>
   );
