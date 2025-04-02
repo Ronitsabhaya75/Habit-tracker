@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { theme } from '../theme'; // Assuming this exists
+import { theme } from '../theme'; // Make sure this path is correct
 import { useNavigate } from 'react-router-dom';
-import { useEventContext } from '../context/EventContext';
+import { useEventContext } from '../context/EventContext'; // Make sure this path is correct
 import AIChat from './AIChat';
 
 // Animations
@@ -35,7 +35,7 @@ const pulseGlow = keyframes`
   100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
 `;
 
-// Styled Components (unchanged from your original)
+// Styled Components
 const Background = styled.div`
   position: absolute;
   width: 100%;
@@ -492,9 +492,11 @@ const Track = () => {
   const { events, userExp, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
   const navigate = useNavigate();
 
-  const user = { name: 'User', habits: [] }; // Define user here; replace with actual auth data if available
+  // Define a default user object
+  const user = { name: 'User', habits: [] };
 
   const handleTaskCompletion = (eventId, isCompleted) => {
+    if (!selectedDate) return;
     const dateKey = formatDate(selectedDate);
     toggleEventCompletion(dateKey, eventId, isCompleted);
   };
@@ -565,6 +567,7 @@ const Track = () => {
   };
 
   const handleDeleteEvent = (eventId) => {
+    if (!selectedDate) return;
     const dateKey = formatDate(selectedDate);
     deleteEvent(dateKey, eventId);
   };
@@ -772,7 +775,7 @@ const Track = () => {
           user={user} 
           onTaskUpdate={handleTaskUpdate}
           onAddTaskWithDate={handleAddTaskWithDate}
-          tasks={[]} // Replace with actual tasks if available
+          tasks={[]}
           events={events}
         />
 

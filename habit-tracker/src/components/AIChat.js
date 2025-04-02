@@ -124,7 +124,7 @@ that requires an AI-powered habit coaching and task management interface.
 import React, { useState, useRef, useEffect } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { theme } from '../theme';
-
+import { useEventContext } from '../context/EventContext';
 // Keyframe animations remain unchanged
 const slideIn = keyframes`
   from { transform: translateY(100px); opacity: 0; }
@@ -406,7 +406,7 @@ const AIChat = ({ user, onTaskUpdate, tasks = [], onAddTaskWithDate }) => {
   const messagesEndRef = useRef(null);
   const [apiError, setApiError] = useState(null);
 
-  const API_KEY = 'get_your_own_api_key';
+  const API_KEY = 'AIzaSyAcE4ZbgOGLQsrS8ihpODooTDdNZXQMTTo';
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
   const scrollToBottom = () => {
