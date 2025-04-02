@@ -3,7 +3,7 @@ Sprint 3 summary
 During sprint 3 time period I analyzed and went through habit-trackerB containing our back end files for our project making changes and updates based on my assessments in order to sync front end local storage with back end mongo database.
 
 ACCOMPLISHMENTS-
-I made changes to middleware, models and routes in habit-trackerB to suit ES module format as that is front ends, in order for integration to follow smoothly, and for consistency. 
+I made changes to middleware, models and routes in habit-trackerB to suit ES module format as that is front ends, in order for integration to follow smoothly, and for consistency. Updated server.js in root to suit new functionality.
 
 Furthermore, I added 3 new files to allow integration, LocalData.js in models folder, LocalStorageRoutes.js in routes folder, and localStorageSync.js in habit-tracker (front end) public folder.
 
