@@ -3,38 +3,38 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
+import taskRoutes from './routes/taskRoutes.js'; // Import your router
+
+// Initialize express app
+const app = express();
+
 // Load environment variables
 dotenv.config();
 
+// Database connection
+connectDB();
 
-// Get all tasks for a user
-router.get('/', verifyToken, async (req, res) => {
-  const tasks = await Task.find({ userId: req.user.id });
-  res.json({ tasks });
+// Middleware
+app.use(cors());
+app.use(morgan('dev'));
+app.use(express.json());
+
+// Routes
+app.use('/api/tasks', taskRoutes); // Mount your task router
+
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.send('Habit Tracker API is running');
 });
 
-// Create a new task
-router.post('/', verifyToken, async (req, res) => {
-  const { name } = req.body;
-  if (!name) return res.status(400).json({ message: 'Task name is required' });
-
-  const newTask = new Task({ userId: req.user.id, name });
-  await newTask.save();
-
-  res.status(201).json({ message: 'Task created', task: newTask });
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
 });
 
-// Mark task as completed
-router.put('/:taskId', verifyToken, async (req, res) => {
-  const { completed } = req.body;
-  const task = await Task.findByIdAndUpdate(req.params.taskId, { completed }, { new: true });
-  res.json({ message: 'Task updated', task });
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
-
-// Delete a task
-router.delete('/:taskId', verifyToken, async (req, res) => {
-  await Task.findByIdAndDelete(req.params.taskId);
-  res.json({ message: 'Task deleted' });
-});
-
-module.exports = router;

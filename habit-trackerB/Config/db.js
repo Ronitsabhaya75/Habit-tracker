@@ -1,17 +1,23 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import { User, Habit, Task, LocalData } from '../models/index.js';
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('✅ MongoDB Connected...');
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    
+    // Optional: Create indexes
+    await User.init();
+    await Habit.init();
+    await Task.init();
+    await LocalData.init();
   } catch (error) {
-    console.error('❌ MongoDB Connection Failed:', error.message);
+    console.error(`Error: ${error.message}`);
     process.exit(1);
   }
 };
 
-module.exports = connectDB;
+export default connectDB;
