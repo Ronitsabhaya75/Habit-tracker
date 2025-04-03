@@ -22,6 +22,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { useHabit } from '../../context/HabitContext';
 
 // Array of word objects used across modes
 const scrambledWords = [
@@ -119,6 +120,7 @@ const WordScramblerGame = () => {
   const [message, setMessage] = useState('');
   const [showMeaning, setShowMeaning] = useState(false);
   const [scrambled, setScrambled] = useState('');// Shuffled/masked word to show
+  const { updateProgress } = useHabit();
   const [xp, setXP] = useState(() => parseInt(localStorage.getItem('scrambledXP')) || 0);
   const [attempts, setAttempts] = useState(0);// Attempt count for current word
   const [currentSet, setCurrentSet] = useState([]);// Current randomized list of questions
@@ -178,6 +180,7 @@ const WordScramblerGame = () => {
         (parseInt(localStorage.getItem('scrambledXP')) || 0) +
         (parseInt(localStorage.getItem('missingXP')) || 0)
       );
+      updateProgress('games', 10);
     } else {
       const newAttempts = attempts + 1;
       if (newAttempts >= 3) {

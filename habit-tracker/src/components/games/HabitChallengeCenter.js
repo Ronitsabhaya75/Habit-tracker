@@ -1,7 +1,7 @@
 /**
  * Habit Challenge Center Component
  *
- * This file implements the HabitChallengeDashboard component, which serves as an engaging 
+ * This file implements the HabitChallengeDashboard component, which serves as an engaging
  * challenge hub within the habit tracking application. It provides two interactive sections:
  *
  * -  Hourly Challenges:
@@ -22,7 +22,7 @@
  * - Dynamic habit generation and streak recognition.
  * - Reset functions for all XP and challenge states.
  *
- * The code emphasizes modularity and readability, reusing helper functions like 
+ * The code emphasizes modularity and readability, reusing helper functions like
  * `getWeeklyHabits()` and `getBadges()` to maintain clean logic separation.
  *
  *  Themed styling is applied using `styled-components`, adhering to a consistent color palette.
@@ -31,7 +31,9 @@
 // Import necessary React and styled-components modules
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { theme } from '../../theme';;
+import { theme } from '../../theme';
+import { useHabit } from '../../context/HabitContext';
+import { useNavigate } from 'react-router-dom';
 
 // Main layout container for the Habit Challenge Center
 const Container = styled.div`
@@ -199,6 +201,36 @@ const ResetButton = styled.button`
   }
 `;
 
+// Navigation buttons styled like in WordScramblerGame
+const NavigationButtons = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+`;
+
+const NavigationButton = styled.button`
+  background: linear-gradient(to right, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+`;
+
 const allWeeklyHabits = [
   "Drink 8 glasses of water", "Stretch for 5 mins", "Journal for 3 mins", "Meditate 5 mins", "Walk 15 mins",
   "Plan tomorrow's tasks", "No sugar today", "Read 10 mins", "Sleep by 10 PM", "Digital detox 1hr",
@@ -237,25 +269,27 @@ const HabitChallengeDashboard = () => {
   const [tab, setTab] = useState('hourly');
   const [hourlyXP, setHourlyXP] = useState(() => parseInt(localStorage.getItem('hourlyXP')) || 0);
   const [weeklyXP, setWeeklyXP] = useState(() => parseInt(localStorage.getItem('weeklyXP')) || 0);
+  const { updateProgress } = useHabit();
   const [totalXP, setTotalXP] = useState(() => parseInt(localStorage.getItem('totalXP')) || 0);
   const [hourlyFeedback, setHourlyFeedback] = useState({});
   const [dailyStatus, setDailyStatus] = useState(() => Array(7).fill(null).map(() => ({})));
   const [completedDays, setCompletedDays] = useState(0);
   const [weeklyHabits, setWeeklyHabits] = useState(getWeeklyHabits);
   const [selectedDifficulty, setSelectedDifficulty] = useState({});
+  const navigate = useNavigate();
 
   // Updated color palette with light blue/bluish green
   const habitColors = [
-    '#5BC0EB', // Light Blue
-    '#9EF01A', // Bright Lime Green
-    '#00F5D4', // Turquoise
-    '#00BFFF', // Deep Sky Blue
-    '#40E0D0', // Turquoise
-    '#20B2AA', // Light Sea Green
-    '#87CEFA', // Light Sky Blue
-    '#4ECDC4', // Turquoise
-    '#5DADE2', // Soft Blue
-    '#48D1CC'  // Medium Turquoise
+    '#5BC0EB',
+    '#9EF01A',
+    '#00F5D4',
+    '#00BFFF',
+    '#40E0D0',
+    '#20B2AA',
+    '#87CEFA',
+    '#4ECDC4',
+    '#5DADE2',
+    '#48D1CC'
   ];
 
 // Sync XP to localStorage anytime XP changes
@@ -305,6 +339,7 @@ const HabitChallengeDashboard = () => {
 
     setWeeklyXP((prev) => prev + xpChange);
     setTotalXP((prev) => prev + xpChange);
+    updateProgress('games', xpChange);
 
     const completed = Object.values(day).filter((s) => s === 'checked').length;
     if (completed === weeklyHabits[dayIdx].length) {
@@ -339,6 +374,15 @@ const HabitChallengeDashboard = () => {
     setWeeklyHabits(getWeeklyHabits());
   };
 
+  // Navigation functions
+  const navigateToHome = () => {
+    navigate('/dashboard');
+  };
+
+  const navigateToBreakthrough = () => {
+    navigate('/breakthrough-game');
+  };
+
   return (
     <Container>
       <Title>🔥 Habit Challenge Center</Title>
@@ -347,6 +391,15 @@ const HabitChallengeDashboard = () => {
         🕐 Hourly XP: {hourlyXP} |
         📆 Weekly XP: {weeklyXP}
       </p>
+
+      <NavigationButtons>
+        <NavigationButton onClick={navigateToHome}>
+          🏠 Home
+        </NavigationButton>
+        <NavigationButton onClick={navigateToBreakthrough}>
+          🚀 Back to Breakthrough
+        </NavigationButton>
+      </NavigationButtons>
 
       <ResetXPButtons>
         <ResetButton onClick={resetTotalXP}>Reset Total XP</ResetButton>

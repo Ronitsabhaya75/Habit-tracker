@@ -19,6 +19,7 @@
 
 import React, { useState, useEffect } from 'react';
 import SpinWheelPopup from './SpinWheelPopup';
+import { useHabit } from '../../context/HabitContext';
 
 // Full questions for the Quiz (randomly shuffled in loadQuestions)
 const fullQuestionSet = [
@@ -94,6 +95,7 @@ const fullQuestionSet = [
 const HabitQuizGame = () => {
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { updateProgress } = useHabit();
   const [xp, setXP] = useState(0);
   const [answered, setAnswered] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -146,6 +148,7 @@ const HabitQuizGame = () => {
       const newXP = xp + 10;
       setXP(newXP);
       localStorage.setItem('quizXP', newXP);
+      updateProgress('games', 10);
       setCorrectCount(prev => prev + 1);
     }
     setAnswered(true);

@@ -22,6 +22,7 @@
 
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { useHabit } from '../../context/HabitContext';
 
 // Styled container for the full spin wheel layout
 const SpinWheelContainer = styled.div`
@@ -89,6 +90,7 @@ const CloseButton = styled.button`
 
 // Main SpinWheel component
 const SpinWheel = ({ onClose, roundNumber, onXPReward }) => {
+  const { updateProgress } = useHabit();
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
 
@@ -127,6 +129,8 @@ const SpinWheel = ({ onClose, roundNumber, onXPReward }) => {
       if (typeof onXPReward === 'function') {
         onXPReward(rewardValue);
       }
+
+      updateProgress('games', rewardValue);
 
       localStorage.setItem('quizSpinDate', today);
       setSpinning(false);
