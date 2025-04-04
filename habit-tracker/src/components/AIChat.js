@@ -406,7 +406,7 @@ const AIChat = ({ user, onTaskUpdate, tasks = [], onAddTaskWithDate }) => {
   const messagesEndRef = useRef(null);
   const [apiError, setApiError] = useState(null);
 
-  const API_KEY = 'generic_api_key'; // Replace with your actual API key
+  const API_KEY = 'get-your-own'; // Replace with your actual API key
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
   const scrollToBottom = () => {
@@ -502,6 +502,7 @@ const AIChat = ({ user, onTaskUpdate, tasks = [], onAddTaskWithDate }) => {
   // Enhanced date extraction
   const extractDateFromText = (text) => {
     const today = new Date();
+    const todayKey = today.toLocaleDateString('en-CA'); 
     const lowerText = text.toLowerCase();
     
     // Handle common date references
@@ -649,7 +650,8 @@ const AIChat = ({ user, onTaskUpdate, tasks = [], onAddTaskWithDate }) => {
           };
           
           if (onAddTaskWithDate) {
-            onAddTaskWithDate(taskDate, newTask);
+const localDateKey = taskDate.toLocaleDateString('en-CA');
+onAddTaskWithDate(new Date(localDateKey), newTask);
             setMessages(prev => [...prev, {
               text: `Added new task for ${taskDate.toLocaleDateString()}: "${taskTitle}"`,
               sender: 'system'
@@ -786,8 +788,10 @@ const AIChat = ({ user, onTaskUpdate, tasks = [], onAddTaskWithDate }) => {
     setApiError(null);
 
     try {
+      const newLocal = new Date();
       // Enhanced prompt with date context
-      const today = new Date();
+      const today = newLocal;
+    
       const prompt = {
         contents: [{
           parts: [{
