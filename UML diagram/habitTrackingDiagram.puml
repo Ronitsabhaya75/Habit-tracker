@@ -1,0 +1,50 @@
+@startuml
+
+package "Habit Tracking App" {
+
+  [Frontend]
+  [HabitTracker]
+  [AICoach]
+  [Leaderboard]
+  [ScoreGraph]
+  [CalendarTracker]
+  [AITaskAdder]
+  [ReviewDashboard]
+
+  [MiniGames]
+  [ChessGame]
+  [PacmanGame]
+  [HabitQuiz]
+  [SpinWheel]
+
+  [Backend]
+  [APIRoutes]
+  [AWSServices]
+  
+  [Database]
+
+  [Frontend] --> [HabitTracker]
+  [Frontend] --> [AICoach]
+  [Frontend] --> [Leaderboard]
+  [Frontend] --> [ScoreGraph]
+  [Frontend] --> [CalendarTracker]
+  [Frontend] --> [AITaskAdder]
+  [Frontend] --> [ReviewDashboard]
+
+  // Mini Games
+  [Frontend] --> [MiniGames]
+  [MiniGames] --> [ChessGame]
+  [MiniGames] --> [PacmanGame]
+  [MiniGames] --> [HabitQuiz]
+  [MiniGames] --> [SpinWheel]
+
+  // Backend Communication
+  [Frontend] --> [Backend] : API Calls
+  [Backend] --> [APIRoutes]
+  [Backend] --> [AWSServices]
+  [Backend] --> [Database] : Read/Write
+
+  // Database Storage
+  [Database] : MongoDB
+}
+@enduml

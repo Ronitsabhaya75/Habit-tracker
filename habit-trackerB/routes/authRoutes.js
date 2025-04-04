@@ -13,15 +13,32 @@ const JWT_SECRET = process.env.JWT_SECRET;
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    if (!name || !email || !password) return res.status(400).json({ message: 'All fields required' });
+    if (!name || !email || !password)
+      return res.status(400).json({ message: 'All fields required' });
+
+    const userExists = await User.findOne({ email });
+    if (userExists)
+      return res.status(400).json({ message: 'User already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashedPassword });
+
+    const newUser = new User({ 
+      name, 
+      email, 
+      password: hashedPassword,
+      xp: 0,               // ensure initial XP is 0
+      level: 1             // ensure initial Level is 1
+    });
+
     await newUser.save();
 
     const token = jwt.sign({ id: newUser._id, name, email }, JWT_SECRET, { expiresIn: '24h' });
 
-    res.status(201).json({ message: 'User registered', token, user: { id: newUser._id, name, email } });
+    res.status(201).json({ 
+      message: 'User registered', 
+      token, 
+      user: { id: newUser._id, name, email, xp: 0, level: 1 } 
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
