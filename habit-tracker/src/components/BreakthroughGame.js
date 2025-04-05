@@ -681,14 +681,17 @@ const BreakthroughGame = () => {
         <Star top="85%" left="55%" speed="3.5s" size="4px" opacity="0.9" />
         <Star top="55%" left="45%" speed="5s" size="2px" opacity="0.8" />
       </Background>
-
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
+
           <NavItem onClick={() => navigate('/dashboard')}>Dashboard</NavItem>
-          <NavItem className="active">Games</NavItem>
-          <NavItem onClick={() => navigate('/track')}>Events</NavItem>
+          <NavItem className="active">Mini Games</NavItem>
+          <NavItem onClick={() => navigate('/track')}>Calender tracker</NavItem>
+          <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
+          <NavItem onClick={() => navigate('/shop')}>Shop</NavItem>
           <NavItem onClick={() => navigate('/review')}>Review</NavItem>
+
         </NavList>
       </Sidebar>
 

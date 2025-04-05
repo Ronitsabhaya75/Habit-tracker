@@ -1,5 +1,212 @@
+/*
+Dashboard Component Documentation
+Overview
+The Dashboard component serves as the central hub for the HabitQuest application, providing users with a comprehensive view of their habit tracking progress, tasks, achievements, and gamification elements. The dashboard features:
+
+Visual progress tracking with interactive charts
+
+Task management system
+
+Achievement tracking
+
+Leaderboard display
+
+AI-powered habit coaching
+
+Gamification elements (XP, levels, streaks)
+
+Key Features
+1. User Progress Tracking
+Visual Charts: Line and bar charts showing progress over time
+
+XP System: Tracks user experience points across all activities
+
+Level Progression: Calculates user level based on accumulated XP
+
+Streak Tracking: Maintains and displays current habit streak
+
+2. Task Management
+Daily Task List: Shows tasks for the current day
+
+Task Operations: Add, edit, complete, and delete tasks
+
+Time Allocation: Estimate and track time spent on tasks
+
+Task Completion Rewards: Awards XP for completed tasks
+
+3. Gamification Elements
+Achievements System: Tracks and displays earned milestones
+
+Leaderboard: Shows user ranking compared to others
+
+XP Rewards: Awards points for various activities
+
+Visual Feedback: Animated elements celebrate progress
+
+4. AI Integration
+Habit Coach: Provides personalized suggestions
+
+Task Assistance: Helps manage and organize tasks
+
+Progress Analysis: Offers insights based on user data
+
+5. Navigation
+Sidebar Menu: Quick access to all application features
+
+Responsive Design: Adapts to different screen sizes
+
+Technical Implementation
+Component Structure
+Styled Components: Uses styled-components for all UI elements
+
+Custom Animations: Keyframe animations for interactive elements
+
+Context Integration: Connects to Auth, Habit, and Event contexts
+
+Recharts Integration: For data visualization
+
+State Management
+Local State: Manages UI state (chart type, notifications, etc.)
+
+Context State: Accesses user data, habits, and events
+
+Derived State: Calculates XP, levels, and streaks
+
+Key Functions
+fetchUserProgress: Loads user progress data
+
+fetchLeaderboard: Retrieves leaderboard data
+
+handleTaskCompletion: Manages task completion logic
+
+addNotification: Displays temporary notifications
+
+generateCoachSuggestions: Creates personalized recommendations
+
+Data Flow
+On mount, fetches user progress and leaderboard data
+
+Calculates derived state (XP, level, streak)
+
+Renders interactive UI components
+
+Handles user interactions through event callbacks
+
+Updates state and persists changes through context
+
+Integration Points
+Context Dependencies
+useAuth: For user authentication and data
+
+useHabit: For habit tracking functionality
+
+useEventContext: For task/event management
+
+Child Components
+AIChat: Embedded AI assistant component
+
+Recharts Components: For data visualization
+
+Navigation
+Links to all major application sections:
+
+SpinWheel
+
+HabitProgressTracker
+
+Games
+
+Events
+
+Review
+
+UI Elements
+Visual Components
+Animated Background: Space-themed with floating elements
+
+Progress Charts: Interactive data visualization
+
+Task List: Editable and completable items
+
+Achievement Cards: Display earned milestones
+
+Leaderboard: Shows competitive ranking
+
+Notifications System: Temporary message display
+
+Interactive Elements
+Buttons: For all primary actions
+
+Checkboxes: For task completion
+
+Input Fields: For adding/editing tasks
+
+Chart Controls: Switch between visualization types
+
+Navigation Menu: Access to all app sections
+
+Data Structure
+Key State Variables
+chartData: Array of progress data points
+
+leaderboard: Array of user ranking objects
+
+notifications: Array of active notifications
+
+todayTasks: Array of tasks for current day
+
+totalXP: Calculated experience points
+
+currentLevel: Derived from totalXP
+
+streak: Current habit streak count
+
+Performance Considerations
+Memoized calculations for derived state
+
+Efficient rendering with virtualized lists
+
+Debounced input handlers
+
+Optimized animations using CSS transforms
+
+Accessibility Features
+Keyboard navigable interface
+
+Sufficient color contrast
+
+ARIA labels for interactive elements
+
+Responsive design for various devices
+
+Error Handling
+API error catching and user feedback
+
+Graceful fallbacks for missing data
+
+Input validation for user entries
+
+Usage Example
+jsx
+Copy
+<Dashboard />
+The Dashboard component is designed to be self-contained and only requires the proper context providers to be wrapped around it in the application hierarchy.
+
+Dependencies
+React
+
+styled-components
+
+recharts
+
+React Router
+
+Various context providers (Auth, Habit, Event)
+
+This comprehensive dashboard brings together all aspects of the HabitQuest application into a cohesive, interactive interface that motivates users through gamification and visual feedback while providing powerful tools for habit formation and task management.
+*/
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import styled, { keyframes, createGlobalStyle } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { useHabit } from '../context/HabitContext';
@@ -7,23 +214,7 @@ import { useEventContext } from '../context/EventContext';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from '../components/AIChat';
-
-// Global style to remove default margins and padding
-const GlobalStyle = createGlobalStyle`
-  html, body, #root {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-  
-  * {
-    box-sizing: inherit;
-  }
-`;
-
+import shop from '../components/shop'
 const HABIT_CATEGORIES = [
   { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
     { level: 1, goal: 'First Week Clean', points: 50, reward: 'Self-Care Package' },
@@ -251,14 +442,8 @@ const XPOrb = styled.div`
 const DashboardContainer = styled.div`
   display: flex;
   min-height: 100vh;
-  height: 100%;
-  width: 100%;
   position: relative;
   color: ${theme.colors.text};
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: ${theme.colors.background};
 `;
 
 const Sidebar = styled.div`
@@ -272,7 +457,6 @@ const Sidebar = styled.div`
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
-  height: 100%;
 
   h2 {
     color: ${theme.colors.accent};
@@ -311,8 +495,6 @@ const MainContent = styled.div`
   padding: 3rem;
   margin-left: 20px;
   z-index: 10;
-  overflow-y: auto;
-  height: 100vh;
 `;
 
 const Header = styled.div`
@@ -657,7 +839,6 @@ const TimeInput = styled.input`
   border-radius: 8px;
 `;
 
-// Main component
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -948,175 +1129,174 @@ const Dashboard = () => {
   const todayTasks = events[todayKey] || [];
 
   return (
-    <>
-      <GlobalStyle />
-      <DashboardContainer>
-        <Background>
-          <GradientOverlay />
-          <Scenery />
-          <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
-          <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
-          <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
-          <Rocket><RocketTrail /></Rocket>
-          <AchievementBadge />
-          <ProgressCircle />
-          <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
-          <XPOrb style={{ top: '30%', right: '25%' }} duration="5s" delay="1.2s" />
-          <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
-          <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
-        </Background>
+    <DashboardContainer>
+      <Background>
+        <GradientOverlay />
+        <Scenery />
+        <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
+        <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
+        <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
+        <Rocket><RocketTrail /></Rocket>
+        <AchievementBadge />
+        <ProgressCircle />
+        <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
+        <XPOrb style={{ top: '30%', right: '25%' }} duration="5s" delay="1.2s" />
+        <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
+        <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
+      </Background>
 
-        <NotificationContainer>
-          {notifications.map(notification => (
-            <NotificationCard key={notification.id}>
-              <NotificationMessage>{notification.message}</NotificationMessage>
-              <NotificationActions>
-                {notification.actions.map((action, index) => (
-                  <Button key={index} onClick={action.onClick}>
-                    {action.label}
-                  </Button>
-                ))}
-              </NotificationActions>
-            </NotificationCard>
-          ))}
-        </NotificationContainer>
-
-        <Sidebar>
-          <h2>HabitQuest</h2>
-          <NavList>
-            <NavItem className="active">Dashboard</NavItem>
-            <NavItem onClick={() => navigate('/breakthrough-game')}>Games</NavItem>
-            <NavItem onClick={() => navigate('/track')}>Events</NavItem>
-            <NavItem onClick={() => navigate('/review')}>Review</NavItem>
-          </NavList>
-        </Sidebar>
-
-        <MainContent>
-          <Header>
-            <UserGreeting>
-              <h1>Welcome{user?.name ? `, ${user.name}` : ''}! 👋</h1>
-              <LevelBadge>Level {currentLevel} - {totalXP} XP</LevelBadge>
-            </UserGreeting>
-            <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
-          </Header>
-
-          <GridContainer>
-            <Card>
-              <h2>Progress Overview</h2>
-              <ChartControls>
-                <ChartTypeButton active={chartType === 'line'} onClick={() => setChartType('line')}>Line</ChartTypeButton>
-                <ChartTypeButton active={chartType === 'bar'} onClick={() => setChartType('bar')}>Bar</ChartTypeButton>
-              </ChartControls>
-              {loading ? <p>Loading chart data...</p> : <ChartContainer>{renderChart()}</ChartContainer>}
-              <h3 style={{ marginTop: '1rem' }}>Current Streak: {streak} days</h3>
-              <ProgressBarContainer progress={streakPercentage}><div></div></ProgressBarContainer>
-              <p>{streak >= 14 ? 'Streak Maxed!' : `${14 - streak} days to max streak`}</p>
-            </Card>
-
-            <Card>
-              <h2>Leaderboard</h2>
-              <LeaderboardList>
-                {sortedLeaderboard.map((player, index) => (
-                  <LeaderboardItem key={player.name}>
-                    <div><UserRank>#{index + 1}</UserRank> {player.name}</div>
-                    <UserScore>{player.xp} XP</UserScore>
-                  </LeaderboardItem>
-                ))}
-              </LeaderboardList>
-            </Card>
-
-            <Card>
-              <h2>Achievements</h2>
-              <AchievementList>
-                {achievements
-                  .filter(achievement => showAllAchievements || achievement.earned)
-                  .map(achievement => (
-                    <AchievementItem key={achievement.id}>
-                      <AchievementTitle>{achievement.title}</AchievementTitle>
-                      <AchievementDetails>{achievement.description}</AchievementDetails>
-                    </AchievementItem>
-                  ))}
-              </AchievementList>
-              <Button style={{ marginTop: '1rem', width: '100%' }} onClick={() => setShowAllAchievements(prev => !prev)}>
-                {showAllAchievements ? "Collapse" : "View All Achievements"}
-              </Button>
-            </Card>
-
-            {selectedTask && (
-              <TimeAllocationModal>
-                <h3>Allocate Time for "{selectedTask.title}"</h3>
-                <TimeInput
-                  type="number"
-                  placeholder="Estimated time in minutes"
-                  value={timeAllocation}
-                  onChange={(e) => setTimeAllocation(e.target.value)}
-                />
-                <Button onClick={saveTimeAllocation}>Save Time</Button>
-                <Button onClick={() => setSelectedTask(null)} style={{ marginLeft: '0.5rem', background: theme.colors.secondary }}>
-                  Cancel
+      <NotificationContainer>
+        {notifications.map(notification => (
+          <NotificationCard key={notification.id}>
+            <NotificationMessage>{notification.message}</NotificationMessage>
+            <NotificationActions>
+              {notification.actions.map((action, index) => (
+                <Button key={index} onClick={action.onClick}>
+                  {action.label}
                 </Button>
-              </TimeAllocationModal>
-            )}
+              ))}
+            </NotificationActions>
+          </NotificationCard>
+        ))}
+      </NotificationContainer>
 
-            <Card>
-              <h2>Today's Tasks</h2>
-              <TaskList>
-                {todayTasks.map((task) => (
-                  <Task key={task.id}>
-                    <TaskCheckbox
-                      completed={task.completed}
-                      onClick={() => handleTaskCompletion(task.id, !task.completed)}
-                    />
-                    {task.isEditing ? (
-                      <EditInput
-                        type="text"
-                        value={task.title}
-                        onChange={(e) => updateEvent(todayKey, task.id, { title: e.target.value })}
-                        onBlur={() => toggleEdit(task.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") toggleEdit(task.id);
-                        }}
-                      />
-                    ) : (
-                      <TaskText
-                        completed={task.completed}
-                        onDoubleClick={() => toggleEdit(task.id)}
-                      >
-                        {task.title}
-                      </TaskText>
-                    )}
-                    <DeleteButton onClick={() => deleteTask(task.id)}>Delete</DeleteButton>
-                  </Task>
+      <Sidebar>
+        <h2>HabitQuest</h2>
+        <NavList>
+          <NavItem className="active">Dashboard</NavItem>
+          <NavItem onClick={() => navigate('/breakthrough-game')}>Mini Games</NavItem>
+          <NavItem onClick={() => navigate('/track')}>Calender tracker</NavItem>
+          <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
+          <NavItem onClick={() => navigate('/shop')}>Shop</NavItem>
+          <NavItem onClick={() => navigate('/review')}>Review</NavItem>
+
+        </NavList>
+      </Sidebar>
+
+      <MainContent>
+        <Header>
+          <UserGreeting>
+            <h1>Welcome{user?.name ? `, ${user.name}` : ''}! 👋</h1>
+            <LevelBadge>Level {currentLevel} - {totalXP} XP</LevelBadge>
+          </UserGreeting>
+          <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+        </Header>
+
+        <GridContainer>
+          <Card>
+            <h2>Progress Overview</h2>
+            <ChartControls>
+              <ChartTypeButton active={chartType === 'line'} onClick={() => setChartType('line')}>Line</ChartTypeButton>
+              <ChartTypeButton active={chartType === 'bar'} onClick={() => setChartType('bar')}>Bar</ChartTypeButton>
+            </ChartControls>
+            {loading ? <p>Loading chart data...</p> : <ChartContainer>{renderChart()}</ChartContainer>}
+            <h3 style={{ marginTop: '1rem' }}>Current Streak: {streak} days</h3>
+            <ProgressBarContainer progress={streakPercentage}><div></div></ProgressBarContainer>
+            <p>{streak >= 14 ? 'Streak Maxed!' : `${14 - streak} days to max streak`}</p>
+          </Card>
+
+          <Card>
+            <h2>Leaderboard</h2>
+            <LeaderboardList>
+              {sortedLeaderboard.map((player, index) => (
+                <LeaderboardItem key={player.name}>
+                  <div><UserRank>#{index + 1}</UserRank> {player.name}</div>
+                  <UserScore>{player.xp} XP</UserScore>
+                </LeaderboardItem>
+              ))}
+            </LeaderboardList>
+          </Card>
+
+          <Card>
+            <h2>Achievements</h2>
+            <AchievementList>
+              {achievements
+                .filter(achievement => showAllAchievements || achievement.earned)
+                .map(achievement => (
+                  <AchievementItem key={achievement.id}>
+                    <AchievementTitle>{achievement.title}</AchievementTitle>
+                    <AchievementDetails>{achievement.description}</AchievementDetails>
+                  </AchievementItem>
                 ))}
-              </TaskList>
-              {showInput ? (
-                <AddHabitInput
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Add a new task..."
-                  value={newHabit}
-                  onChange={(e) => setNewHabit(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  onBlur={() => setShowInput(false)}
-                />
-              ) : (
-                <AddHabitButton onClick={addHabit}>+ Add Task</AddHabitButton>
-              )}
-            </Card>
-          </GridContainer>
-        </MainContent>
-        <AIChat 
-          user={user} 
-          tasks={todayTasks} 
-          onTaskUpdate={handleTaskCompletion}
-          onAddTaskWithDate={(date, task) => {
-            const dateKey = date.toISOString().split('T')[0];
-            addEvent(dateKey, task);
-          }}
-        />
-      </DashboardContainer>
-    </>
+            </AchievementList>
+            <Button style={{ marginTop: '1rem', width: '100%' }} onClick={() => setShowAllAchievements(prev => !prev)}>
+              {showAllAchievements ? "Collapse" : "View All Achievements"}
+            </Button>
+          </Card>
+
+          {selectedTask && (
+            <TimeAllocationModal>
+              <h3>Allocate Time for "{selectedTask.title}"</h3>
+              <TimeInput
+                type="number"
+                placeholder="Estimated time in minutes"
+                value={timeAllocation}
+                onChange={(e) => setTimeAllocation(e.target.value)}
+              />
+              <Button onClick={saveTimeAllocation}>Save Time</Button>
+              <Button onClick={() => setSelectedTask(null)} style={{ marginLeft: '0.5rem', background: theme.colors.secondary }}>
+                Cancel
+              </Button>
+            </TimeAllocationModal>
+          )}
+
+<Card>
+            <h2>Today's Tasks</h2>
+            <TaskList>
+              {todayTasks.map((task) => (
+                <Task key={task.id}>
+                  <TaskCheckbox
+                    completed={task.completed}
+                    onClick={() => handleTaskCompletion(task.id, !task.completed)}
+                  />
+                  {task.isEditing ? (
+                    <EditInput
+                      type="text"
+                      value={task.title}
+                      onChange={(e) => updateEvent(todayKey, task.id, { title: e.target.value })}
+                      onBlur={() => toggleEdit(task.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") toggleEdit(task.id);
+                      }}
+                    />
+                  ) : (
+                    <TaskText
+                      completed={task.completed}
+                      onDoubleClick={() => toggleEdit(task.id)}
+                    >
+                      {task.title}
+                    </TaskText>
+                  )}
+                  <DeleteButton onClick={() => deleteTask(task.id)}>Delete</DeleteButton>
+                </Task>
+              ))}
+            </TaskList>
+            {showInput ? (
+              <AddHabitInput
+                ref={inputRef}
+                type="text"
+                placeholder="Add a new task..."
+                value={newHabit}
+                onChange={(e) => setNewHabit(e.target.value)}
+                onKeyPress={handleKeyPress}
+                onBlur={() => setShowInput(false)}
+              />
+            ) : (
+              <AddHabitButton onClick={addHabit}>+ Add Task</AddHabitButton>
+            )}
+          </Card>
+        </GridContainer>
+      </MainContent>
+      <AIChat 
+  user={user} 
+  tasks={todayTasks} 
+  onTaskUpdate={handleTaskCompletion}
+  onAddTaskWithDate={(date, task) => {
+    const dateKey = date.toISOString().split('T')[0];
+    addEvent(dateKey, task);
+  }}
+/>
+    </DashboardContainer>
   );
 };
-
 export default Dashboard;

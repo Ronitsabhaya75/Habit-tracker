@@ -724,17 +724,17 @@ const Track = () => {
         <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
         <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
       </Background>
-
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
-          <NavItem onClick={() => navigate('/dashboard')}>Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/breakthrough-game')}>Games</NavItem>
-          <NavItem className="active">Events</NavItem>
+          <NavItem className="active">Dashboard</NavItem>
+          <NavItem onClick={() => navigate('/dashboard')}>Mini Games</NavItem>
+          <NavItem className="active">Calender Tracker</NavItem>
+          <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
+          <NavItem onClick={() => navigate('/shop')}>Shop</NavItem>
           <NavItem onClick={() => navigate('/review')}>Review</NavItem>
         </NavList>
-      </Sidebar>
-      
+      </Sidebar> 
       <TrackContainer>
         <h1 style={{ fontSize: '2.5rem', color: theme.colors.accent, marginBottom: '1rem' }}>Track Your Habits</h1>
         <div style={{ marginBottom: '1rem', fontSize: '1.2rem', color: theme.colors.text }}>

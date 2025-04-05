@@ -575,8 +575,10 @@ const DashboardReview = () => {
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem onClick={() => navigate('/dashboard')}>Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/breakthrough-game')}>Games</NavItem>
-          <NavItem onClick={() => navigate('/track')}>Events</NavItem>
+          <NavItem onClick={() => navigate('/breakthrough-game')}>Mini Games</NavItem>
+          <NavItem onClick={() => navigate('/track')}>Calender Tracker</NavItem>
+          <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
+          <NavItem onClick={() => navigate('/shop')}>Shop</NavItem>
           <NavItem className="active">Review</NavItem>
         </NavList>
       </Sidebar>
