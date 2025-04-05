@@ -406,7 +406,7 @@ const AIChat = ({ user, onTaskUpdate, tasks = [], onAddTaskWithDate }) => {
   const messagesEndRef = useRef(null);
   const [apiError, setApiError] = useState(null);
 
-  const API_KEY = 'get-your-own'; // Replace with your actual API key
+  const API_KEY = 'AIzaSyAcE4ZbgOGLQsrS8ihpODooTDdNZXQMTTo'; // Replace with your actual API key
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
   const scrollToBottom = () => {
