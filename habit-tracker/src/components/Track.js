@@ -727,8 +727,8 @@ const Track = () => {
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
-          <NavItem className="active">Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/dashboard')}>Mini Games</NavItem>
+        <NavItem onClick={() => navigate('/dashboard')}>Dashboard</NavItem>
+        <NavItem onClick={() => navigate('/breakthrough-game')}>Mini Games</NavItem>
           <NavItem className="active">Calender Tracker</NavItem>
           <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
           <NavItem onClick={() => navigate('/shop')}>Shop</NavItem>
