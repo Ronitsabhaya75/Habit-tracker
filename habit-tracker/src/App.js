@@ -33,6 +33,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/track" element={<Track />} />
               <Route path="/review" element={<DashboardReview />} />
+              <Route path="/shop" element={<Shop />} />
               <Route path="/breakthrough-game" element={<BreakthroughGame />} />
               <Route path="/addiction-recovery" element={<AddictionRecoveryGame />} />
               <Route path="/chess" element={<Chess />} />
@@ -40,7 +41,6 @@ function App() {
               <Route path="/habit-quiz" element={<HabitQuizGame />} />
               <Route path="/habit-challenge" element={<HabitChallengeDashboard />} />
               <Route path="/pacman" element={<PacmanGame />} />
-              <Route path="/shop" element={<Shop />} />
             </Routes>
           </EventProvider>
         </HabitProvider>

@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+// ✅ HabitContext.js (Updated with persistence, streak, and XP deduction)
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const HabitContext = createContext();
 
@@ -13,10 +14,17 @@ export const HabitProvider = ({ children }) => {
     return savedHistory ? JSON.parse(savedHistory) : [];
   };
 
+  const loadBadges = () => {
+    const saved = localStorage.getItem('habitBadges');
+    return saved ? JSON.parse(saved) : [];
+  };
+
   const [progress, setProgress] = useState(loadProgress);
   const [progressHistory, setProgressHistory] = useState(loadHistory);
   const [lastAction, setLastAction] = useState(null);
   const [streak, setStreak] = useState(0);
+  const [events, setEvents] = useState({});
+  const [ownedBadges, setOwnedBadges] = useState(loadBadges);
 
   useEffect(() => {
     localStorage.setItem('habitProgress', JSON.stringify(progress));
@@ -25,6 +33,10 @@ export const HabitProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('habitHistory', JSON.stringify(progressHistory));
   }, [progressHistory]);
+
+  useEffect(() => {
+    localStorage.setItem('habitBadges', JSON.stringify(ownedBadges));
+  }, [ownedBadges]);
 
   const updateProgress = (categoryId, points) => {
     const currentProgress = progress[categoryId] || 0;
@@ -59,6 +71,46 @@ export const HabitProvider = ({ children }) => {
     return historyEntry;
   };
 
+  const updateEvent = (dateKey, taskId, updatedTask) => {
+    setEvents(prev => ({
+      ...prev,
+      [dateKey]: prev[dateKey].map(task => task.id === taskId ? { ...task, ...updatedTask } : task)
+    }));
+  };
+
+  const toggleEventCompletion = (dateKey, taskId, completed) => {
+    setEvents(prev => ({
+      ...prev,
+      [dateKey]: prev[dateKey].map(task => task.id === taskId ? { ...task, completed } : task)
+    }));
+  };
+
+  const calculateTotalXP = () => {
+    const progressXP = Object.values(progress).reduce((sum, p) => sum + p, 0);
+    const todayKey = new Date().toISOString().split('T')[0];
+    const tasksXP = events[todayKey]?.filter(task => task.completed).length * 10 || 0;
+    return progressXP + tasksXP;
+  };
+
+  const deductXP = (amount) => {
+    const total = calculateTotalXP();
+    if (amount > total) return false;
+
+    const sortedDates = Object.keys(progress).sort();
+    let remaining = amount;
+    const newProgress = { ...progress };
+
+    for (const key of sortedDates) {
+      const deduction = Math.min(remaining, newProgress[key]);
+      newProgress[key] -= deduction;
+      remaining -= deduction;
+      if (remaining <= 0) break;
+    }
+
+    setProgress(newProgress);
+    return true;
+  };
+
   const getCategoryProgress = (categoryId) => progress[categoryId] || 0;
 
   const getCategoryHistory = (categoryId) => {
@@ -75,13 +127,20 @@ export const HabitProvider = ({ children }) => {
   return (
     <HabitContext.Provider value={{
       progress,
+      events,
       progressHistory,
       updateProgress,
+      updateEvent,
+      toggleEventCompletion,
+      calculateTotalXP,
       getCategoryProgress,
       getCategoryHistory,
       lastAction,
       getStreak,
       setStreak,
+      ownedBadges,
+      setOwnedBadges,
+      deductXP,
     }}>
       {children}
     </HabitContext.Provider>
@@ -95,5 +154,3 @@ export const useHabit = () => {
   }
   return context;
 };
-
-export default HabitContext;

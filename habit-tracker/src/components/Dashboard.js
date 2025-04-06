@@ -214,7 +214,8 @@ import { useEventContext } from '../context/EventContext';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from '../components/AIChat';
-import shop from '../components/shop'
+
+// Habit categories (unchanged)
 const HABIT_CATEGORIES = [
   { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
     { level: 1, goal: 'First Week Clean', points: 50, reward: 'Self-Care Package' },
@@ -250,7 +251,7 @@ const HABIT_CATEGORIES = [
   },
 ];
 
-// Animation keyframes
+// Animation keyframes (unchanged)
 const floatAnimation = keyframes`
   0% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-15px) rotate(2deg); }
@@ -280,7 +281,7 @@ const pulseGlow = keyframes`
   100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
 `;
 
-// Styled components (keeping all styling as is)
+// Styled components (unchanged)
 const Background = styled.div`
   position: absolute;
   width: 100%;
@@ -839,10 +840,30 @@ const TimeInput = styled.input`
   border-radius: 8px;
 `;
 
+// Badge data from Shop (to display badges in leaderboard)
+const BADGES = [
+  { id: 'rookie', name: 'Rookie Badge', icon: '🆕' },
+  { id: 'streak-master', name: 'Streak Master', icon: '🔥' },
+  { id: 'xp-legend', name: 'XP Legend', icon: '🏆' },
+  { id: 'early-bird', name: 'Early Bird', icon: '🐦' },
+  { id: 'night-owl', name: 'Night Owl', icon: '🦉' },
+  { id: 'habit-hero', name: 'Habit Hero', icon: '🦸' },
+  { id: 'task-crusher', name: 'Task Crusher', icon: '💪' },
+  { id: 'meditation-master', name: 'Meditation Master', icon: '🧘' },
+];
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { progress, getStreak, getCategoryProgress, setStreak, updateProgress } = useHabit();
+  const { 
+    progress, 
+    getStreak, 
+    getCategoryProgress, 
+    setStreak, 
+    updateProgress, 
+    calculateTotalXP, 
+    ownedBadges 
+  } = useHabit();
   const { events, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
 
   const [chartData, setChartData] = useState([]);
@@ -874,16 +895,12 @@ const Dashboard = () => {
 
   const handleTaskCompletion = async (taskId, completed) => {
     const todayKey = new Date().toISOString().split('T')[0];
-
     await toggleEventCompletion(todayKey, taskId, completed);
 
     if (completed) {
       await updateProgress('tasks', 10);
       addNotification(`Great job! You completed the task "${events[todayKey].find(t => t.id === taskId)?.title}".`, [
-        {
-          label: 'Track Progress',
-          onClick: () => navigate('/review')
-        }
+        { label: 'Track Progress', onClick: () => navigate('/review') }
       ]);
     }
   };
@@ -896,11 +913,7 @@ const Dashboard = () => {
     if (!selectedTask || !timeAllocation) return;
 
     const todayKey = new Date().toISOString().split('T')[0];
-    const updatedTask = {
-      ...selectedTask,
-      estimatedTime: parseInt(timeAllocation, 10)
-    };
-
+    const updatedTask = { ...selectedTask, estimatedTime: parseInt(timeAllocation, 10) };
     updateEvent(todayKey, selectedTask.id, updatedTask);
     addNotification(`Time allocated for "${selectedTask.title}": ${timeAllocation} minutes`);
     setSelectedTask(null);
@@ -914,32 +927,12 @@ const Dashboard = () => {
 
     if (incompleteTasks.length > 0) {
       addNotification(`You have ${incompleteTasks.length} tasks pending today!`, [
-        {
-          label: 'View Tasks',
-          onClick: () => window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'smooth'
-          })
-        }
+        { label: 'View Tasks', onClick: () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }) }
       ]);
     }
   }, [events, addNotification]);
 
-  const calculateTotalXP = useCallback(() => {
-    const progressXP = Object.values(progress).reduce((sum, p) => sum + p, 0);
-    let tasksXP = 0;
-    const todayKey = new Date().toISOString().split('T')[0];
-    const todayTasks = events[todayKey] || [];
-    tasksXP = todayTasks.filter(task => task.completed).length * 10;
-    return progressXP + tasksXP;
-  }, [progress, events]);
-
-  const [totalXP, setTotalXP] = useState(calculateTotalXP());
-
-  useEffect(() => {
-    setTotalXP(calculateTotalXP());
-  }, [calculateTotalXP]);
-
+  const totalXP = calculateTotalXP();
   const currentLevel = Math.floor(totalXP / 100) + 1;
   const levelProgress = totalXP % 100;
   const streakPercentage = Math.min((streak / 14) * 100, 100);
@@ -996,6 +989,7 @@ const Dashboard = () => {
       setLoading(true);
       const userProgress = await fakeFetchUserData();
       setChartData(userProgress.map((item, index) => ({
+        day: item.date,
         progress: getCategoryProgress(item.date) || item.progress,
       })));
     } catch (error) {
@@ -1024,9 +1018,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user && !leaderboard.some(entry => entry.name === user.name)) {
-      setLeaderboard(prev => [...prev, { name: user.name, xp: totalXP }]);
+      setLeaderboard(prev => [...prev, { name: user.name, xp: totalXP, badges: ownedBadges }]);
+    } else if (user) {
+      setLeaderboard(prev => prev.map(entry => 
+        entry.name === user.name ? { ...entry, xp: totalXP, badges: ownedBadges } : entry
+      ));
     }
-  }, [user, totalXP, leaderboard]);
+  }, [user, totalXP, ownedBadges, leaderboard]);
 
   const sortedLeaderboard = [...leaderboard].sort((a, b) => b.xp - a.xp);
 
@@ -1043,7 +1041,6 @@ const Dashboard = () => {
       setTimeout(() => {
         resolve(
           Array.from({ length: 7 }, (_, i) => ({
-            date: new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000).toLocaleDateString(),
             progress: Math.floor(Math.random() * 10),
           }))
         );
@@ -1064,11 +1061,7 @@ const Dashboard = () => {
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && newHabit.trim()) {
       const todayKey = new Date().toISOString().split('T')[0];
-      addEvent(todayKey, {
-        id: Date.now(),
-        title: newHabit.trim(),
-        completed: false
-      });
+      addEvent(todayKey, { id: Date.now(), title: newHabit.trim(), completed: false });
       setNewHabit('');
       setShowInput(false);
     }
@@ -1165,11 +1158,10 @@ const Dashboard = () => {
         <NavList>
           <NavItem className="active">Dashboard</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>Mini Games</NavItem>
-          <NavItem onClick={() => navigate('/track')}>Calender tracker</NavItem>
+          <NavItem onClick={() => navigate('/track')}>Calendar tracker</NavItem>
           <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
           <NavItem onClick={() => navigate('/shop')}>Shop</NavItem>
           <NavItem onClick={() => navigate('/review')}>Review</NavItem>
-
         </NavList>
       </Sidebar>
 
@@ -1200,7 +1192,13 @@ const Dashboard = () => {
             <LeaderboardList>
               {sortedLeaderboard.map((player, index) => (
                 <LeaderboardItem key={player.name}>
-                  <div><UserRank>#{index + 1}</UserRank> {player.name}</div>
+                  <div>
+                    <UserRank>#{index + 1}</UserRank> {player.name}{' '}
+                    {player.badges && player.badges.map(badgeId => {
+                      const badge = BADGES.find(b => b.id === badgeId);
+                      return badge ? <span key={badgeId}>{badge.icon}</span> : null;
+                    })}
+                  </div>
                   <UserScore>{player.xp} XP</UserScore>
                 </LeaderboardItem>
               ))}
@@ -1240,7 +1238,7 @@ const Dashboard = () => {
             </TimeAllocationModal>
           )}
 
-<Card>
+          <Card>
             <h2>Today's Tasks</h2>
             <TaskList>
               {todayTasks.map((task) => (
@@ -1288,15 +1286,16 @@ const Dashboard = () => {
         </GridContainer>
       </MainContent>
       <AIChat 
-  user={user} 
-  tasks={todayTasks} 
-  onTaskUpdate={handleTaskCompletion}
-  onAddTaskWithDate={(date, task) => {
-    const dateKey = date.toISOString().split('T')[0];
-    addEvent(dateKey, task);
-  }}
-/>
+        user={user} 
+        tasks={todayTasks} 
+        onTaskUpdate={handleTaskCompletion}
+        onAddTaskWithDate={(date, task) => {
+          const dateKey = date.toISOString().split('T')[0];
+          addEvent(dateKey, task);
+        }}
+      />
     </DashboardContainer>
   );
 };
+
 export default Dashboard;

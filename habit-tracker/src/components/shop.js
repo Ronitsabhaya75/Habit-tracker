@@ -33,8 +33,9 @@ Technical Implementation
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
-import { useAuth } from '../context/AuthContext';
+import { useHabit } from '../context/HabitContext';
 import { useNavigate } from 'react-router-dom';
+
 
 // Badge data
 const BADGES = [
@@ -372,59 +373,48 @@ const BackButton = styled.button`
 `;
 
 const Shop = () => {
-  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
-  const [ownedBadges, setOwnedBadges] = useState(user?.badges || []);
-  const [xp, setXp] = useState(user?.xp || 0);
+  const { 
+    calculateTotalXP, 
+    deductXP, 
+    ownedBadges, 
+    setOwnedBadges 
+  } = useHabit(); // Use HabitContext instead of AuthContext
+
   const [purchasing, setPurchasing] = useState(false);
   const [notification, setNotification] = useState(null);
 
-  useEffect(() => {
-    if (user) {
-      setOwnedBadges(user.badges || []);
-      setXp(user.xp || 0);
-    }
-  }, [user]);
+  const xp = calculateTotalXP(); // Get XP from HabitContext
 
   const purchaseBadge = async (badgeId) => {
     if (purchasing) return;
-    
+
     const badge = BADGES.find(b => b.id === badgeId);
     if (!badge) return;
-    
+
     if (xp < badge.cost) {
       setNotification({ type: 'error', message: 'Not enough XP!' });
       setTimeout(() => setNotification(null), 3000);
       return;
     }
-    
+
     if (ownedBadges.includes(badgeId)) {
       setNotification({ type: 'error', message: 'You already own this badge!' });
       setTimeout(() => setNotification(null), 3000);
       return;
     }
-    
+
     setPurchasing(true);
-    
+
     try {
-      // In a real app, you would call your backend API here
-      const newXp = xp - badge.cost;
+      // Deduct XP using HabitContext's deductXP function
+      const success = deductXP(badge.cost);
+      if (!success) throw new Error('XP deduction failed');
+
+      // Add badge to ownedBadges
       const newBadges = [...ownedBadges, badgeId];
-      
-      // Update local state immediately for better UX
-      setXp(newXp);
       setOwnedBadges(newBadges);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Update user in context and (in a real app) persist to backend
-      updateUser({
-        ...user,
-        xp: newXp,
-        badges: newBadges
-      });
-      
+
       setNotification({ 
         type: 'success', 
         message: `Purchased ${badge.name}!` 
@@ -432,9 +422,6 @@ const Shop = () => {
       setTimeout(() => setNotification(null), 3000);
     } catch (error) {
       console.error('Purchase failed:', error);
-      // Revert local state if purchase fails
-      setXp(xp);
-      setOwnedBadges(ownedBadges);
       setNotification({ 
         type: 'error', 
         message: 'Purchase failed. Please try again.' 
@@ -447,20 +434,19 @@ const Shop = () => {
 
   return (
     <ShopContainer>
-        <Sidebar>
+      <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
-          <NavItem className="active">Dashboard</NavItem>
+          <NavItem onClick={() => navigate('/dashboard')}>Dashboard</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>Mini Games</NavItem>
-          <NavItem onClick={() => navigate('/track')}>Calender tracker</NavItem>
+          <NavItem onClick={() => navigate('/track')}>Calendar tracker</NavItem>
           <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
-          <NavItem onClick={() => navigate('/shop')}>Shop</NavItem>
+          <NavItem className="active">Shop</NavItem>
           <NavItem onClick={() => navigate('/review')}>Review</NavItem>
-
         </NavList>
       </Sidebar>
+
       <ShopContent>
-        
         <Header>
           <Title>HabitQuest Shop</Title>
           <XpDisplay>
@@ -468,32 +454,29 @@ const Shop = () => {
             <span>{xp}</span>
           </XpDisplay>
         </Header>
-        
+
         <p>Spend your hard-earned XP on badges to show off on the leaderboard!</p>
-        
+
         <BadgeGrid>
           {BADGES.map(badge => (
-            <BadgeCard 
-              key={badge.id} 
-              rarity={badge.rarity}
-            >
+            <BadgeCard key={badge.id} rarity={badge.rarity}>
               {ownedBadges.includes(badge.id) && <OwnedTag>OWNED</OwnedTag>}
               <RarityTag rarity={badge.rarity}>
                 {badge.rarity.toUpperCase()}
               </RarityTag>
-              
+
               <BadgeIcon effect={badge.effect}>
                 {badge.icon}
               </BadgeIcon>
-              
+
               <BadgeName>{badge.name}</BadgeName>
               <BadgeDescription>{badge.description}</BadgeDescription>
-              
+
               <BadgeCost>
                 <span>{badge.cost}</span>
                 <span>XP</span>
               </BadgeCost>
-              
+
               <PurchaseButton
                 onClick={() => purchaseBadge(badge.id)}
                 disabled={ownedBadges.includes(badge.id) || xp < badge.cost || purchasing}
@@ -503,7 +486,7 @@ const Shop = () => {
             </BadgeCard>
           ))}
         </BadgeGrid>
-        
+
         {notification && (
           <div style={{
             position: 'fixed',
