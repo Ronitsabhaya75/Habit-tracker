@@ -174,15 +174,14 @@ const HabitQuizGame = () => {
   };
 
 /** Proceeds to next round or final summary */
-  const handleNextRound = () => {
-    setTotalCorrect(prev => prev + correctCount);
-    if (roundNumber < 3) {
-      setRoundNumber(prev => prev + 1);
-      setShowSpinWheel(true);
-    } else {
-      setFinalSummary(true);
-    }
-  };
+const handleNextRound = () => {
+  setTotalCorrect(prev => prev + correctCount);
+  if (roundNumber < 3) {
+    setRoundNumber(prev => prev + 1);
+  } else {
+    setFinalSummary(true);
+  }
+};
 
 /** Restart the quiz from the beginning */
   const handleReplay = () => {
