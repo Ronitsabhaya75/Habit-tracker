@@ -9,21 +9,26 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import habitRoutes from './routes/habitRoutes.js';
-import localStorageRoutes from './routes/LocalStorageRoutes.js';
+import localStorageRoutes from './routes/localStorageRoutes.js';
 import spinWheelRoutes from './routes/spinWheelRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
 
-// Configure environment variables
+// Configure environment
 dotenv.config();
+
+// Validate required environment variables
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'PORT'];
+requiredEnvVars.forEach(envVar => {
+  if (!process.env[envVar]) {
+    console.error(`Missing required environment variable: ${envVar}`);
+    process.exit(1);
+  }
+});
 
 // Initialize Express
 const app = express();
 
-// Fix __dirname for ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Database connection caching for Vercel Serverless
+// Database connection
 let cachedDb = null;
 
 async function connectToDatabase() {
@@ -63,7 +68,7 @@ app.use('/api/local-storage', localStorageRoutes);
 app.use('/api/spin-wheel', spinWheelRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 
-// Health check endpoint
+// Health check
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'healthy',
@@ -71,21 +76,29 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
 });
 
-// Initialize database connection before starting
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Error:', {
+    message: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method
+  });
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// Initialize
 connectToDatabase()
   .then(() => {
-    // Only start standalone server if not in Vercel environment
     if (process.env.VERCEL !== '1') {
       const PORT = process.env.PORT || 5000;
       app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
-        console.log(`API available at http://localhost:${PORT}/api`);
       });
     }
   })
@@ -94,5 +107,4 @@ connectToDatabase()
     process.exit(1);
   });
 
-// Export for Vercel Serverless Functions
 export default app;

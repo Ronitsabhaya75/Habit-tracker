@@ -6,7 +6,6 @@ dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export const verifyToken = (req, res, next) => {
-  // Get token from Authorization header
   const authHeader = req.headers.authorization;
   
   if (!authHeader?.startsWith('Bearer ')) {
@@ -17,7 +16,7 @@ export const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // Attach decoded user to request
+    req.user = decoded;
     next();
   } catch (error) {
     console.error('JWT Verification Error:', error.message);
