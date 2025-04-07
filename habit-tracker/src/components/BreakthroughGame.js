@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { useHabit } from '../context/HabitContext';
 
 // Chess pieces (Unicode characters)
@@ -14,154 +14,167 @@ const pieces = {
   king: '♚',
 };
 
-// Animations
+// Space Theme from Track
+const spaceTheme = {
+  deepSpace: '#0E1A40',
+  deepSpaceGradient: 'linear-gradient(135deg, #0E1A40 0%, #13294B 100%)',
+  accentGlow: '#32FFC0',
+  accentGold: '#FFDF6C',
+  textPrimary: '#D0E7FF',
+  actionButton: '#00F9FF',
+  actionButtonAlt: '#FF5DA0',
+  highlight: '#FFFA81',
+  highlightAlt: '#FBC638',
+  calendarCell: '#1C2A4A',
+  glassOverlay: 'rgba(30, 39, 73, 0.8)'
+};
+
+// Animations from Track
 const floatAnimation = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0) rotate(0deg); }
 `;
 
 const starGlow = keyframes`
-  0% { opacity: 0.6; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.1); }
-  100% { opacity: 0.6; transform: scale(0.8); }
+  0% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
+  50% { opacity: 1; filter: blur(0px); transform: scale(1.1); }
+  100% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
 `;
 
-const pulseAnimation = keyframes`
-  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+const pulseGlow = keyframes`
+  0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
+  50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
+  100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
 `;
 
-// Theme object for consistent styling
-const theme = {
-  colors: {
-    primary: '#1e2749',
-    secondary: '#4a69bd',
-    accent: '#6c5ce7',
-    success: '#2ecc71',
-    warning: '#f1c40f',
-    danger: '#e74c3c',
-    text: '#ffffff',
-    textSecondary: '#b2bec3',
-    borderWhite: 'rgba(255, 255, 255, 0.1)',
-    darkOverlay: 'rgba(0, 0, 0, 0.2)',
-    cardBg: 'rgba(255, 255, 255, 0.08)',
-    gradientStart: '#1e2749',
-    gradientEnd: '#2e3b73'
-  }
-};
+const glowPulse = keyframes`
+  0% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
+  50% { text-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
+  100% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
+`;
 
-// Styled Components
+const warping = keyframes`
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+// Styled Components Adapted from Track
 const Background = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, ${theme.colors.gradientStart} 0%, ${theme.colors.gradientEnd} 100%);
-  z-index: 0;
+  background: ${spaceTheme.deepSpaceGradient};
   overflow: hidden;
+  z-index: 0;
+`;
 
-  &::before {
-    content: '';
-    position: absolute;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(114, 137, 218, 0.2) 0%, transparent 70%);
-    top: 10%;
-    left: 15%;
-    animation: ${floatAnimation} 8s ease-in-out infinite;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    width: 250px;
-    height: 250px;
-    background: radial-gradient(circle, rgba(255, 107, 107, 0.15) 0%, transparent 70%);
-    bottom: 20%;
-    right: 10%;
-    animation: ${floatAnimation} 10s ease-in-out infinite;
-  }
+const GradientOverlay = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 30% 50%, rgba(50, 255, 192, 0.1) 0%, transparent 70%),
+              radial-gradient(circle at 70% 70%, rgba(0, 249, 255, 0.1) 0%, transparent 60%);
+  z-index: 1;
 `;
 
 const Star = styled.div`
   position: absolute;
-  width: ${props => props.size || '2px'};
-  height: ${props => props.size || '2px'};
-  background: white;
+  width: ${props => props.size || '30px'};
+  height: ${props => props.size || '30px'};
+  background: radial-gradient(circle, ${props => props.color || 'rgba(255, 223, 108, 0.9)'} 0%, rgba(255, 255, 255, 0) 70%);
   border-radius: 50%;
-  animation: ${starGlow} ${props => props.speed || '2s'} ease-in-out infinite;
-  top: ${props => props.top || '50%'};
-  left: ${props => props.left || '50%'};
-  opacity: ${props => props.opacity || '0.8'};
-`;
-
-const DashboardContainer = styled.div`
-  display: flex;
-  min-height: 100vh;
-  position: relative;
-  color: ${theme.colors.text};
-  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  z-index: 2;
+  animation: ${starGlow} ${props => props.duration || '3s'} infinite ease-in-out;
+  animation-delay: ${props => props.delay || '0s'};
+  opacity: 0.7;
+  
+  &::before {
+    content: '★';
+    position: absolute;
+    font-size: ${props => parseInt(props.size) * 0.8 || '24px'};
+    color: ${props => props.color || 'rgba(255, 223, 108, 0.9)'};
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
 `;
 
 const Sidebar = styled.div`
-  width: 280px;
+  width: 250px;
   padding: 2rem;
-  background: rgba(30, 39, 73, 0.8);
-  border-right: 1px solid ${theme.colors.borderWhite};
-  backdrop-filter: blur(10px);
-  z-index: 10;
-  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
-
+  background: rgba(14, 26, 64, 0.8);
+  color: ${spaceTheme.textPrimary};
+  border-right: 1px solid rgba(50, 255, 192, 0.3);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+  
   h2 {
-    color: ${theme.colors.accent};
-    font-size: 1.8rem;
+    font-family: 'Orbitron', sans-serif;
     margin-bottom: 2rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    color: ${spaceTheme.accentGlow};
+    text-shadow: 0 0 10px ${spaceTheme.accentGlow};
+    font-size: 1.8rem;
+    letter-spacing: 2px;
   }
 `;
 
 const NavList = styled.ul`
   list-style: none;
   padding: 0;
-  margin-top: 1rem;
-  flex-grow: 1;
+  margin-top: 2rem;
 `;
 
 const NavItem = styled.li`
-  padding: 1rem 1.5rem;
-  margin: 0.8rem 0;
-  border-radius: 12px;
+  padding: 1rem;
+  margin: 0.7rem 0;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
+  color: ${spaceTheme.textPrimary};
   align-items: center;
   gap: 1rem;
-  font-weight: 500;
-  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(50, 255, 192, 0.1);
+    border: 1px solid rgba(50, 255, 192, 0.3);
     transform: translateX(5px);
   }
   
   &.active {
-    background: ${theme.colors.secondary};
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transform: translateX(5px);
+    background: rgba(50, 255, 192, 0.2);
+    border: 1px solid rgba(50, 255, 192, 0.5);
+    box-shadow: 0 0 15px rgba(50, 255, 192, 0.2);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 4px;
+      background: ${spaceTheme.accentGlow};
+      box-shadow: 0 0 10px ${spaceTheme.accentGlow};
+    }
   }
 `;
 
 const MainContent = styled.div`
   flex: 1;
   padding: 3rem;
-  margin-left: 20px;
+  margin-left: 250px;
   z-index: 10;
   overflow-y: auto;
   max-height: 100vh;
@@ -170,135 +183,93 @@ const MainContent = styled.div`
 const GameHeader = styled.div`
   text-align: center;
   margin-bottom: 3rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid ${theme.colors.borderWhite};
   
   h1 {
     font-size: 2.5rem;
-    margin-bottom: 1rem;
-    background: linear-gradient(to right, #74ebd5, #ACB6E5);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 800;
-    letter-spacing: 0.5px;
+    color: ${spaceTheme.accentGlow};
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px ${spaceTheme.accentGlow}, 0 0 20px ${spaceTheme.accentGlow};
+    animation: ${glowPulse} 3s infinite ease-in-out;
   }
   
   p {
     font-size: 1.1rem;
-    color: ${theme.colors.textSecondary};
+    color: ${spaceTheme.textPrimary};
+    opacity: 0.8;
     max-width: 700px;
-    margin: 0 auto;
+    margin: 1rem auto;
     line-height: 1.6;
   }
 `;
 
 const GameContent = styled.div`
-  background: ${theme.colors.cardBg};
+  background: rgba(14, 26, 64, 0.8);
   border-radius: 16px;
   padding: 2.5rem;
-  overflow-y: auto;
-  max-height: calc(100vh - 200px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(50, 255, 192, 0.3);
   max-width: 1200px;
   margin: 0 auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(4px);
-  
-  h1, h2 {
-    color: ${theme.colors.accent};
-    margin-bottom: 1.5rem;
-  }
+  color: ${spaceTheme.textPrimary};
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: ${css`${warping} 0.5s ease-out`};
   
   h2 {
     font-size: 1.8rem;
-    position: relative;
-    display: inline-block;
-    
-    &:after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 0;
-      width: 50px;
-      height: 3px;
-      background: ${theme.colors.accent};
-      border-radius: 3px;
-    }
-  }
-  
-  p {
-    color: ${theme.colors.textSecondary};
-    margin-bottom: 2rem;
-    line-height: 1.6;
+    color: ${spaceTheme.accentGlow};
+    font-family: 'Orbitron', sans-serif;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 5px ${spaceTheme.accentGlow};
   }
 `;
 
 const GameButton = styled.button`
-  background: linear-gradient(135deg, ${theme.colors.accent}, ${theme.colors.secondary});
-  color: white;
+  background: ${spaceTheme.actionButton};
+  color: ${spaceTheme.deepSpace};
   border: none;
+  border-radius: 8px;
   padding: 1.8rem 2.5rem;
-  border-radius: 16px;
   margin: 1.5rem;
   width: 85%;
   max-width: 450px;
   cursor: pointer;
   font-size: 1.3rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-  text-align: left;
+  font-weight: bold;
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.3s;
+  box-shadow: 0 0 10px rgba(0, 249, 255, 0.3);
   position: relative;
   overflow: hidden;
   
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
-    transition: all 0.4s ease;
-  }
-
   &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
-    
-    &:before {
-      left: 100%;
-    }
+    background: ${spaceTheme.accentGlow};
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(50, 255, 192, 0.5);
   }
   
   div {
     font-size: 0.95rem;
     margin-top: 0.8rem;
     opacity: 0.9;
-    font-weight: 400;
-    line-height: 1.5;
+    font-weight: normal;
   }
 `;
 
 const PointsDisplay = styled.div`
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background: rgba(14, 26, 64, 0.6);
+  border-radius: 20px;
   padding: 1.5rem 2rem;
   margin-bottom: 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(50, 255, 192, 0.3);
+  box-shadow: 0 0 15px rgba(50, 255, 192, 0.1);
   
   h3 {
     font-size: 1.5rem;
-    color: white;
+    color: ${spaceTheme.textPrimary};
     display: flex;
     align-items: center;
     
@@ -311,42 +282,41 @@ const PointsDisplay = styled.div`
   
   div {
     text-align: right;
-    font-weight: 600;
+    font-weight: bold;
     font-size: 1.1rem;
+    color: ${spaceTheme.accentGold};
   }
 `;
 
 const ProgressIndicator = styled.div`
   margin: 2rem 0;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background: rgba(14, 26, 64, 0.6);
+  border-radius: 20px;
   padding: 1.5rem 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-
+  border: 1px solid rgba(50, 255, 192, 0.3);
+  
   h3 {
     margin-bottom: 1rem;
-    color: white;
+    color: ${spaceTheme.accentGlow};
     font-size: 1.3rem;
+    font-family: 'Orbitron', sans-serif;
   }
-
+  
   .progress-bar {
     width: 100%;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    margin-top: 1rem;
+    height: 14px;
+    background: rgba(10, 20, 50, 0.5);
+    border-radius: 7px;
     overflow: hidden;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
-
-    .fill {
-      height: 100%;
-      background: linear-gradient(to right, ${theme.colors.accent}, #9b59b6);
-      width: ${props => props.progress}%;
-      transition: width 0.8s ease;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(108, 92, 231, 0.5);
-    }
+    border: 1px solid rgba(50, 255, 192, 0.3);
+  }
+  
+  .fill {
+    height: 100%;
+    background: linear-gradient(90deg, ${spaceTheme.accentGlow} 0%, ${spaceTheme.actionButton} 100%);
+    width: ${props => props.progress}%;
+    transition: width 1s ease-in-out;
+    border-radius: 7px;
   }
 `;
 
@@ -358,80 +328,53 @@ const ActionButtons = styled.div`
 `;
 
 const ActionButton = styled.button`
-  background: linear-gradient(135deg, ${props => props.color || theme.colors.accent}, ${props => {
-    if (props.color === '#4CAF50') return '#2ecc71';
-    if (props.color === '#2196F3') return '#3498db';
-    if (props.color === '#9C27B0') return '#8e44ad';
-    return theme.colors.secondary;
-  }});
-  color: white;
+  background: ${props => props.color || spaceTheme.actionButton};
+  color: ${spaceTheme.deepSpace};
   border: none;
+  border-radius: 8px;
   padding: 1.5rem 2rem;
-  border-radius: 12px;
   cursor: pointer;
-  font-weight: 600;
-  width: 100%;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-  position: relative;
-  overflow: hidden;
+  font-weight: bold;
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.3s;
+  box-shadow: 0 0 10px rgba(0, 249, 255, 0.3);
   
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
-    transition: all 0.4s ease;
-  }
-
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    
-    &:before {
-      left: 100%;
-    }
+    background: ${spaceTheme.accentGlow};
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(50, 255, 192, 0.5);
   }
-
+  
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
   }
   
   div {
     font-size: 0.85rem;
     margin-top: 0.8rem;
-    font-weight: 400;
-    line-height: 1.4;
+    font-weight: normal;
   }
 `;
 
 const LastActionBox = styled.div`
   margin: 2rem 0;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(28, 42, 74, 0.6);
   border-radius: 12px;
-  border-left: 4px solid ${theme.colors.accent};
-  animation: ${pulseAnimation} 2s infinite;
+  border: 1px solid rgba(50, 255, 192, 0.3);
+  animation: ${pulseGlow} 4s infinite ease-in-out;
   
   h4 {
     font-size: 1.1rem;
     margin-bottom: 0.8rem;
-    color: ${theme.colors.accent};
+    color: ${spaceTheme.accentGlow};
   }
   
   p {
     margin-bottom: 0;
     font-size: 1rem;
+    color: ${spaceTheme.textPrimary};
   }
 `;
 
@@ -443,138 +386,88 @@ const StageGrid = styled.div`
 `;
 
 const StageCard = styled.div`
-  background: rgba(255, 255, 255, 0.05);
+  background: ${props => 
+    props.isCompleted ? 'rgba(50, 255, 192, 0.2)' : 
+    props.isCurrent ? 'rgba(0, 249, 255, 0.2)' : 
+    'rgba(28, 42, 74, 0.4)'};
   border-radius: 16px;
   padding: 2rem;
-  border: 1px solid ${props =>
-    props.isCompleted ? 'rgba(46, 213, 115, 0.5)' : props.isCurrent ? theme.colors.accent : 'rgba(255, 255, 255, 0.1)'};
-  position: relative;
-  overflow: hidden;
+  border: 1px solid ${props => 
+    props.isCompleted ? 'rgba(50, 255, 192, 0.6)' : 
+    props.isCurrent ? 'rgba(0, 249, 255, 0.6)' : 
+    'rgba(50, 255, 192, 0.2)'};
   transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: ${props => 
+    props.isCompleted || props.isCurrent ? '0 0 10px rgba(50, 255, 192, 0.3)' : 'none'};
   
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
-
-  ${props =>
-    props.isCompleted &&
-    `
-    background: linear-gradient(135deg, rgba(46, 213, 115, 0.1), rgba(39, 174, 96, 0.1));
-    &::after {
-      content: '✓';
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      color: rgba(46, 213, 115, 1);
-      font-size: 1.8rem;
-      font-weight: bold;
-    }
-  `}
-  
-  ${props =>
-    props.isCurrent &&
-    `
-    background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(90, 64, 154, 0.1));
-    box-shadow: 0 8px 25px rgba(108, 92, 231, 0.2);
-  `}
   
   h3 {
     font-size: 1.3rem;
     margin-bottom: 0.5rem;
-    color: ${props => props.isCompleted ? theme.colors.success : props.isCurrent ? theme.colors.accent : 'white'};
+    color: ${props => props.isCompleted ? spaceTheme.accentGlow : spaceTheme.textPrimary};
   }
   
   h4 {
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
-    color: white;
+    color: ${spaceTheme.accentGlow};
   }
   
   p {
     margin: 0.7rem 0;
     line-height: 1.5;
+    color: ${spaceTheme.textPrimary};
   }
   
   .progress-bar {
     width: 100%;
     height: 8px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(10, 20, 50, 0.5);
     border-radius: 4px;
     margin-top: 0.5rem;
     overflow: hidden;
-
-    .fill {
-      height: 100%;
-      transition: width 0.8s ease;
-      border-radius: 4px;
-    }
+  }
+  
+  .fill {
+    height: 100%;
+    background: linear-gradient(90deg, ${spaceTheme.accentGlow} 0%, ${spaceTheme.actionButton} 100%);
+    transition: width 0.8s ease;
+    border-radius: 4px;
   }
 `;
 
 const ProgressChart = styled.div`
   margin-top: 3rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(14, 26, 64, 0.8);
   border-radius: 16px;
   padding: 2rem;
+  border: 1px solid rgba(50, 255, 192, 0.3);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.05);
   
   h3 {
     font-size: 1.5rem;
     margin-bottom: 2rem;
-    color: ${theme.colors.accent};
-    position: relative;
-    display: inline-block;
-    
-    &:after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 0;
-      width: 40px;
-      height: 3px;
-      background: ${theme.colors.accent};
-      border-radius: 3px;
-    }
+    color: ${spaceTheme.accentGlow};
+    font-family: 'Orbitron', sans-serif;
+    text-shadow: 0 0 5px ${spaceTheme.accentGlow};
   }
 `;
 
+// GamesHub Component
 const GamesHub = () => {
   const navigate = useNavigate();
 
   const games = [
-    {
-      title: 'Chess',
-      description: 'Play a game of chess to improve your strategic thinking.',
-      path: '/chess',
-    },
-    {
-      title: 'Addiction Recovery',
-      description: 'Track your progress and stay motivated on your recovery journey.',
-      path: '/addiction-recovery',
-    },
-    {
-      title: 'Word Scrambler',
-      description: 'Unscramble the word and find the XP! Unjumble your mind with this fun game.',
-      path: '/word-scrambler',
-    },
-    {
-      title: 'pacman',
-      description: 'Navigate through a maze and collect points while avoiding ghosts.',
-      path: '/pacman',
-    },
-    {
-      title: 'habitQuizGame',
-      description: 'Test your habit knowledge through 3 exciting quiz rounds with XP rewards.',
-      path: '/habit-quiz',
-    },
-    {
-      title: 'habitChallengeCenter',
-      description: 'Take on hourly and weekly habit challenges to earn XP and build consistency.',
-      path: '/habit-challenge',
-    }
+    { title: 'Chess', description: 'Play a game of chess to improve your strategic thinking.', path: '/chess' },
+    { title: 'Addiction Recovery', description: 'Track your progress and stay motivated on your recovery journey.', path: '/addiction-recovery' },
+    { title: 'Word Scrambler', description: 'Unscramble the word and find the XP! Unjumble your mind with this fun game.', path: '/word-scrambler' },
+    { title: 'Pacman', description: 'Navigate through a maze and collect points while avoiding ghosts.', path: '/pacman' },
+    { title: 'HabitQuizGame', description: 'Test your habit knowledge through 3 exciting quiz rounds with XP rewards.', path: '/habit-quiz' },
+    { title: 'HabitChallengeCenter', description: 'Take on hourly and weekly habit challenges to earn XP and build consistency.', path: '/habit-challenge' }
   ];
 
   return (
@@ -584,15 +477,14 @@ const GamesHub = () => {
       {games.map((game, index) => (
         <GameButton key={index} onClick={() => navigate(game.path)}>
           {game.title}
-          <div>
-            {game.description}
-          </div>
+          <div>{game.description}</div>
         </GameButton>
       ))}
     </GameContent>
   );
 };
 
+// Main BreakthroughGame Component
 const BreakthroughGame = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -610,24 +502,20 @@ const BreakthroughGame = () => {
 
   const handleProgressUpdate = (points, actionType) => {
     updateProgress(categoryId, points, actionType);
-
     setLocalLastAction({
       type: actionType,
       points,
       timestamp: new Date().toLocaleTimeString(),
       categoryId,
     });
-
     if (points >= 25) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
     }
-
     const currentPoints = getCategoryProgress(categoryId) + points;
     const completedStage = stages.find(
       stage => currentPoints >= stage.points && getCategoryProgress(categoryId) < stage.points
     );
-
     if (completedStage) {
       alert(`🎉 Congratulations! You've completed ${completedStage.goal} and earned ${completedStage.reward}!`);
     }
@@ -635,11 +523,11 @@ const BreakthroughGame = () => {
 
   const getMotivationalMessage = () => {
     const currentPoints = getCategoryProgress(categoryId);
-    if (currentPoints === 0) return "Ready to start your journey? Every step counts!";
-    if (currentPoints < 50) return "Great start! Keep building those healthy habits!";
-    if (currentPoints < 100) return "You're making excellent progress! Stay consistent!";
-    if (currentPoints < 200) return "You're becoming a master of your habits!";
-    return "Incredible dedication! You're an inspiration!";
+    if (currentPoints === 0) return "Ready to start your cosmic journey? Every step counts!";
+    if (currentPoints < 50) return "Great launch! Keep orbiting toward your goals!";
+    if (currentPoints < 100) return "You're in hyperspace now! Stay on course!";
+    if (currentPoints < 200) return "You're a galactic habit master!";
+    return "Stellar dedication! You're a cosmic inspiration!";
   };
 
   const stages = [
@@ -659,59 +547,43 @@ const BreakthroughGame = () => {
     return stages.find(stage => currentPoints < stage.points) || stages[stages.length - 1];
   };
 
-  const isStageCompleted = (stage) => {
-    const currentPoints = getCategoryProgress(categoryId);
-    return currentPoints >= stage.points;
-  };
-
-  const isCurrentStage = (stage) => {
-    const currentStage = getCurrentStage();
-    return currentStage && currentStage.level === stage.level;
-  };
+  const isStageCompleted = (stage) => getCategoryProgress(categoryId) >= stage.points;
+  const isCurrentStage = (stage) => getCurrentStage()?.level === stage.level;
 
   return (
-    <DashboardContainer>
+    <div>
       <Background>
-        <Star top="15%" left="25%" speed="3s" size="3px" opacity="0.9" />
-        <Star top="35%" left="65%" speed="4s" size="4px" opacity="0.8" />
-        <Star top="65%" left="15%" speed="3.5s" size="2px" opacity="0.7" />
-        <Star top="25%" left="85%" speed="5s" size="3px" opacity="0.9" />
-        <Star top="75%" left="35%" speed="2.5s" size="3px" opacity="0.8" />
-        <Star top="45%" left="75%" speed="4.5s" size="2px" opacity="0.7" />
-        <Star top="85%" left="55%" speed="3.5s" size="4px" opacity="0.9" />
-        <Star top="55%" left="45%" speed="5s" size="2px" opacity="0.8" />
+        <GradientOverlay />
+        <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" color="rgba(255, 223, 108, 0.9)" />
+        <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" color="rgba(50, 255, 192, 0.9)" />
+        <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" color="rgba(0, 249, 255, 0.9)" />
       </Background>
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
-
-          <NavItem onClick={() => navigate('/dashboard')}>Dashboard</NavItem>
-          <NavItem className="active">Mini Games</NavItem>
-          <NavItem onClick={() => navigate('/track')}>Calender tracker</NavItem>
-          <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
-          <NavItem onClick={() => navigate('/shop')}>Shop</NavItem>
-          <NavItem onClick={() => navigate('/review')}>Review</NavItem>
-
+          <NavItem onClick={() => navigate('/dashboard')}>👾 Dashboard</NavItem>
+          <NavItem className="active">🎮 Mini Games</NavItem>
+          <NavItem onClick={() => navigate('/track')}>📅 Calendar Tracker</NavItem>
+          <NavItem onClick={() => navigate('/NewHabit')}>✨ Habit Creation</NavItem>
+          <NavItem onClick={() => navigate('/shop')}>🛒 Shop</NavItem>
+          <NavItem onClick={() => navigate('/review')}>📊 Review</NavItem>
         </NavList>
       </Sidebar>
-
       <MainContent>
         {location.pathname === '/breakthrough-game' ? (
-          <GamesHub /> // Render Games Hub
+          <GamesHub />
         ) : (
           <>
             <GameHeader>
-              <h1>Breakthrough: Your Transformation Journey</h1>
-              <p>Level up your life through consistent habits and meaningful achievements.</p>
-              <div style={{ marginTop: '1.5rem', color: theme.colors.accent, fontWeight: '600', fontSize: '1.2rem' }}>
+              <h1>Breakthrough: Cosmic Journey</h1>
+              <p>Level up your life through interstellar habits and achievements.</p>
+              <div style={{ marginTop: '1.5rem', color: spaceTheme.accentGlow, fontWeight: '600', fontSize: '1.2rem' }}>
                 {getMotivationalMessage()}
               </div>
             </GameHeader>
-
             <GameContent>
-              <h2>Your Journey</h2>
-              <p>Track your progress and achieve your goals through consistent effort.</p>
-
+              <h2>Your Galactic Progress</h2>
+              <p>Track your cosmic journey and conquer your goals.</p>
               <PointsDisplay>
                 <h3>Current Points: {getCategoryProgress(categoryId)}</h3>
                 <div>
@@ -721,7 +593,6 @@ const BreakthroughGame = () => {
                   </div>
                 </div>
               </PointsDisplay>
-
               <ProgressIndicator progress={calculateProgress()}>
                 <h3>Overall Progress</h3>
                 <div className="progress-bar">
@@ -731,7 +602,6 @@ const BreakthroughGame = () => {
                   {calculateProgress().toFixed(1)}% Complete
                 </div>
               </ProgressIndicator>
-
               <ActionButtons>
                 <ActionButton onClick={() => handleProgressUpdate(5, 'Small Win')} color="#4CAF50">
                   Small Win (+5 pts)
@@ -746,17 +616,14 @@ const BreakthroughGame = () => {
                   <div>Significant milestone</div>
                 </ActionButton>
               </ActionButtons>
-
               {localLastAction && (
                 <LastActionBox>
                   <h4>Last Action</h4>
                   <p>
-                    {localLastAction.type} completed at {localLastAction.timestamp} (+{localLastAction.points}{' '}
-                    points)
+                    {localLastAction.type} completed at {localLastAction.timestamp} (+{localLastAction.points} points)
                   </p>
                 </LastActionBox>
               )}
-
               <StageGrid>
                 {stages.map(stage => (
                   <StageCard
@@ -766,20 +633,17 @@ const BreakthroughGame = () => {
                   >
                     <h3>Level {stage.level}</h3>
                     <h4>{stage.goal}</h4>
-                    <p style={{ margin: '1rem 0' }}>Reward: {stage.reward}</p>
+                    <p>Reward: {stage.reward}</p>
                     <p>Required Points: {stage.points}</p>
                     {isStageCompleted(stage) && (
-                      <p style={{ color: '#2ecc71', marginTop: '1rem', fontWeight: '600' }}>✨ Stage Complete!</p>
+                      <p style={{ color: spaceTheme.accentGlow, marginTop: '1rem', fontWeight: '600' }}>✨ Stage Complete!</p>
                     )}
                     {isCurrentStage(stage) && (
                       <div style={{ marginTop: '1rem' }}>
                         <div className="progress-bar">
                           <div
                             className="fill"
-                            style={{
-                              width: `${(getCategoryProgress(categoryId) / stage.points) * 100}%`,
-                              background: 'linear-gradient(to right, #6c5ce7, #a29bfe)',
-                            }}
+                            style={{ width: `${(getCategoryProgress(categoryId) / stage.points) * 100}%` }}
                           />
                         </div>
                         <p style={{ fontSize: '0.9rem', marginTop: '0.8rem', textAlign: 'center' }}>
@@ -790,28 +654,28 @@ const BreakthroughGame = () => {
                   </StageCard>
                 ))}
               </StageGrid>
-
               <ProgressChart>
                 <h3>Progress History</h3>
                 {getCategoryHistory(categoryId).length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={getCategoryHistory(categoryId)}>
-                      <XAxis dataKey="date" stroke="#b2bec3" />
-                      <YAxis stroke="#b2bec3" />
+                      <XAxis dataKey="date" stroke={spaceTheme.textPrimary} />
+                      <YAxis stroke={spaceTheme.textPrimary} />
                       <Tooltip 
                         contentStyle={{ 
-                          background: 'rgba(30, 39, 73, 0.9)', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '8px'
+                          background: 'rgba(14, 26, 64, 0.9)', 
+                          border: `1px solid ${spaceTheme.accentGlow}`,
+                          borderRadius: '8px',
+                          color: spaceTheme.textPrimary
                         }} 
                       />
                       <Line 
                         type="monotone" 
                         dataKey="points" 
-                        stroke={theme.colors.accent} 
+                        stroke={spaceTheme.accentGlow} 
                         strokeWidth={3}
-                        dot={{ stroke: theme.colors.accent, strokeWidth: 2, r: 4 }}
-                        activeDot={{ stroke: theme.colors.accent, strokeWidth: 3, r: 6 }}
+                        dot={{ stroke: spaceTheme.accentGlow, strokeWidth: 2, r: 4 }}
+                        activeDot={{ stroke: spaceTheme.accentGlow, strokeWidth: 3, r: 6 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -825,7 +689,7 @@ const BreakthroughGame = () => {
           </>
         )}
       </MainContent>
-    </DashboardContainer>
+    </div>
   );
 };
 

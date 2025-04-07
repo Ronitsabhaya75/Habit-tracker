@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
-import styled, { keyframes, createGlobalStyle } from 'styled-components';
+import styled, { keyframes, createGlobalStyle, css } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 
@@ -326,7 +326,7 @@ const LoginButton = styled.button`
     cursor: not-allowed;
   }
   
-  ${props => props.loading && `
+  ${props => props.loading && css`
     color: transparent;
     pointer-events: none;
     

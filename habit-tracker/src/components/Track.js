@@ -304,7 +304,7 @@ const Sidebar = styled.div`
   color: ${spaceTheme.textPrimary};
   border-right: 1px solid rgba(50, 255, 192, 0.3);
   backdrop-filter: blur(8px);
-  z-index: 10;
+  z-index: 1000; // Increased from 10 to 1000 to ensure it's on top
   position: fixed;
   left: 0;
   top: 0;
