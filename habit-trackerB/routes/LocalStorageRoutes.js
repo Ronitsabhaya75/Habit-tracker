@@ -3,6 +3,7 @@ import LocalData from '../models/LocalData.js';
 
 const router = express.Router();
 
+//save local data
 router.post('/:key', async (req, res) => {
   try {
     const { key } = req.params;
@@ -18,10 +19,11 @@ router.post('/:key', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error saving localStorage:', error);
-    res.status(500).json({ success: false, error: 'Failed to save data' });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
+// get local data
 router.get('/:key', async (req, res) => {
   try {
     const { key } = req.params;
@@ -31,21 +33,24 @@ router.get('/:key', async (req, res) => {
     res.json({ success: true, value: data ? data.value : null });
   } catch (error) {
     console.error('Error getting localStorage:', error);
-    res.status(500).json({ success: false, error: 'Failed to get data' });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
+// gets data for user
 router.get('/', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'] || 'anonymous';
+    
     const data = await LocalData.getAllForUser(userId);
     res.json({ success: true, data });
   } catch (error) {
     console.error('Error getting all localStorage data:', error);
-    res.status(500).json({ success: false, error: 'Failed to get all data' });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
+// delete local data
 router.delete('/:key', async (req, res) => {
   try {
     const { key } = req.params;
@@ -55,7 +60,7 @@ router.delete('/:key', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting localStorage data:', error);
-    res.status(500).json({ success: false, error: 'Failed to delete data' });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
