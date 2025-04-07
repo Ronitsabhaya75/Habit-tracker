@@ -1,4 +1,4 @@
-import Habit from '../models/Habit.js';
+import Habit from '../models/Habit.js'; // Ensure the file extension is included for ES modules
 
 // Get all habits for a user
 const getHabits = async (req, res) => {
@@ -35,4 +35,4 @@ const deleteHabit = async (req, res) => {
   res.json({ message: 'Habit deleted' });
 };
 
-module.exports = { getHabits, createHabit, completeHabit, deleteHabit };
+export { getHabits, createHabit, completeHabit, deleteHabit };
