@@ -3,7 +3,7 @@ import LocalData from '../models/LocalData.js';
 
 const router = express.Router();
 
-//save local data
+// Save local storage data
 router.post('/:key', async (req, res) => {
   try {
     const { key } = req.params;
@@ -23,7 +23,7 @@ router.post('/:key', async (req, res) => {
   }
 });
 
-// get local data
+// Get local storage data
 router.get('/:key', async (req, res) => {
   try {
     const { key } = req.params;
@@ -37,7 +37,7 @@ router.get('/:key', async (req, res) => {
   }
 });
 
-// gets data for user
+// Get all data for a user
 router.get('/', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'] || 'anonymous';
@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// delete local data
+// Delete local storage data
 router.delete('/:key', async (req, res) => {
   try {
     const { key } = req.params;
