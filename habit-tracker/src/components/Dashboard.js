@@ -15,7 +15,7 @@ AI-powered habit coaching
 
 Gamification elements (XP, levels, streaks)
 
-Key Features
+Key Feature:
 1. User Progress Tracking
 Visual Charts: Line and bar charts showing progress over time
 
