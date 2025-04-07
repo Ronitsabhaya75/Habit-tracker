@@ -54,7 +54,15 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
-
+app.get('/', (req, res) => {
+  res.send(
+    {
+      activeStatus: true,
+      error: false,
+    }
+  );
+}
+);
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
