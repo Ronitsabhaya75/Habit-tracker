@@ -2,41 +2,41 @@ import mongoose from 'mongoose';
 
 const LocalDataSchema = new mongoose.Schema({
   // Identify user
-  userId: { 
-    type: String, 
+  userId: {
+    type: String,
     required: true,
     index: true,
     trim: true
   },
-  
+ 
   //local storage key
-  key: { 
-    type: String, 
+  key: {
+    type: String,
     required: true,
     trim: true
   },
-  
+ 
   //value
-  value: { 
-    type: mongoose.Schema.Types.Mixed, 
-    required: true 
+  value: {
+    type: mongoose.Schema.Types.Mixed,
+    required: true
   },
-  
+ 
   //update marker
-  updatedAt: { 
-    type: Date, 
-    default: Date.now 
+  updatedAt: {
+    type: Date,
+    default: Date.now
   },
-  
+ 
   //created marker
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
 }, {
-  
+ 
   timestamps: true,
-  
+ 
   //
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
@@ -60,7 +60,7 @@ LocalDataSchema.methods.getParsedValue = function() {
 //find or create data
 LocalDataSchema.statics.findOrCreate = async function(userId, key, defaultValue = {}) {
   let data = await this.findOne({ userId, key });
-  
+ 
   if (!data) {
     data = await this.create({
       userId,
@@ -68,7 +68,7 @@ LocalDataSchema.statics.findOrCreate = async function(userId, key, defaultValue 
       value: defaultValue
     });
   }
-  
+ 
   return data;
 };
 
