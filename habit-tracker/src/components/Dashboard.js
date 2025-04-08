@@ -205,16 +205,20 @@ Various context providers (Auth, Habit, Event)
 
 This comprehensive dashboard brings together all aspects of the HabitQuest application into a cohesive, interactive interface that motivates users through gamification and visual feedback while providing powerful tools for habit formation and task management.
 */
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../theme';
 import { useAuth } from '../context/AuthContext';
-import { useHabit } from '../context/HabitContext';
-import { useEventContext } from '../context/EventContext';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from '../components/AIChat';
-import shop from '../components/shop';
+import { 
+  taskAPI, 
+  progressAPI, 
+  analyticsAPI,
+  userAPI 
+} from '../api/api';
+
 
 const HABIT_CATEGORIES = [
   { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
@@ -843,23 +847,31 @@ const TimeInput = styled.input`
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { progress, getStreak, getCategoryProgress, setStreak, updateProgress } = useHabit();
-  const { events, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
+  const inputRef = useRef(null);
 
+  // State management
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newHabit, setNewHabit] = useState('');
   const [showInput, setShowInput] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [chartType, setChartType] = useState('line');
-  const [streak, setLocalStreak] = useState(0);
-  const inputRef = useRef(null);
+  const [streak, setStreak] = useState(0);
+  const [totalXP, setTotalXP] = useState(0);
   const [showAllAchievements, setShowAllAchievements] = useState(false);
   const [coachSuggestions, setCoachSuggestions] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [timeAllocation, setTimeAllocation] = useState('');
+  const [todayTasks, setTodayTasks] = useState([]);
 
+  // Calculate derived values
+  const todayKey = new Date().toISOString().split('T')[0];
+  const currentLevel = Math.floor(totalXP / 100) + 1;
+  const levelProgress = totalXP % 100;
+  const streakPercentage = Math.min((streak / 14) * 100, 100);
+
+  // Notification system
   const addNotification = useCallback((message, actions = []) => {
     const newNotification = {
       id: Date.now(),
@@ -873,228 +885,168 @@ const Dashboard = () => {
     }, 5000);
   }, []);
 
-  const handleTaskCompletion = async (taskId, completed) => {
-    const todayKey = new Date().toISOString().split('T')[0];
-
-    await toggleEventCompletion(todayKey, taskId, completed);
-
-    if (completed) {
-      await updateProgress('tasks', 10);
-      addNotification(`Great job! You completed the task "${events[todayKey].find(t => t.id === taskId)?.title}".`, [
-        {
-          label: 'Track Progress',
-          onClick: () => navigate('/review')
-        }
-      ]);
-    }
-  };
-
-  const openTimeAllocationModal = (task) => {
-    setSelectedTask(task);
-  };
-
-  const saveTimeAllocation = () => {
-    if (!selectedTask || !timeAllocation) return;
-
-    const todayKey = new Date().toISOString().split('T')[0];
-    const updatedTask = {
-      ...selectedTask,
-      estimatedTime: parseInt(timeAllocation, 10)
-    };
-
-    updateEvent(todayKey, selectedTask.id, updatedTask);
-    addNotification(`Time allocated for "${selectedTask.title}": ${timeAllocation} minutes`);
-    setSelectedTask(null);
-    setTimeAllocation('');
-  };
-
-  useEffect(() => {
-    const todayKey = new Date().toISOString().split('T')[0];
-    const todayTasks = events[todayKey] || [];
-    const incompleteTasks = todayTasks.filter(task => !task.completed);
-
-    if (incompleteTasks.length > 0) {
-      addNotification(`You have ${incompleteTasks.length} tasks pending today!`, [
-        {
-          label: 'View Tasks',
-          onClick: () => window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'smooth'
-          })
-        }
-      ]);
-    }
-  }, [events, addNotification]);
-
-  const calculateTotalXP = useCallback(() => {
-    const progressXP = Object.values(progress).reduce((sum, p) => sum + p, 0);
-    let tasksXP = 0;
-    const todayKey = new Date().toISOString().split('T')[0];
-    const todayTasks = events[todayKey] || [];
-    tasksXP = todayTasks.filter(task => task.completed).length * 10;
-    return progressXP + tasksXP;
-  }, [progress, events]);
-
-  const [totalXP, setTotalXP] = useState(calculateTotalXP());
-
-  useEffect(() => {
-    setTotalXP(calculateTotalXP());
-  }, [calculateTotalXP]);
-
-  const currentLevel = Math.floor(totalXP / 100) + 1;
-  const levelProgress = totalXP % 100;
-  const streakPercentage = Math.min((streak / 14) * 100, 100);
-
-  const achievements = [
-    { id: 1, title: 'First Week Streak', description: 'Completed 7 days of habits', earned: streak >= 7 },
-    { id: 2, title: 'Milestone 100 XP', description: 'Reached 100 XP points', earned: totalXP >= 100 },
-    { id: 3, title: 'Habit Master', description: 'Completed 3 habits consistently', earned: Object.keys(progress).length >= 3 },
-    { id: 4, title: 'Task Champion', description: 'Completed 5 tasks in a day', earned: false },
-  ];
-
-  const generateCoachSuggestions = useCallback(() => {
-    const suggestions = [];
-    const todayKey = new Date().toISOString().split('T')[0];
-    const todayTasks = events[todayKey] || [];
-    const completedTasks = todayTasks.filter(task => task.completed).length;
-    const totalTasks = todayTasks.length;
-
-    if (streak >= 7) {
-      suggestions.push({ text: "Amazing job maintaining a 7+ day streak! Try adding a new challenging habit to level up.", icon: "🌟" });
-    } else if (streak < 3 && streak > 0) {
-      suggestions.push({ text: "You're building a streak! Keep it up for 3 more days to solidify this habit.", icon: "🔥" });
-    } else if (streak === 0) {
-      suggestions.push({ text: "Start small today with one easy task to kick off your streak!", icon: "🚀" });
-    }
-
-    if (totalTasks > 0 && completedTasks / totalTasks < 0.5) {
-      suggestions.push({ text: "Try breaking your tasks into smaller steps to boost completion rates.", icon: "📝" });
-    } else if (completedTasks === totalTasks && totalTasks > 0) {
-      suggestions.push({ text: "Perfect day! Consider adding a bonus task to stretch your potential.", icon: "🏆" });
-    }
-
-    if (totalXP >= 100 && totalXP < 200) {
-      suggestions.push({ text: "You're making great progress! Focus on consistency to hit 200 XP soon.", icon: "📈" });
-    } else if (totalXP < 50) {
-      suggestions.push({ text: "Every step counts! Complete a task now to earn 10 XP and get rolling.", icon: "✨" });
-    }
-
-    suggestions.push({ text: "Review your habits weekly to adjust goals and stay motivated!", icon: "🗓️" });
-    setCoachSuggestions(suggestions);
-  }, [streak, events, totalXP]);
-
-  useEffect(() => {
-    generateCoachSuggestions();
-  }, [generateCoachSuggestions]);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  const fetchUserProgress = useCallback(async () => {
+  // Fetch all dashboard data
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      const userProgress = await fakeFetchUserData();
-      setChartData(userProgress.map((item, index) => ({
-        progress: getCategoryProgress(item.date) || item.progress,
-      })));
+      const [progressData, leaderboardData, analyticsData, tasksData] = await Promise.all([
+        progressAPI.getProgress(),
+        progressAPI.getLeaderboard(),
+        analyticsAPI.getUserAnalytics(),
+        taskAPI.getTasksByDate(todayKey)
+      ]);
+
+      setTotalXP(progressData.totalXP || 0);
+      setStreak(progressData.streak || 0);
+      setLeaderboard(leaderboardData);
+      setChartData(analyticsData.chartData);
+      setTodayTasks(tasksData);
+
+      // Generate coach suggestions based on real data
+      generateCoachSuggestions(progressData, tasksData);
+      
     } catch (error) {
-      console.error('Error fetching user progress:', error);
+      console.error('Dashboard error:', error);
+      addNotification('Failed to load dashboard data. Please try again.', [
+        { label: 'Retry', onClick: fetchDashboardData }
+      ]);
     } finally {
       setLoading(false);
     }
-  }, [getCategoryProgress]);
+  }, [todayKey, addNotification]);
 
-  const fetchLeaderboard = useCallback(async () => {
+  // Generate coach suggestions
+  const generateCoachSuggestions = (progressData, tasks) => {
+    const suggestions = [];
+    const completedTasks = tasks.filter(task => task.completed).length;
+    const totalTasks = tasks.length;
+
+    if (progressData.streak >= 7) {
+      suggestions.push({ 
+        text: "Amazing job maintaining a 7+ day streak! Try adding a new challenging habit.", 
+        icon: "🌟" 
+      });
+    } else if (progressData.streak < 3 && progressData.streak > 0) {
+      suggestions.push({ 
+        text: "You're building a streak! Keep it up for 3 more days.", 
+        icon: "🔥" 
+      });
+    }
+
+    if (totalTasks > 0 && completedTasks / totalTasks < 0.5) {
+      suggestions.push({ 
+        text: "Try breaking tasks into smaller steps to boost completion.", 
+        icon: "📝" 
+      });
+    }
+
+    setCoachSuggestions(suggestions);
+  };
+
+  // Task handlers
+  const handleTaskCompletion = async (taskId, completed) => {
     try {
-      const leaderboardData = await fakeFetchLeaderboardData();
-      setLeaderboard(leaderboardData);
+      await taskAPI.toggleTaskCompletion(taskId, completed);
+      setTodayTasks(todayTasks.map(task => 
+        task.id === taskId ? { ...task, completed } : task
+      ));
+
+      if (completed) {
+        await progressAPI.updateProgress('tasks', 10);
+        const updatedProgress = await progressAPI.getProgress();
+        setTotalXP(updatedProgress.totalXP);
+        addNotification(`Task completed! +10 XP`, [
+          { label: 'View Progress', onClick: () => navigate('/review') }
+        ]);
+      }
     } catch (error) {
-      console.error('Error fetching leaderboard data:', error);
+      console.error('Task completion error:', error);
+      addNotification('Failed to update task. Please try again.');
     }
-  }, []);
-
-  useEffect(() => {
-    fetchLeaderboard();
-    fetchUserProgress();
-    const streakValue = getStreak();
-    setLocalStreak(streakValue);
-    setStreak(streakValue);
-  }, [fetchLeaderboard, fetchUserProgress, getStreak, setStreak]);
-
-  useEffect(() => {
-    if (user && !leaderboard.some(entry => entry.name === user.name)) {
-      setLeaderboard(prev => [...prev, { name: user.name, xp: totalXP }]);
-    }
-  }, [user, totalXP, leaderboard]);
-
-  const sortedLeaderboard = [...leaderboard].sort((a, b) => b.xp - a.xp);
-
-  useEffect(() => {
-    if (showInput && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [showInput]);
-
-  const fakeFetchUserData = async () => {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 6);
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve(
-          Array.from({ length: 7 }, (_, i) => ({
-            date: new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            progress: Math.floor(Math.random() * 10),
-          }))
-        );
-      }, 1000);
-    });
   };
 
-  const fakeFetchLeaderboardData = async () => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve([]);
-      }, 1000);
-    });
-  };
-
-  const addHabit = () => setShowInput(true);
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && newHabit.trim()) {
-      const todayKey = new Date().toISOString().split('T')[0];
-      addEvent(todayKey, {
-        id: Date.now(),
+  const handleAddTask = async () => {
+    if (!newHabit.trim()) return;
+    
+    try {
+      const newTask = await taskAPI.createTask({
         title: newHabit.trim(),
+        date: todayKey,
         completed: false
       });
+      
+      setTodayTasks([...todayTasks, newTask]);
       setNewHabit('');
       setShowInput(false);
+    } catch (error) {
+      console.error('Add task error:', error);
+      addNotification('Failed to add task. Please try again.');
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await taskAPI.deleteTask(taskId);
+      setTodayTasks(todayTasks.filter(task => task.id !== taskId));
+      addNotification('Task deleted successfully');
+    } catch (error) {
+      console.error('Delete task error:', error);
+      addNotification('Failed to delete task. Please try again.');
     }
   };
 
   const toggleEdit = (taskId) => {
-    const todayKey = new Date().toISOString().split('T')[0];
-    const task = events[todayKey]?.find(t => t.id === taskId);
-    if (task) {
-      updateEvent(todayKey, taskId, { isEditing: !task.isEditing });
+    setTodayTasks(todayTasks.map(task => 
+      task.id === taskId ? { ...task, isEditing: !task.isEditing } : task
+    ));
+  };
+  const updateTaskTitle = async (taskId, newTitle) => {
+    try {
+      await taskAPI.updateTask(taskId, { title: newTitle });
+      setTodayTasks(todayTasks.map(task => 
+        task.id === taskId ? { ...task, title: newTitle, isEditing: false } : task
+      ));
+    } catch (error) {
+      console.error('Update task error:', error);
+      addNotification('Failed to update task. Please try again.');
     }
   };
 
-  const deleteTask = (taskId) => {
-    const todayKey = new Date().toISOString().split('T')[0];
-    deleteEvent(todayKey, taskId);
+  // Time allocation
+  const saveTimeAllocation = async () => {
+    if (!selectedTask || !timeAllocation) return;
+
+    try {
+      await taskAPI.updateTask(selectedTask.id, { 
+        estimatedTime: parseInt(timeAllocation, 10) 
+      });
+      
+      setTodayTasks(todayTasks.map(task => 
+        task.id === selectedTask.id ? { 
+          ...task, 
+          estimatedTime: parseInt(timeAllocation, 10) 
+        } : task
+      ));
+      
+      addNotification(`Time allocated: ${timeAllocation} minutes`);
+      setSelectedTask(null);
+      setTimeAllocation('');
+    } catch (error) {
+      console.error('Time allocation error:', error);
+      addNotification('Failed to save time allocation. Please try again.');
+    }
   };
 
-  const getLineColor = (progress) => {
-    if (progress < 40) return '#ff6b6b';
-    if (progress < 70) return '#feca57';
-    return '#1dd1a1';
-  };
-
+  // Chart rendering
   const renderChart = () => {
+    const getLineColor = (data) => {
+      if (!data || data.length === 0) return theme.colors.accent;
+      const lastValue = data[data.length - 1].progress;
+      if (lastValue < 40) return '#ff6b6b';
+      if (lastValue < 70) return '#feca57';
+      return '#1dd1a1';
+    };
+
     switch (chartType) {
       case 'bar':
         return (
@@ -1117,7 +1069,7 @@ const Dashboard = () => {
               <Line
                 type="monotone"
                 dataKey="progress"
-                stroke={chartData.length ? getLineColor(chartData[chartData.length - 1]?.progress) : theme.colors.accent}
+                stroke={getLineColor(chartData)}
                 strokeWidth={2}
               />
             </LineChart>
@@ -1126,26 +1078,51 @@ const Dashboard = () => {
     }
   };
 
-  const todayKey = new Date().toISOString().split('T')[0];
-  const todayTasks = events[todayKey] || [];
+  // Initial data load
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // Focus input when shown
+  useEffect(() => {
+    if (showInput && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [showInput]);
+
+  // Achievements data
+  const achievements = [
+    { 
+      id: 1, 
+      title: 'First Week Streak', 
+      description: 'Completed 7 days of habits', 
+      earned: streak >= 7 
+    },
+    { 
+      id: 2, 
+      title: 'Milestone 100 XP', 
+      description: 'Reached 100 XP points', 
+      earned: totalXP >= 100 
+    },
+    { 
+      id: 3, 
+      title: 'Task Champion', 
+      description: 'Completed 5 tasks in a day', 
+      earned: todayTasks.filter(t => t.completed).length >= 5 
+    },
+  ];
 
   return (
     <DashboardContainer>
+      {/* Background elements (keep your existing background JSX) */}
       <Background>
         <GradientOverlay />
         <Scenery />
         <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
-        <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
-        <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
-        <Rocket><RocketTrail /></Rocket>
-        <AchievementBadge />
-        <ProgressCircle />
-        <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
-        <XPOrb style={{ top: '30%', right: '25%' }} duration="5s" delay="1.2s" />
-        <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
-        <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
+        {/* ... other decorative elements ... */}
       </Background>
 
+      {/* Notifications */}
       <NotificationContainer>
         {notifications.map(notification => (
           <NotificationCard key={notification.id}>
@@ -1161,53 +1138,77 @@ const Dashboard = () => {
         ))}
       </NotificationContainer>
 
+      {/* Sidebar (keep your existing sidebar JSX) */}
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem className="active">Dashboard</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>Mini Games</NavItem>
-          <NavItem onClick={() => navigate('/track')}>Calender tracker</NavItem>
+          <NavItem onClick={() => navigate('/track')}>Calendar Tracker</NavItem>
           <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
           <NavItem onClick={() => navigate('/shop')}>Shop</NavItem>
           <NavItem onClick={() => navigate('/review')}>Review</NavItem>
-
         </NavList>
       </Sidebar>
 
+      {/* Main Content */}
       <MainContent>
         <Header>
           <UserGreeting>
             <h1>Welcome{user?.name ? `, ${user.name}` : ''}! 👋</h1>
             <LevelBadge>Level {currentLevel} - {totalXP} XP</LevelBadge>
           </UserGreeting>
-          <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+          <LogoutButton onClick={logout}>Logout</LogoutButton>
         </Header>
 
         <GridContainer>
+          {/* Progress Card */}
           <Card>
             <h2>Progress Overview</h2>
             <ChartControls>
-              <ChartTypeButton active={chartType === 'line'} onClick={() => setChartType('line')}>Line</ChartTypeButton>
-              <ChartTypeButton active={chartType === 'bar'} onClick={() => setChartType('bar')}>Bar</ChartTypeButton>
+              <ChartTypeButton 
+                active={chartType === 'line'} 
+                onClick={() => setChartType('line')}
+              >
+                Line
+              </ChartTypeButton>
+              <ChartTypeButton 
+                active={chartType === 'bar'} 
+                onClick={() => setChartType('bar')}
+              >
+                Bar
+              </ChartTypeButton>
             </ChartControls>
-            {loading ? <p>Loading chart data...</p> : <ChartContainer>{renderChart()}</ChartContainer>}
+            {loading ? (
+              <p>Loading chart data...</p>
+            ) : (
+              <ChartContainer>
+                {chartData.length > 0 ? renderChart() : <p>No data available</p>}
+              </ChartContainer>
+            )}
             <h3 style={{ marginTop: '1rem' }}>Current Streak: {streak} days</h3>
-            <ProgressBarContainer progress={streakPercentage}><div></div></ProgressBarContainer>
+            <ProgressBarContainer progress={`${streakPercentage}%`}>
+              <div></div>
+            </ProgressBarContainer>
             <p>{streak >= 14 ? 'Streak Maxed!' : `${14 - streak} days to max streak`}</p>
           </Card>
 
+          {/* Leaderboard Card */}
           <Card>
             <h2>Leaderboard</h2>
             <LeaderboardList>
-              {sortedLeaderboard.map((player, index) => (
-                <LeaderboardItem key={player.name}>
-                  <div><UserRank>#{index + 1}</UserRank> {player.name}</div>
+              {leaderboard.map((player, index) => (
+                <LeaderboardItem key={player.id || index}>
+                  <div>
+                    <UserRank>#{index + 1}</UserRank> {player.name}
+                  </div>
                   <UserScore>{player.xp} XP</UserScore>
                 </LeaderboardItem>
               ))}
             </LeaderboardList>
           </Card>
 
+          {/* Achievements Card */}
           <Card>
             <h2>Achievements</h2>
             <AchievementList>
@@ -1215,33 +1216,23 @@ const Dashboard = () => {
                 .filter(achievement => showAllAchievements || achievement.earned)
                 .map(achievement => (
                   <AchievementItem key={achievement.id}>
-                    <AchievementTitle>{achievement.title}</AchievementTitle>
+                    <AchievementTitle>
+                      {achievement.earned ? '✓ ' : ''}{achievement.title}
+                    </AchievementTitle>
                     <AchievementDetails>{achievement.description}</AchievementDetails>
                   </AchievementItem>
                 ))}
             </AchievementList>
-            <Button style={{ marginTop: '1rem', width: '100%' }} onClick={() => setShowAllAchievements(prev => !prev)}>
-              {showAllAchievements ? "Collapse" : "View All Achievements"}
+            <Button 
+              style={{ marginTop: '1rem', width: '100%' }} 
+              onClick={() => setShowAllAchievements(!showAllAchievements)}
+            >
+              {showAllAchievements ? "Show Earned Only" : "View All Achievements"}
             </Button>
           </Card>
 
-          {selectedTask && (
-            <TimeAllocationModal>
-              <h3>Allocate Time for "{selectedTask.title}"</h3>
-              <TimeInput
-                type="number"
-                placeholder="Estimated time in minutes"
-                value={timeAllocation}
-                onChange={(e) => setTimeAllocation(e.target.value)}
-              />
-              <Button onClick={saveTimeAllocation}>Save Time</Button>
-              <Button onClick={() => setSelectedTask(null)} style={{ marginLeft: '0.5rem', background: theme.colors.secondary }}>
-                Cancel
-              </Button>
-            </TimeAllocationModal>
-          )}
-
-<Card>
+          {/* Tasks Card */}
+          <Card>
             <h2>Today's Tasks</h2>
             <TaskList>
               {todayTasks.map((task) => (
@@ -1254,11 +1245,9 @@ const Dashboard = () => {
                     <EditInput
                       type="text"
                       value={task.title}
-                      onChange={(e) => updateEvent(todayKey, task.id, { title: e.target.value })}
+                      onChange={(e) => updateTaskTitle(task.id, e.target.value)}
                       onBlur={() => toggleEdit(task.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") toggleEdit(task.id);
-                      }}
+                      onKeyDown={(e) => e.key === 'Enter' && toggleEdit(task.id)}
                     />
                   ) : (
                     <TaskText
@@ -1268,36 +1257,66 @@ const Dashboard = () => {
                       {task.title}
                     </TaskText>
                   )}
-                  <DeleteButton onClick={() => deleteTask(task.id)}>Delete</DeleteButton>
+                  <DeleteButton onClick={() => handleDeleteTask(task.id)}>
+                    Delete
+                  </DeleteButton>
                 </Task>
               ))}
             </TaskList>
             {showInput ? (
-              <AddHabitInput
-                ref={inputRef}
-                type="text"
-                placeholder="Add a new task..."
-                value={newHabit}
-                onChange={(e) => setNewHabit(e.target.value)}
-                onKeyPress={handleKeyPress}
-                onBlur={() => setShowInput(false)}
-              />
+              <div>
+                <AddHabitInput
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Add a new task..."
+                  value={newHabit}
+                  onChange={(e) => setNewHabit(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
+                  onBlur={() => setShowInput(false)}
+                />
+                <AddHabitButton onClick={handleAddTask}>Save Task</AddHabitButton>
+              </div>
             ) : (
-              <AddHabitButton onClick={addHabit}>+ Add Task</AddHabitButton>
+              <AddHabitButton onClick={() => setShowInput(true)}>
+                + Add Task
+              </AddHabitButton>
             )}
           </Card>
+
+          {/* Time Allocation Modal */}
+          {selectedTask && (
+            <TimeAllocationModal>
+              <h3>Allocate Time for "{selectedTask.title}"</h3>
+              <TimeInput
+                type="number"
+                placeholder="Estimated time in minutes"
+                value={timeAllocation}
+                onChange={(e) => setTimeAllocation(e.target.value)}
+              />
+              <Button onClick={saveTimeAllocation}>Save Time</Button>
+              <Button 
+                onClick={() => setSelectedTask(null)} 
+                style={{ marginLeft: '0.5rem', background: theme.colors.secondary }}
+              >
+                Cancel
+              </Button>
+            </TimeAllocationModal>
+          )}
         </GridContainer>
       </MainContent>
+
+      {/* AI Chat Component */}
       <AIChat 
-  user={user} 
-  tasks={todayTasks} 
-  onTaskUpdate={handleTaskCompletion}
-  onAddTaskWithDate={(date, task) => {
-    const dateKey = date.toISOString().split('T')[0];
-    addEvent(dateKey, task);
-  }}
-/>
+        user={user} 
+        tasks={todayTasks} 
+        onTaskUpdate={handleTaskCompletion}
+        onAddTask={(taskTitle) => {
+          handleAddTask(taskTitle);
+          addNotification('Task added from AI Chat');
+        }}
+      />
     </DashboardContainer>
   );
 };
+
 export default Dashboard;
