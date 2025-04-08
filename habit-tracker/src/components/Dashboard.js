@@ -1,5 +1,5 @@
 /*
-Dashboard Component Documentation
+Dashboard Components Documentation
 Overview
 The Dashboard component serves as the central hub for the HabitQuest application, providing users with a comprehensive view of their habit tracking progress, tasks, achievements, and gamification elements. The dashboard features:
 
