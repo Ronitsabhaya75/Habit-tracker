@@ -1,44 +1,51 @@
 import mongoose from 'mongoose';
 
 const LocalDataSchema = new mongoose.Schema({
+  // Identify user
   userId: {
     type: String,
-    required: [true, 'User ID is required'],
+    required: true,
     index: true,
     trim: true
   },
+ 
+  //local storage key
   key: {
     type: String,
-    required: [true, 'Key is required'],
-    trim: true,
-    maxlength: [100, 'Key cannot exceed 100 characters']
+    required: true,
+    trim: true
   },
+ 
+  //value
   value: {
     type: mongoose.Schema.Types.Mixed,
-    required: [true, 'Value is required']
+    required: true
   },
-  expiresAt: {
+ 
+  //update marker
+  updatedAt: {
     type: Date,
-    default: null
+    default: Date.now
+  },
+ 
+  //created marker
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
 }, {
+ 
   timestamps: true,
+ 
+  //
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
-// Compound index
+//compound index
 LocalDataSchema.index({ userId: 1, key: 1 }, { unique: true });
 
-// TTL index for auto-expiration
-LocalDataSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-// Virtual for age in days
-LocalDataSchema.virtual('ageInDays').get(function() {
-  return Math.floor((Date.now() - this.createdAt) / (1000 * 60 * 60 * 24));
-});
-
-// Parse stringified JSON values
+//parsing if needed
 LocalDataSchema.methods.getParsedValue = function() {
   if (typeof this.value === 'string') {
     try {
@@ -50,24 +57,31 @@ LocalDataSchema.methods.getParsedValue = function() {
   return this.value;
 };
 
-// Find or create pattern
+//find or create data
 LocalDataSchema.statics.findOrCreate = async function(userId, key, defaultValue = {}) {
   let data = await this.findOne({ userId, key });
+ 
   if (!data) {
-    data = await this.create({ userId, key, value: defaultValue });
+    data = await this.create({
+      userId,
+      key,
+      value: defaultValue
+    });
   }
+ 
   return data;
 };
 
-// Get all data for user
+// get data
 LocalDataSchema.statics.getAllForUser = async function(userId) {
-  return this.find({ userId }).sort({ key: 1 }).lean();
+  return this.find({ userId }).sort({ key: 1 });
 };
 
-// Update timestamp on save
-LocalDataSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
+
+LocalDataSchema.virtual('ageInDays').get(function() {
+  return Math.floor((Date.now() - this.createdAt) / (1000 * 60 * 60 * 24));
 });
 
-export default mongoose.model('LocalData', LocalDataSchema);
+const LocalData = mongoose.model('LocalData', LocalDataSchema);
+
+export default LocalData;
