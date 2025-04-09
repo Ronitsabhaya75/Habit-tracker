@@ -5,7 +5,7 @@ import styled, { keyframes, createGlobalStyle, css } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 
-// Add Global Style to remove default margins and padding
+// Add Global Style to remove default margins and paddings
 const GlobalStyle = createGlobalStyle`
   * {
     margin: 0;

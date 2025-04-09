@@ -1,323 +1,100 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-// Make sure css helper is imported and used consistently
-import { theme } from '../theme'; // Make sure this path is correct
 import { useNavigate } from 'react-router-dom';
-import { useEventContext } from '../context/EventContext'; // Make sure this path is correct
+import { useEventContext } from '../context/EventContext';
 import AIChat from './AIChat';
 
-// UPDATED SPACE THEME COLORS
-const spaceTheme = {
-  deepSpace: '#0E1A40',
-  deepSpaceGradient: 'linear-gradient(135deg, #0E1A40 0%, #13294B 100%)',
-  accentGlow: '#32FFC0',
-  accentGold: '#FFDF6C',
-  textPrimary: '#D0E7FF',
-  actionButton: '#00F9FF',
-  actionButtonAlt: '#FF5DA0',
-  highlight: '#FFFA81',
-  highlightAlt: '#FBC638',
-  calendarCell: '#1C2A4A',
-  glassOverlay: 'rgba(30, 39, 73, 0.8)'
+// Theme Colors from Original Dashboard
+const dashboardTheme = {
+  backgroundGradient: 'linear-gradient(to bottom, #0B1A2C, #152642)',
+  accentGlow: '#00FFF5',
+  accentGradientStart: '#00FFC6',
+  accentGradientEnd: '#4A90E2',
+  textPrimary: '#B8FFF9',
+  cardBackground: 'rgba(21, 38, 66, 0.8)',
+  glassOverlay: 'rgba(11, 26, 44, 0.9)',
+  borderGlow: 'rgba(0, 255, 198, 0.3)',
+  buttonGradient: 'linear-gradient(90deg, #00FFC6 0%, #4A90E2 100%)',
 };
 
-// ENHANCED ANIMATIONS
-const floatAnimation = keyframes`
-  0% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(2deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+// Animations from Original Dashboard
+const starFloat = keyframes`
+  0% { opacity: 0; transform: translateY(0px) translateX(0px); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px) translateX(10px); }
 `;
 
-const starGlow = keyframes`
-  0% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
-  50% { opacity: 1; filter: blur(0px); transform: scale(1.1); }
-  100% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
-`;
-
-const slowRotate = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`;
-
-const trailAnimation = keyframes`
-  0% { opacity: 0; transform: translateX(20px); }
-  20% { opacity: 0.7; }
-  100% { opacity: 0; transform: translateX(-100px); }
-`;
-
-const pulseGlow = keyframes`
-  0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
-  50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
-  100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
-`;
-
-const expGain = keyframes`
+const pulse = keyframes`
   0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+  50% { transform: scale(1.1); }
   100% { transform: scale(1); }
 `;
 
-const meteorShower = keyframes`
-  0% { transform: translateX(0) translateY(0); opacity: 0: }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { transform: translateX(-100vw) translateY(100vh); opacity: 0; }
+const glow = keyframes`
+  0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)); }
+  50% { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.9)); }
+  100% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)); }
 `;
 
-const glowPulse = keyframes`
-  0% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
-  50% { text-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
-  100% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
+const float = keyframes`
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
 `;
 
-const warping = keyframes`
-  0% { transform: scale(0.8); opacity: 0; }
-  50% { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+const shimmer = keyframes`
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 `;
 
-// STYLED COMPONENTS WITH ENHANCED THEME
+const fadeIn = keyframes`
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+`;
+
+// Styled Components with Dashboard Theme
 const Background = styled.div`
   position: absolute;
   width: 100%;
   height: 100%;
-  background: ${spaceTheme.deepSpaceGradient};
+  background: ${dashboardTheme.backgroundGradient};
   overflow: hidden;
-`;
-
-const GradientOverlay = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 30% 50%, rgba(50, 255, 192, 0.1) 0%, transparent 70%),
-              radial-gradient(circle at 70% 70%, rgba(0, 249, 255, 0.1) 0%, transparent 60%);
-  z-index: 1;
-`;
-
-const Scenery = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 30%;
-  background: linear-gradient(180deg, transparent 0%, rgba(20, 30, 60, 0.3) 100%);
-  z-index: 1;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 5%;
-    width: 30%;
-    height: 80%;
-    background: linear-gradient(135deg, #1C2A4A 20%, #0E1A40 100%);
-    clip-path: polygon(0% 100%, 50% 30%, 100% 100%);
-    box-shadow: 0 0 15px rgba(50, 255, 192, 0.2);
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 15%;
-    width: 40%;
-    height: 90%;
-    background: linear-gradient(135deg, #0E1A40 20%, #13294B 100%);
-    clip-path: polygon(0% 100%, 40% 20%, 80% 60%, 100% 100%);
-    box-shadow: 0 0 15px rgba(0, 249, 255, 0.2);
-  }
 `;
 
 const Star = styled.div`
   position: absolute;
-  width: ${props => props.size || '30px'};
-  height: ${props => props.size || '30px'};
-  background: radial-gradient(circle, ${props => props.color || 'rgba(255, 223, 108, 0.9)'} 0%, rgba(255, 255, 255, 0) 70%);
+  width: ${props => props.size || 2}px;
+  height: ${props => props.size || 2}px;
+  background-color: #ffffff;
   border-radius: 50%;
-  z-index: 2;
-  animation: ${starGlow} ${props => props.duration || '3s'} infinite ease-in-out;
-  animation-delay: ${props => props.delay || '0s'};
-  opacity: 0.7;
-  
-  &::before {
-    content: '★';
-    position: absolute;
-    font-size: ${props => parseInt(props.size) * 0.8 || '24px'};
-    color: ${props => props.color || 'rgba(255, 223, 108, 0.9)'};
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-`;
-
-const Meteor = styled.div`
-  position: absolute;
-  top: ${props => props.top || '10%'};
-  right: 0;
-  width: 4px;
-  height: 4px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 0 10px ${spaceTheme.accentGold}, 0 0 20px ${spaceTheme.accentGold};
-  opacity: 0.8;
-  z-index: 2;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 80px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, ${spaceTheme.accentGold});
-    border-radius: 2px;
-    transform: translateX(2px);
-  }
-  
-  animation: ${meteorShower} ${props => props.duration || '2s'} ${props => props.delay || '0s'} linear forwards;
-`;
-
-const AchievementBadge = styled.div`
-  position: absolute;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(50, 255, 192, 0.2) 0%, rgba(50, 255, 192, 0) 70%);
-  border: 2px solid rgba(50, 255, 192, 0.3);
-  box-shadow: 0 0 15px rgba(50, 255, 192, 0.4);
-  top: 15%;
-  right: 15%;
-  z-index: 2;
-  animation: ${pulseGlow} 4s infinite ease-in-out;
-  
-  &::before {
-    content: '🏆';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 24px;
-  }
-`;
-
-const Rocket = styled.div`
-  position: absolute;
-  top: 30%;
-  left: 15%;
-  width: 50px;
-  height: 50px;
-  z-index: 3;
-  animation: ${floatAnimation} 8s infinite ease-in-out;
-  transform-origin: center center;
-  
-  &::before {
-    content: '🚀';
-    position: absolute;
-    font-size: 28px;
-    transform: rotate(45deg);
-  }
-`;
-
-const RocketTrail = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 80px;
-  height: 8px;
-  background: linear-gradient(90deg, rgba(50, 255, 192, 0) 0%, rgba(50, 255, 192, 0.7) 100%);
-  border-radius: 4px;
-  z-index: 2;
-  opacity: 0.5;
-  filter: blur(2px);
-  transform: translateX(-80px);
-  animation: ${trailAnimation} 2s infinite;
-`;
-
-const Planet = styled.div`
-  position: absolute;
-  width: ${props => props.size || '80px'};
-  height: ${props => props.size || '80px'};
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, ${props => props.color || '#5073b8'}, #1a2b4d);
-  opacity: 0.8;
-  box-shadow: 0 0 20px rgba(50, 255, 192, 0.2);
-  z-index: 1;
-  bottom: ${props => props.bottom || '50px'};
-  right: ${props => props.right || '50px'};
-  
-  &::after {
-    content: '';
-    position: absolute;
-    width: 110%;
-    height: 20px;
-    background: rgba(50, 255, 192, 0.2);
-    border-radius: 50%;
-    top: 50%;
-    left: -5%;
-    transform: translateY(-50%) rotateX(80deg);
-  }
-`;
-
-const ProgressCircle = styled.div`
-  position: absolute;
-  bottom: 20%;
-  right: 10%;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 3px solid rgba(0, 249, 255, 0.2);
-  border-top: 3px solid rgba(0, 249, 255, 0.8);
-  animation: ${slowRotate} 8s linear infinite;
-  z-index: 2;
-  box-shadow: 0 0 15px rgba(0, 249, 255, 0.1);
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    border: 2px dashed rgba(0, 249, 255, 0.2);
-  }
-`;
-
-const XPOrb = styled.div`
-  position: absolute;
-  width: 15px;
-  height: 15px;
-  background: radial-gradient(circle, rgba(50, 255, 192, 0.8) 30%, rgba(50, 255, 192, 0) 70%);
-  border-radius: 50%;
-  animation: ${floatAnimation} ${props => props.duration || '4s'} infinite ease-in-out;
-  animation-delay: ${props => props.delay || '0s'};
-  opacity: 0.7;
-  z-index: 2;
-  box-shadow: 0 0 10px rgba(50, 255, 192, 0.5);
+  opacity: ${props => props.opacity || 0.7};
+  top: ${props => props.top}%;
+  left: ${props => props.left}%;
+  animation: ${starFloat} ${props => props.duration || 10}s linear infinite;
+  animation-delay: ${props => props.delay || 0}s;
+  box-shadow: 0 0 ${props => props.glow || 1}px ${props => props.glow || 1}px ${dashboardTheme.textPrimary};
 `;
 
 const Sidebar = styled.div`
   width: 250px;
   padding: 2rem;
-  background: rgba(14, 26, 64, 0.8);
-  color: ${spaceTheme.textPrimary};
-  border-right: 1px solid rgba(50, 255, 192, 0.3);
-  backdrop-filter: blur(8px);
-  z-index: 1000; // Increased from 10 to 1000 to ensure it's on top
+  background: ${dashboardTheme.glassOverlay};
+  border-right: 1px solid ${dashboardTheme.borderGlow};
+  backdrop-filter: blur(10px);
+  z-index: 1000;
   position: fixed;
   left: 0;
   top: 0;
   height: 100vh;
-  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
   
   h2 {
-    font-family: 'Orbitron', sans-serif;
-    margin-bottom: 2rem;
-    color: ${spaceTheme.accentGlow};
-    text-shadow: 0 0 10px ${spaceTheme.accentGlow};
+    color: ${dashboardTheme.accentGlow};
     font-size: 1.8rem;
-    letter-spacing: 2px;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(0, 255, 245, 0.5);
   }
 `;
 
@@ -329,39 +106,24 @@ const NavList = styled.ul`
 
 const NavItem = styled.li`
   padding: 1rem;
-  margin: 0.7rem 0;
+  margin: 0.5rem 0;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s;
   display: flex;
-  color: ${spaceTheme.textPrimary};
   align-items: center;
   gap: 1rem;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid transparent;
+  color: ${dashboardTheme.textPrimary};
   
   &:hover {
-    background: rgba(50, 255, 192, 0.1);
-    border: 1px solid rgba(50, 255, 192, 0.3);
+    background: rgba(0, 255, 198, 0.1);
     transform: translateX(5px);
   }
   
   &.active {
-    background: rgba(50, 255, 192, 0.2);
-    border: 1px solid rgba(50, 255, 192, 0.5);
-    box-shadow: 0 0 15px rgba(50, 255, 192, 0.2);
-    
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      width: 4px;
-      background: ${spaceTheme.accentGlow};
-      box-shadow: 0 0 10px ${spaceTheme.accentGlow};
-    }
+    background: linear-gradient(90deg, rgba(0, 255, 198, 0.3), rgba(74, 144, 226, 0.3));
+    border-left: 3px solid ${dashboardTheme.accentGradientStart};
+    color: ${dashboardTheme.accentGlow};
   }
 `;
 
@@ -379,12 +141,9 @@ const TrackContainer = styled.div`
 
 const PageTitle = styled.h1`
   font-size: 2.5rem;
-  color: ${spaceTheme.accentGlow};
+  color: ${dashboardTheme.accentGlow};
   margin-bottom: 1rem;
-  font-family: 'Orbitron', sans-serif;
-  letter-spacing: 2px;
-  text-shadow: 0 0 10px ${spaceTheme.accentGlow}, 0 0 20px ${spaceTheme.accentGlow};
-  animation: ${glowPulse} 3s infinite ease-in-out;
+  text-shadow: 0 0 10px rgba(0, 255, 245, 0.5);
 `;
 
 const ExpContainer = styled.div`
@@ -395,9 +154,9 @@ const ExpContainer = styled.div`
   width: 350px;
   border-radius: 20px;
   padding: 1rem;
-  background: rgba(14, 26, 64, 0.6);
-  border: 1px solid rgba(50, 255, 192, 0.3);
-  box-shadow: 0 0 15px rgba(50, 255, 192, 0.1);
+  background: ${dashboardTheme.cardBackground};
+  border: 1px solid ${dashboardTheme.borderGlow};
+  box-shadow: 0 0 15px rgba(0, 255, 198, 0.2);
 `;
 
 const ExpLabel = styled.div`
@@ -405,78 +164,43 @@ const ExpLabel = styled.div`
   justify-content: space-between;
   width: 100%;
   margin-bottom: 0.5rem;
-  color: ${spaceTheme.textPrimary};
+  color: ${dashboardTheme.textPrimary};
   font-size: 1.1rem;
   
   span {
-    color: ${spaceTheme.accentGold};
+    color: ${dashboardTheme.accentGradientStart};
     font-weight: bold;
-  }
-  
-  .exp-amount {
-    animation: ${props => props.animate ? css`${expGain} 1s ease-in-out` : 'none'};
   }
 `;
 
 const ExpBarContainer = styled.div`
   width: 100%;
   height: 14px;
-  background: rgba(10, 20, 50, 0.5);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 7px;
   overflow: hidden;
-  border: 1px solid rgba(50, 255, 192, 0.3);
+  margin-top: 1rem;
 `;
 
 const ExpBarFill = styled.div`
   height: 100%;
   width: ${props => props.percentage}%;
-  background: linear-gradient(90deg, ${spaceTheme.accentGlow} 0%, ${spaceTheme.actionButton} 100%);
+  background: ${dashboardTheme.buttonGradient};
   border-radius: 7px;
   transition: width 1s ease-in-out;
-  position: relative;
-  overflow: hidden;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.4) 50%,
-      transparent 100%
-    );
-    transform: translateX(-100%);
-    animation: shimmer 2s infinite;
-  }
-  
-  @keyframes shimmer {
-    100% {
-      transform: translateX(100%);
-    }
-  }
 `;
 
 const CalendarContainer = styled.div`
-  background: rgba(14, 26, 64, 0.8);
+  background: ${dashboardTheme.cardBackground};
   padding: 2.5rem;
   border-radius: 16px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(50, 255, 192, 0.3);
+  border: 1px solid ${dashboardTheme.borderGlow};
+  backdrop-filter: blur(8px);
   width: 90%;
   max-width: 800px;
-  color: ${spaceTheme.textPrimary};
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
-              0 0 0 1px rgba(50, 255, 192, 0.2), 
-              inset 0 1px 1px rgba(50, 255, 192, 0.05);
-  animation: ${css`${warping} 0.5s ease-out`};
-  
-  .selected-date-container {
-    animation: ${css`${warping} 0.3s ease-out`};
-  }
+  color: ${dashboardTheme.textPrimary};
+  box-shadow: 0 0 15px rgba(0, 255, 198, 0.2);
+  animation: ${css`${fadeIn} 0.5s ease-out`};
 `;
 
 const CalendarHeader = styled.div`
@@ -486,31 +210,22 @@ const CalendarHeader = styled.div`
   margin-bottom: 1.5rem;
   
   h3 {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.4rem;
-    color: ${spaceTheme.accentGlow};
-    text-shadow: 0 0 5px ${spaceTheme.accentGlow};
+    color: ${dashboardTheme.accentGlow};
+    text-shadow: 0 0 5px rgba(0, 255, 245, 0.5);
   }
 `;
 
 const MonthNavButton = styled.button`
-  background: rgba(50, 255, 192, 0.2);
-  color: ${spaceTheme.textPrimary};
-  border: 1px solid rgba(50, 255, 192, 0.3);
-  border-radius: 8px;
+  background: ${dashboardTheme.buttonGradient};
+  color: white;
+  border: none;
   padding: 0.6rem 1rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s;
-  font-family: 'Orbitron', sans-serif;
-  
+  transition: all 0.3s ease;
   &:hover {
-    background: rgba(50, 255, 192, 0.4);
-    box-shadow: 0 0 15px rgba(50, 255, 192, 0.4);
     transform: translateY(-2px);
-  }
-  
-  &:active {
-    transform: translateY(1px);
+    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.3);
   }
 `;
 
@@ -524,10 +239,7 @@ const DayLabel = styled.div`
   text-align: center;
   padding: 0.5rem 0;
   font-weight: bold;
-  color: ${spaceTheme.accentGlow};
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.8rem;
-  letter-spacing: 1px;
+  color: ${dashboardTheme.accentGlow};
 `;
 
 const CalendarDay = styled.div`
@@ -540,59 +252,30 @@ const CalendarDay = styled.div`
   cursor: pointer;
   position: relative;
   background: ${props => 
-    props.isToday 
-      ? 'rgba(0, 249, 255, 0.2)' 
-      : props.isSelected 
-        ? `rgba(50, 255, 192, 0.3)`
-        : props.hasEvent 
-          ? 'rgba(255, 250, 129, 0.15)' 
-          : 'rgba(28, 42, 74, 0.4)'
-  };
-  
+    props.isToday ? 'rgba(0, 255, 245, 0.2)' : 
+    props.isSelected ? 'rgba(0, 255, 198, 0.3)' : 
+    props.hasEvent ? 'rgba(74, 144, 226, 0.2)' : 
+    'rgba(21, 38, 66, 0.8)'};
   border: 1px solid ${props => 
-    props.isToday 
-      ? 'rgba(0, 249, 255, 0.6)' 
-      : props.isSelected 
-        ? `rgba(50, 255, 192, 0.6)`
-        : props.hasEvent 
-          ? 'rgba(255, 250, 129, 0.3)' 
-          : 'rgba(50, 255, 192, 0.2)'
-  };
-  
-  box-shadow: ${props => 
-    props.isToday || props.isSelected
-      ? `0 0 10px ${props.isToday ? 'rgba(0, 249, 255, 0.3)' : 'rgba(50, 255, 192, 0.3)'}`
-      : 'none'
-  };
-  
-  color: ${props => props.isCurrentMonth ? spaceTheme.textPrimary : 'rgba(208, 231, 255, 0.4)'};
-  font-weight: ${props => props.isToday || props.isSelected ? 'bold' : 'normal'};
+    props.isToday ? 'rgba(0, 255, 245, 0.6)' : 
+    props.isSelected ? 'rgba(0, 255, 198, 0.6)' : 
+    props.hasEvent ? 'rgba(74, 144, 226, 0.4)' : 
+    dashboardTheme.borderGlow};
+  color: ${props => props.isCurrentMonth ? dashboardTheme.textPrimary : 'rgba(184, 255, 249, 0.4)'};
   transition: all 0.2s;
   
   &:hover {
-    background: ${props => props.isSelected ? 'rgba(50, 255, 192, 0.4)' : 'rgba(0, 249, 255, 0.2)'};
+    background: rgba(0, 255, 198, 0.2);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 10px rgba(0, 255, 198, 0.3);
   }
   
   &::after {
     content: ${props => props.hasEvent ? '"•"' : '""'};
     position: absolute;
     bottom: 4px;
-    color: ${spaceTheme.accentGold};
-    font-size: 14px;
-    text-shadow: 0 0 4px ${spaceTheme.accentGold};
+    color: ${dashboardTheme.accentGradientStart};
   }
-  
-  ${props => props.hasStreak && `
-    &::before {
-      content: '🔥';
-      position: absolute;
-      top: 2px;
-      right: 2px;
-      font-size: 10px;
-    }
-  `}
 `;
 
 const EventModal = styled.div`
@@ -601,7 +284,7 @@ const EventModal = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(10, 17, 40, 0.8);
+  background: rgba(11, 26, 44, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -610,21 +293,20 @@ const EventModal = styled.div`
 `;
 
 const EventModalContent = styled.div`
-  background: rgba(14, 26, 64, 0.9);
+  background: ${dashboardTheme.cardBackground};
   padding: 2rem;
   border-radius: 16px;
-  border: 1px solid rgba(50, 255, 192, 0.3);
+  border: 1px solid ${dashboardTheme.borderGlow};
   backdrop-filter: blur(8px);
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(50, 255, 192, 0.2);
-  animation: ${css`${warping} 0.3s ease-out`};
+  box-shadow: 0 0 15px rgba(0, 255, 198, 0.2);
+  animation: ${css`${fadeIn} 0.3s ease-out`};
   
   h3 {
-    color: ${spaceTheme.accentGlow};
+    color: ${dashboardTheme.accentGlow};
     margin-bottom: 1.5rem;
-    font-family: 'Orbitron', sans-serif;
-    text-shadow: 0 0 10px ${spaceTheme.accentGlow};
+    text-shadow: 0 0 10px rgba(0, 255, 245, 0.5);
   }
 `;
 
@@ -632,81 +314,42 @@ const EventInput = styled.input`
   width: 100%;
   padding: 0.75rem;
   margin: 0.5rem 0;
-  background: rgba(28, 42, 74, 0.6);
-  border: 1px solid rgba(50, 255, 192, 0.3);
+  background: ${dashboardTheme.glassOverlay};
+  border: 1px solid ${dashboardTheme.borderGlow};
   border-radius: 8px;
-  color: ${spaceTheme.textPrimary};
-  transition: all 0.3s;
-  
-  &:focus {
-    outline: none;
-    border-color: ${spaceTheme.accentGlow};
-    box-shadow: 0 0 10px rgba(50, 255, 192, 0.3);
-  }
-  
-  &::placeholder {
-    color: rgba(208, 231, 255, 0.6);
-  }
+  color: ${dashboardTheme.textPrimary};
 `;
 
 const EventTextarea = styled.textarea`
   width: 100%;
   padding: 0.75rem;
   margin: 0.5rem 0;
-  background: rgba(28, 42, 74, 0.6);
-  border: 1px solid rgba(50, 255, 192, 0.3);
+  background: ${dashboardTheme.glassOverlay};
+  border: 1px solid ${dashboardTheme.borderGlow};
   border-radius: 8px;
-  color: ${spaceTheme.textPrimary};
+  color: ${dashboardTheme.textPrimary};
   min-height: 100px;
   resize: vertical;
-  transition: all 0.3s;
-  
-  &:focus {
-    outline: none;
-    border-color: ${spaceTheme.accentGlow};
-    box-shadow: 0 0 10px rgba(50, 255, 192, 0.3);
-  }
-  
-  &::placeholder {
-    color: rgba(208, 231, 255, 0.6);
-  }
 `;
 
 const EventList = styled.div`
   margin-top: 1rem;
   max-height: 200px;
   overflow-y: auto;
-  
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: rgba(28, 42, 74, 0.6);
-    border-radius: 4px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: rgba(50, 255, 192, 0.3);
-    border-radius: 4px;
-  }
 `;
 
 const EventItem = styled.div`
   padding: 1rem;
-  background: rgba(28, 42, 74, 0.6);
+  background: ${dashboardTheme.glassOverlay};
   border-radius: 12px;
   margin-bottom: 0.8rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid rgba(50, 255, 192, 0.1);
   transition: all 0.2s;
-  
   &:hover {
-    background: rgba(28, 42, 74, 0.8);
-    border-color: rgba(50, 255, 192, 0.3);
+    background: rgba(0, 255, 198, 0.1);
     transform: translateX(3px);
   }
 `;
@@ -715,26 +358,23 @@ const TaskCheckbox = styled.div`
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 2px solid ${props => props.completed ? spaceTheme.accentGlow : 'rgba(208, 231, 255, 0.3)'};
-  background: ${props => props.completed ? spaceTheme.accentGlow : 'transparent'};
+  border: 2px solid ${props => props.completed ? dashboardTheme.accentGlow : 'rgba(184, 255, 249, 0.3)'};
+  background: ${props => props.completed ? dashboardTheme.buttonGradient : 'transparent'};
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: ${props => props.completed ? `0 0 8px ${spaceTheme.accentGlow}` : 'none'};
   
   &::after {
     content: ${props => props.completed ? '"✓"' : '""'};
-    color: #0E1A40;
+    color: white;
     font-size: 0.8rem;
-    font-weight: bold;
   }
   
   &:hover {
-    border-color: ${spaceTheme.accentGlow};
+    border-color: ${dashboardTheme.accentGlow};
     transform: scale(1.1);
-    box-shadow: 0 0 8px rgba(50, 255, 192, 0.5);
   }
 `;
 
@@ -746,109 +386,67 @@ const ModalButtonContainer = styled.div`
 `;
 
 const CancelButton = styled.button`
-  background: rgba(28, 42, 74, 0.6);
-  color: ${spaceTheme.textPrimary};
-  border: 1px solid rgba(208, 231, 255, 0.3);
-  border-radius: 8px;
+  background: rgba(255, 82, 82, 0.3);
+  color: white;
+  border: none;
   padding: 0.7rem 1.2rem;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Orbitron', sans-serif;
-  
   &:hover {
-    background: rgba(28, 42, 74, 0.8);
-    border-color: rgba(208, 231, 255, 0.5);
+    background: rgba(255, 82, 82, 0.5);
   }
 `;
 
 const SaveButton = styled.button`
-  background: ${spaceTheme.accentGlow};
-  color: #0E1A40;
+  background: ${dashboardTheme.buttonGradient};
+  color: white;
   border: none;
-  border-radius: 8px;
   padding: 0.7rem 1.4rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
-  font-weight: bold;
-  font-family: 'Orbitron', sans-serif;
-  box-shadow: 0 0 10px rgba(50, 255, 192, 0.4);
-  
+  transition: all 0.3s ease;
   &:hover {
-    background: ${spaceTheme.actionButton};
     transform: translateY(-2px);
-    box-shadow: 0 0 15px rgba(0, 249, 255, 0.5);
-  }
-  
-  &:active {
-    transform: translateY(1px);
+    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.3);
   }
 `;
 
 const AddEventButton = styled.button`
-  background: ${spaceTheme.actionButton};
-  color: #0E1A40;
+  background: ${dashboardTheme.buttonGradient};
+  color: white;
   border: none;
-  border-radius: 8px;
   padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: bold;
-  font-size: 1rem;
-  transition: all 0.3s;
-  font-family: 'Orbitron', sans-serif;
-  box-shadow: 0 0 10px rgba(0, 249, 255, 0.3);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  
+  transition: all 0.3s ease;
   &:hover {
-    background: ${spaceTheme.accentGlow};
     transform: translateY(-2px);
-    box-shadow: 0 0 15px rgba(50, 255, 192, 0.5);
-  }
-  
-  &:active {
-    transform: translateY(1px);
-  }
-  
-  &::before {
-    content: '+';
-    font-size: 1.2rem;
-    font-weight: bold;
+    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.3);
   }
 `;
 
 const DeleteButton = styled.button`
-  background: rgba(255, 77, 77, 0.3);
+  background: rgba(255, 82, 82, 0.3);
   color: white;
-  border: 1px solid rgba(255, 77, 77, 0.5);
-  border-radius: 8px;
+  border: none;
   padding: 0.5rem 1rem;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  
   &:hover {
-    background: rgba(255, 77, 77, 0.6);
-    box-shadow: 0 0 10px rgba(255, 77, 77, 0.3);
+    background: rgba(255, 82, 82, 0.5);
   }
 `;
 
 const StreakBadge = styled.div`
-  position: relative;
   padding: 0.3rem 0.8rem;
-  background: rgba(255, 223, 108, 0.2);
+  background: rgba(0, 255, 198, 0.2);
   border-radius: 20px;
-  color: ${spaceTheme.accentGold};
+  color: ${dashboardTheme.accentGlow};
   font-size: 0.8rem;
-  display: flex;
-  align-items: center;
   margin-bottom: 1rem;
-  border: 1px solid rgba(255, 223, 108, 0.3);
-  box-shadow: 0 0 10px rgba(255, 223, 108, 0.1);
-  
-  &::before {
-    content: '🔥';
-    margin-right: 0.4rem;
-  }
+  border: 1px solid ${dashboardTheme.borderGlow};
 `;
 
 const CoachTip = styled.div`
@@ -858,19 +456,17 @@ const CoachTip = styled.div`
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: rgba(0, 249, 255, 0.2);
-  border: 2px solid rgba(0, 249, 255, 0.4);
+  background: ${dashboardTheme.buttonGradient};
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s;
   z-index: 100;
-  box-shadow: 0 0 15px rgba(0, 249, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 255, 198, 0.3);
   
   &:hover {
     transform: scale(1.1);
-    box-shadow: 0 0 20px rgba(0, 249, 255, 0.5);
   }
   
   &::before {
@@ -885,29 +481,16 @@ const TipPopup = styled.div`
   right: 30px;
   width: 280px;
   padding: 1.2rem;
-  background: rgba(14, 26, 64, 0.9);
+  background: ${dashboardTheme.cardBackground};
   border-radius: 12px;
-  border: 1px solid rgba(0, 249, 255, 0.3);
-  color: ${spaceTheme.textPrimary};
+  border: 1px solid ${dashboardTheme.borderGlow};
+  color: ${dashboardTheme.textPrimary};
   z-index: 100;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 5px 20px rgba(0, 255, 198, 0.2);
   backdrop-filter: blur(8px);
-  animation: ${css`${warping} 0.3s ease-out`};
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    right: 30px;
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: 10px solid rgba(0, 249, 255, 0.3);
-  }
+  animation: ${css`${fadeIn} 0.3s ease-out`};
 `;
 
-// ENHANCED TRACK COMPONENT
 const Track = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -915,43 +498,13 @@ const Track = () => {
   const [newEvent, setNewEvent] = useState({ title: '', description: '' });
   const [editEvent, setEditEvent] = useState(null);
   const [showTip, setShowTip] = useState(false);
-  const [expAnimating, setExpAnimating] = useState(false);
-  const [streakCount, setStreakCount] = useState(4); // Mock streak count
+  const [streakCount, setStreakCount] = useState(4);
   const { events, userExp, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
   const navigate = useNavigate();
 
-  // Define a default user object
   const user = { name: 'User', habits: [] };
 
-  useEffect(() => {
-    // Simulate meteor shower periodically
-    const meteorInterval = setInterval(() => {
-      createMeteor();
-    }, 5000);
-    
-    return () => clearInterval(meteorInterval);
-  }, []);
-  
-  // Meteor is now handled directly with styled components
-  const [meteors, setMeteors] = useState([]);
-  
-  // Create meteor element for animation
-  const createMeteor = () => {
-    const topPosition = Math.floor(Math.random() * 50) + 5; // Random top position
-    const duration = Math.floor(Math.random() * 3) + 1; // Random duration
-    const meteorId = Date.now();
-    
-    setMeteors(prev => [...prev, { id: meteorId, top: topPosition, duration }]);
-    
-    // Remove meteor after animation
-    setTimeout(() => {
-      setMeteors(prev => prev.filter(meteor => meteor.id !== meteorId));
-    }, duration * 1000);
-  };
-
-  // Calculate EXP percentage for the progress bar
   const calculateExpPercentage = () => {
-    // Mock calculation - in a real app, this would be based on level thresholds
     const currentLevel = Math.floor(userExp / 100);
     const currentLevelExp = userExp % 100;
     return currentLevelExp;
@@ -961,12 +514,6 @@ const Track = () => {
     if (!selectedDate) return;
     const dateKey = formatDate(selectedDate);
     toggleEventCompletion(dateKey, eventId, isCompleted);
-    
-    // Animate EXP gain when task completed
-    if (isCompleted) {
-      setExpAnimating(true);
-      setTimeout(() => setExpAnimating(false), 1000);
-    }
   };
 
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
@@ -996,9 +543,7 @@ const Track = () => {
     setSelectedDate(clickedDate);
   };
 
-  const formatDate = (date) => {
-    return date.toISOString().split('T')[0];
-  };
+  const formatDate = (date) => date.toISOString().split('T')[0];
 
   const handleOpenEventModal = (event = null) => {
     if (event) {
@@ -1040,13 +585,6 @@ const Track = () => {
     deleteEvent(dateKey, eventId);
   };
 
-  // Mock streak data - in a real app this would be calculated from completion history
-  const hasStreak = (date) => {
-    // This is just mock implementation
-    const day = date.getDate();
-    return day % 5 === 0 || day % 7 === 0; // Just for demonstration
-  };
-
   const renderCalendarDays = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -1077,7 +615,6 @@ const Track = () => {
       const date = new Date(year, month, day);
       const dateKey = formatDate(date);
       const hasEvents = events[dateKey] && events[dateKey].length > 0;
-      const hasStreakBadge = hasStreak(date);
       
       const isSelectedDay = selectedDate && 
         date.getDate() === selectedDate.getDate() &&
@@ -1091,7 +628,6 @@ const Track = () => {
           isToday={isToday(date)}
           isSelected={isSelectedDay}
           hasEvent={hasEvents}
-          hasStreak={hasStreakBadge}
           onClick={() => handleDateClick(year, month, day)}
         >
           {day}
@@ -1125,7 +661,7 @@ const Track = () => {
     const dateEvents = events[dateKey] || [];
     
     if (dateEvents.length === 0) {
-      return <p>No quests scheduled for this date. Add one to earn EXP!</p>;
+      return <p>No quests scheduled for this date. Add one to earn EXP choses!</p>;
     }
     
     return (
@@ -1141,22 +677,20 @@ const Track = () => {
                 }}
               />
               <div>
-                <strong style={{ color: event.completed ? spaceTheme.accentGlow : spaceTheme.textPrimary }}>
+                <strong style={{ color: event.completed ? dashboardTheme.accentGlow : dashboardTheme.textPrimary }}>
                   {event.title}
                 </strong>
                 {event.description && <p style={{ opacity: 0.8, fontSize: '0.9rem', marginTop: '0.3rem' }}>{event.description}</p>}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <DeleteButton 
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  handleDeleteEvent(event.id); 
-                }}
-              >
-                Delete
-              </DeleteButton>
-            </div>
+            <DeleteButton 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                handleDeleteEvent(event.id); 
+              }}
+            >
+              Delete
+            </DeleteButton>
           </EventItem>
         ))}
       </EventList>
@@ -1187,35 +721,42 @@ const Track = () => {
     addEvent(dateKey, task);
   };
 
-  const toggleTip = () => {
-    setShowTip(!showTip);
+  const toggleTip = () => setShowTip(!showTip);
+
+  const generateStars = (count) => {
+    const stars = [];
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        id: i,
+        size: Math.random() * 3 + 1,
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        opacity: Math.random() * 0.7 + 0.3,
+        duration: Math.random() * 15 + 10,
+        delay: Math.random() * 10,
+        glow: Math.random() > 0.8 ? 3 : 1,
+      });
+    }
+    return stars;
   };
+
+  const stars = generateStars(100);
 
   return (
     <>
       <Background>
-        <GradientOverlay />
-        <Scenery />
-        <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" color="rgba(255, 223, 108, 0.9)" />
-        <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" color="rgba(50, 255, 192, 0.9)" />
-        <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" color="rgba(0, 249, 255, 0.9)" />
-        <Star size="12px" style={{ top: '45%', left: '40%' }} duration="3.5s" delay="0.7s" color="rgba(255, 255, 255, 0.9)" />
-        <Star size="18px" style={{ top: '60%', right: '15%' }} duration="4.5s" delay="1.5s" color="rgba(50, 255, 192, 0.9)" />
-        {meteors.map(meteor => (
-          <Meteor 
-            key={meteor.id} 
-            top={`${meteor.top}%`} 
-            duration={`${meteor.duration}s`} 
+        {stars.map(star => (
+          <Star
+            key={star.id}
+            size={star.size}
+            top={star.top}
+            left={star.left}
+            opacity={star.opacity}
+            duration={star.duration}
+            delay={star.delay}
+            glow={star.glow}
           />
         ))}
-        <Rocket><RocketTrail /></Rocket>
-        <AchievementBadge />
-        <ProgressCircle />
-        <Planet size="120px" bottom="50px" right="100px" color="#3a5c9e" />
-        <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
-        <XPOrb style={{ top: '30%', right: '25%' }} duration="5s" delay="1.2s" />
-        <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
-        <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
       </Background>
       
       <Sidebar>
@@ -1224,19 +765,18 @@ const Track = () => {
           <NavItem onClick={() => navigate('/dashboard')}>👾 Dashboard</NavItem>
           <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Mini Games</NavItem>
           <NavItem className="active">📅 Calendar Tracker</NavItem>
-          <NavItem onClick={() => navigate('/NewHabit')}>✨ Habit Creation</NavItem>
+          <NavItem onClick={() => navigate('/new-habit')}>✨ Habit Creation</NavItem>
           <NavItem onClick={() => navigate('/shop')}>🛒 Shop</NavItem>
           <NavItem onClick={() => navigate('/review')}>📊 Review</NavItem>
         </NavList>
       </Sidebar> 
-      
       <TrackContainer>
         <PageTitle>Mission Control</PageTitle>
         
         <ExpContainer>
-          <ExpLabel animate={expAnimating}>
+          <ExpLabel>
             <div>SPACE RANGER LEVEL: <span>3</span></div>
-            <div>EXP: <span className="exp-amount">{userExp}</span></div>
+            <div>EXP: <span>{userExp}</span></div>
           </ExpLabel>
           <ExpBarContainer>
             <ExpBarFill percentage={calculateExpPercentage()} />
@@ -1255,7 +795,7 @@ const Track = () => {
           </CalendarHeader>
           
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-            <AddEventButton onClick={() => handleOpenEventModal()}>ADD QUEST</AddEventButton>
+            <AddEventButton onClick={() => handleOpenEventModal()}>+ Add Quest</AddEventButton>
           </div>
           
           <CalendarGrid>
@@ -1263,16 +803,12 @@ const Track = () => {
           </CalendarGrid>
           
           {selectedDate && (
-            <div style={{ 
-              marginTop: '1.5rem',
-              // Use an explicit className instead of inline animation
-              className: "selected-date-container" 
-            }}>
+            <div style={{ marginTop: '1.5rem' }}>
               <h4 style={{ 
                 fontSize: '1.2rem', 
                 marginBottom: '1rem',
-                color: spaceTheme.accentGlow,
-                textShadow: `0 0 5px ${spaceTheme.accentGlow}`
+                color: dashboardTheme.accentGlow,
+                textShadow: `0 0 5px ${dashboardTheme.accentGlow}`
               }}>
                 {selectedDate.toLocaleDateString('en-US', { 
                   weekday: 'long', 
@@ -1297,7 +833,7 @@ const Track = () => {
         <CoachTip onClick={toggleTip} />
         {showTip && (
           <TipPopup>
-            <strong style={{ color: spaceTheme.accentGlow }}>Captain's Log:</strong>
+            <strong style={{ color: dashboardTheme.accentGlow }}>Captain's Log:</strong>
             <p style={{ marginTop: '0.5rem' }}>You're just 2 quests away from leveling up! Complete tasks to earn cosmic EXP and unlock new powers.</p>
           </TipPopup>
         )}
@@ -1325,8 +861,6 @@ const Track = () => {
           </EventModal>
         )}
       </TrackContainer>
-      
-      {/* Meteor is now handled through styled-components instead of inline styles */}
     </>
   );
 };

@@ -14,116 +14,95 @@ const pieces = {
   king: '♚',
 };
 
-// Space Theme from Track
-const spaceTheme = {
-  deepSpace: '#0E1A40',
-  deepSpaceGradient: 'linear-gradient(135deg, #0E1A40 0%, #13294B 100%)',
-  accentGlow: '#32FFC0',
-  accentGold: '#FFDF6C',
-  textPrimary: '#D0E7FF',
-  actionButton: '#00F9FF',
-  actionButtonAlt: '#FF5DA0',
-  highlight: '#FFFA81',
-  highlightAlt: '#FBC638',
-  calendarCell: '#1C2A4A',
-  glassOverlay: 'rgba(30, 39, 73, 0.8)'
+// Theme from Original Dashboard (aligned with updated Track)
+const dashboardTheme = {
+  backgroundGradient: 'linear-gradient(to bottom, #0B1A2C, #152642)',
+  accentGlow: '#00FFF5',
+  accentGradientStart: '#00FFC6',
+  accentGradientEnd: '#4A90E2',
+  textPrimary: '#B8FFF9',
+  cardBackground: 'rgba(21, 38, 66, 0.8)',
+  glassOverlay: 'rgba(11, 26, 44, 0.9)',
+  borderGlow: 'rgba(0, 255, 198, 0.3)',
+  buttonGradient: 'linear-gradient(90deg, #00FFC6 0%, #4A90E2 100%)',
 };
 
-// Animations from Track
-const floatAnimation = keyframes`
-  0% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(2deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+// Animations from Original Dashboard (aligned with updated Track)
+const starFloat = keyframes`
+  0% { opacity: 0; transform: translateY(0px) translateX(0px); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px) translateX(10px); }
 `;
 
-const starGlow = keyframes`
-  0% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
-  50% { opacity: 1; filter: blur(0px); transform: scale(1.1); }
-  100% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 `;
 
-const pulseGlow = keyframes`
-  0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
-  50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
-  100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
+const glow = keyframes`
+  0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)); }
+  50% { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.9)); }
+  100% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)); }
 `;
 
-const glowPulse = keyframes`
-  0% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
-  50% { text-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
-  100% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
+const float = keyframes`
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
 `;
 
-const warping = keyframes`
-  0% { transform: scale(0.8); opacity: 0; }
-  50% { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+const fadeIn = keyframes`
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 `;
 
-// Styled Components Adapted from Track
+// Styled Components Adapted from Original Dashboard
 const Background = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: ${spaceTheme.deepSpaceGradient};
+  background: ${dashboardTheme.backgroundGradient};
   overflow: hidden;
   z-index: 0;
 `;
 
-const GradientOverlay = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 30% 50%, rgba(50, 255, 192, 0.1) 0%, transparent 70%),
-              radial-gradient(circle at 70% 70%, rgba(0, 249, 255, 0.1) 0%, transparent 60%);
-  z-index: 1;
-`;
-
 const Star = styled.div`
   position: absolute;
-  width: ${props => props.size || '30px'};
-  height: ${props => props.size || '30px'};
-  background: radial-gradient(circle, ${props => props.color || 'rgba(255, 223, 108, 0.9)'} 0%, rgba(255, 255, 255, 0) 70%);
+  width: ${props => props.size || 2}px;
+  height: ${props => props.size || 2}px;
+  background-color: #ffffff;
   border-radius: 50%;
-  z-index: 2;
-  animation: ${starGlow} ${props => props.duration || '3s'} infinite ease-in-out;
-  animation-delay: ${props => props.delay || '0s'};
-  opacity: 0.7;
-  
-  &::before {
-    content: '★';
-    position: absolute;
-    font-size: ${props => parseInt(props.size) * 0.8 || '24px'};
-    color: ${props => props.color || 'rgba(255, 223, 108, 0.9)'};
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
+  opacity: ${props => props.opacity || 0.7};
+  top: ${props => props.top}%;
+  left: ${props => props.left}%;
+  animation: ${starFloat} ${props => props.duration || 10}s linear infinite;
+  animation-delay: ${props => props.delay || 0}s;
+  box-shadow: 0 0 ${props => props.glow || 1}px ${props => props.glow || 1}px ${dashboardTheme.textPrimary};
 `;
 
 const Sidebar = styled.div`
   width: 250px;
   padding: 2rem;
-  background: rgba(14, 26, 64, 0.8);
-  color: ${spaceTheme.textPrimary};
-  border-right: 1px solid rgba(50, 255, 192, 0.3);
-  backdrop-filter: blur(8px);
+  background: ${dashboardTheme.glassOverlay};
+  border-right: 1px solid ${dashboardTheme.borderGlow};
+  backdrop-filter: blur(10px);
   z-index: 1000;
   position: fixed;
   left: 0;
   top: 0;
   height: 100vh;
-  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
   
   h2 {
-    font-family: 'Orbitron', sans-serif;
-    margin-bottom: 2rem;
-    color: ${spaceTheme.accentGlow};
-    text-shadow: 0 0 10px ${spaceTheme.accentGlow};
+    color: ${dashboardTheme.accentGlow};
     font-size: 1.8rem;
-    letter-spacing: 2px;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(0, 255, 245, 0.5);
   }
 `;
 
@@ -135,39 +114,24 @@ const NavList = styled.ul`
 
 const NavItem = styled.li`
   padding: 1rem;
-  margin: 0.7rem 0;
+  margin: 0.5rem 0;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s;
   display: flex;
-  color: ${spaceTheme.textPrimary};
   align-items: center;
   gap: 1rem;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid transparent;
+  color: ${dashboardTheme.textPrimary};
   
   &:hover {
-    background: rgba(50, 255, 192, 0.1);
-    border: 1px solid rgba(50, 255, 192, 0.3);
+    background: rgba(0, 255, 198, 0.1);
     transform: translateX(5px);
   }
   
   &.active {
-    background: rgba(50, 255, 192, 0.2);
-    border: 1px solid rgba(50, 255, 192, 0.5);
-    box-shadow: 0 0 15px rgba(50, 255, 192, 0.2);
-    
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      width: 4px;
-      background: ${spaceTheme.accentGlow};
-      box-shadow: 0 0 10px ${spaceTheme.accentGlow};
-    }
+    background: linear-gradient(90deg, rgba(0, 255, 198, 0.3), rgba(74, 144, 226, 0.3));
+    border-left: 3px solid ${dashboardTheme.accentGradientStart};
+    color: ${dashboardTheme.accentGlow};
   }
 `;
 
@@ -186,16 +150,14 @@ const GameHeader = styled.div`
   
   h1 {
     font-size: 2.5rem;
-    color: ${spaceTheme.accentGlow};
-    font-family: 'Orbitron', sans-serif;
+    color: ${dashboardTheme.accentGlow};
     letter-spacing: 2px;
-    text-shadow: 0 0 10px ${spaceTheme.accentGlow}, 0 0 20px ${spaceTheme.accentGlow};
-    animation: ${glowPulse} 3s infinite ease-in-out;
+    text-shadow: 0 0 10px rgba(0, 255, 245, 0.5);
   }
   
   p {
     font-size: 1.1rem;
-    color: ${spaceTheme.textPrimary};
+    color: ${dashboardTheme.textPrimary};
     opacity: 0.8;
     max-width: 700px;
     margin: 1rem auto;
@@ -204,29 +166,28 @@ const GameHeader = styled.div`
 `;
 
 const GameContent = styled.div`
-  background: rgba(14, 26, 64, 0.8);
+  background: ${dashboardTheme.cardBackground};
   border-radius: 16px;
   padding: 2.5rem;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(50, 255, 192, 0.3);
+  border: 1px solid ${dashboardTheme.borderGlow};
   max-width: 1200px;
   margin: 0 auto;
-  color: ${spaceTheme.textPrimary};
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  animation: ${css`${warping} 0.5s ease-out`};
+  color: ${dashboardTheme.textPrimary};
+  box-shadow: 0 0 15px rgba(0, 255, 198, 0.2);
+  animation: ${css`${fadeIn} 0.5s ease-out`};
   
   h2 {
     font-size: 1.8rem;
-    color: ${spaceTheme.accentGlow};
-    font-family: 'Orbitron', sans-serif;
+    color: ${dashboardTheme.accentGlow};
     margin-bottom: 1.5rem;
-    text-shadow: 0 0 5px ${spaceTheme.accentGlow};
+    text-shadow: 0 0 5px rgba(0, 255, 245, 0.5);
   }
 `;
 
 const GameButton = styled.button`
-  background: ${spaceTheme.actionButton};
-  color: ${spaceTheme.deepSpace};
+  background: ${dashboardTheme.buttonGradient};
+  color: white;
   border: none;
   border-radius: 8px;
   padding: 1.8rem 2.5rem;
@@ -236,16 +197,12 @@ const GameButton = styled.button`
   cursor: pointer;
   font-size: 1.3rem;
   font-weight: bold;
-  font-family: 'Orbitron', sans-serif;
-  transition: all 0.3s;
-  box-shadow: 0 0 10px rgba(0, 249, 255, 0.3);
-  position: relative;
-  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 198, 0.3);
   
   &:hover {
-    background: ${spaceTheme.accentGlow};
     transform: translateY(-2px);
-    box-shadow: 0 0 15px rgba(50, 255, 192, 0.5);
+    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.5);
   }
   
   div {
@@ -257,19 +214,19 @@ const GameButton = styled.button`
 `;
 
 const PointsDisplay = styled.div`
-  background: rgba(14, 26, 64, 0.6);
+  background: rgba(21, 38, 66, 0.6);
   border-radius: 20px;
   padding: 1.5rem 2rem;
   margin-bottom: 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid rgba(50, 255, 192, 0.3);
-  box-shadow: 0 0 15px rgba(50, 255, 192, 0.1);
+  border: 1px solid ${dashboardTheme.borderGlow};
+  box-shadow: 0 0 15px rgba(0, 255, 198, 0.1);
   
   h3 {
     font-size: 1.5rem;
-    color: ${spaceTheme.textPrimary};
+    color: ${dashboardTheme.textPrimary};
     display: flex;
     align-items: center;
     
@@ -284,36 +241,34 @@ const PointsDisplay = styled.div`
     text-align: right;
     font-weight: bold;
     font-size: 1.1rem;
-    color: ${spaceTheme.accentGold};
+    color: ${dashboardTheme.accentGradientStart};
   }
 `;
 
 const ProgressIndicator = styled.div`
   margin: 2rem 0;
-  background: rgba(14, 26, 64, 0.6);
+  background: rgba(21, 38, 66, 0.6);
   border-radius: 20px;
   padding: 1.5rem 2rem;
-  border: 1px solid rgba(50, 255, 192, 0.3);
+  border: 1px solid ${dashboardTheme.borderGlow};
   
   h3 {
     margin-bottom: 1rem;
-    color: ${spaceTheme.accentGlow};
+    color: ${dashboardTheme.accentGlow};
     font-size: 1.3rem;
-    font-family: 'Orbitron', sans-serif;
   }
   
   .progress-bar {
     width: 100%;
     height: 14px;
-    background: rgba(10, 20, 50, 0.5);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 7px;
     overflow: hidden;
-    border: 1px solid rgba(50, 255, 192, 0.3);
   }
   
   .fill {
     height: 100%;
-    background: linear-gradient(90deg, ${spaceTheme.accentGlow} 0%, ${spaceTheme.actionButton} 100%);
+    background: ${dashboardTheme.buttonGradient};
     width: ${props => props.progress}%;
     transition: width 1s ease-in-out;
     border-radius: 7px;
@@ -328,21 +283,19 @@ const ActionButtons = styled.div`
 `;
 
 const ActionButton = styled.button`
-  background: ${props => props.color || spaceTheme.actionButton};
-  color: ${spaceTheme.deepSpace};
+  background: ${props => props.color || dashboardTheme.buttonGradient};
+  color: white;
   border: none;
   border-radius: 8px;
   padding: 1.5rem 2rem;
   cursor: pointer;
   font-weight: bold;
-  font-family: 'Orbitron', sans-serif;
-  transition: all 0.3s;
-  box-shadow: 0 0 10px rgba(0, 249, 255, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 198, 0.3);
   
   &:hover {
-    background: ${spaceTheme.accentGlow};
     transform: translateY(-2px);
-    box-shadow: 0 0 15px rgba(50, 255, 192, 0.5);
+    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.5);
   }
   
   &:disabled {
@@ -360,21 +313,21 @@ const ActionButton = styled.button`
 const LastActionBox = styled.div`
   margin: 2rem 0;
   padding: 1.5rem;
-  background: rgba(28, 42, 74, 0.6);
+  background: rgba(21, 38, 66, 0.6);
   border-radius: 12px;
-  border: 1px solid rgba(50, 255, 192, 0.3);
-  animation: ${pulseGlow} 4s infinite ease-in-out;
+  border: 1px solid ${dashboardTheme.borderGlow};
+  animation: ${pulse} 2s infinite ease-in-out;
   
   h4 {
     font-size: 1.1rem;
     margin-bottom: 0.8rem;
-    color: ${spaceTheme.accentGlow};
+    color: ${dashboardTheme.accentGlow};
   }
   
   p {
     margin-bottom: 0;
     font-size: 1rem;
-    color: ${spaceTheme.textPrimary};
+    color: ${dashboardTheme.textPrimary};
   }
 `;
 
@@ -387,46 +340,46 @@ const StageGrid = styled.div`
 
 const StageCard = styled.div`
   background: ${props => 
-    props.isCompleted ? 'rgba(50, 255, 192, 0.2)' : 
-    props.isCurrent ? 'rgba(0, 249, 255, 0.2)' : 
-    'rgba(28, 42, 74, 0.4)'};
+    props.isCompleted ? 'rgba(0, 255, 245, 0.2)' : 
+    props.isCurrent ? 'rgba(0, 255, 198, 0.3)' : 
+    'rgba(21, 38, 66, 0.6)'};
   border-radius: 16px;
   padding: 2rem;
   border: 1px solid ${props => 
-    props.isCompleted ? 'rgba(50, 255, 192, 0.6)' : 
-    props.isCurrent ? 'rgba(0, 249, 255, 0.6)' : 
-    'rgba(50, 255, 192, 0.2)'};
+    props.isCompleted ? 'rgba(0, 255, 245, 0.6)' : 
+    props.isCurrent ? 'rgba(0, 255, 198, 0.6)' : 
+    dashboardTheme.borderGlow};
   transition: all 0.3s ease;
   box-shadow: ${props => 
-    props.isCompleted || props.isCurrent ? '0 0 10px rgba(50, 255, 192, 0.3)' : 'none'};
+    props.isCompleted || props.isCurrent ? '0 0 10px rgba(0, 255, 198, 0.3)' : 'none'};
   
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 255, 198, 0.2);
   }
   
   h3 {
     font-size: 1.3rem;
     margin-bottom: 0.5rem;
-    color: ${props => props.isCompleted ? spaceTheme.accentGlow : spaceTheme.textPrimary};
+    color: ${props => props.isCompleted ? dashboardTheme.accentGlow : dashboardTheme.textPrimary};
   }
   
   h4 {
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
-    color: ${spaceTheme.accentGlow};
+    color: ${dashboardTheme.accentGlow};
   }
   
   p {
     margin: 0.7rem 0;
     line-height: 1.5;
-    color: ${spaceTheme.textPrimary};
+    color: ${dashboardTheme.textPrimary};
   }
   
   .progress-bar {
     width: 100%;
     height: 8px;
-    background: rgba(10, 20, 50, 0.5);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
     margin-top: 0.5rem;
     overflow: hidden;
@@ -434,7 +387,7 @@ const StageCard = styled.div`
   
   .fill {
     height: 100%;
-    background: linear-gradient(90deg, ${spaceTheme.accentGlow} 0%, ${spaceTheme.actionButton} 100%);
+    background: ${dashboardTheme.buttonGradient};
     transition: width 0.8s ease;
     border-radius: 4px;
   }
@@ -442,18 +395,17 @@ const StageCard = styled.div`
 
 const ProgressChart = styled.div`
   margin-top: 3rem;
-  background: rgba(14, 26, 64, 0.8);
+  background: ${dashboardTheme.cardBackground};
   border-radius: 16px;
   padding: 2rem;
-  border: 1px solid rgba(50, 255, 192, 0.3);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid ${dashboardTheme.borderGlow};
+  box-shadow: 0 0 15px rgba(0, 255, 198, 0.2);
   
   h3 {
     font-size: 1.5rem;
     margin-bottom: 2rem;
-    color: ${spaceTheme.accentGlow};
-    font-family: 'Orbitron', sans-serif;
-    text-shadow: 0 0 5px ${spaceTheme.accentGlow};
+    color: ${dashboardTheme.accentGlow};
+    text-shadow: 0 0 5px rgba(0, 255, 245, 0.5);
   }
 `;
 
@@ -550,13 +502,40 @@ const BreakthroughGame = () => {
   const isStageCompleted = (stage) => getCategoryProgress(categoryId) >= stage.points;
   const isCurrentStage = (stage) => getCurrentStage()?.level === stage.level;
 
+  const generateStars = (count) => {
+    const stars = [];
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        id: i,
+        size: Math.random() * 3 + 1,
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        opacity: Math.random() * 0.7 + 0.3,
+        duration: Math.random() * 15 + 10,
+        delay: Math.random() * 10,
+        glow: Math.random() > 0.8 ? 3 : 1,
+      });
+    }
+    return stars;
+  };
+
+  const stars = generateStars(100);
+
   return (
     <div>
       <Background>
-        <GradientOverlay />
-        <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" color="rgba(255, 223, 108, 0.9)" />
-        <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" color="rgba(50, 255, 192, 0.9)" />
-        <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" color="rgba(0, 249, 255, 0.9)" />
+        {stars.map(star => (
+          <Star
+            key={star.id}
+            size={star.size}
+            top={star.top}
+            left={star.left}
+            opacity={star.opacity}
+            duration={star.duration}
+            delay={star.delay}
+            glow={star.glow}
+          />
+        ))}
       </Background>
       <Sidebar>
         <h2>HabitQuest</h2>
@@ -564,7 +543,7 @@ const BreakthroughGame = () => {
           <NavItem onClick={() => navigate('/dashboard')}>👾 Dashboard</NavItem>
           <NavItem className="active">🎮 Mini Games</NavItem>
           <NavItem onClick={() => navigate('/track')}>📅 Calendar Tracker</NavItem>
-          <NavItem onClick={() => navigate('/NewHabit')}>✨ Habit Creation</NavItem>
+          <NavItem onClick={() => navigate('/new-habit')}>✨ Habit Creation</NavItem>
           <NavItem onClick={() => navigate('/shop')}>🛒 Shop</NavItem>
           <NavItem onClick={() => navigate('/review')}>📊 Review</NavItem>
         </NavList>
@@ -577,7 +556,7 @@ const BreakthroughGame = () => {
             <GameHeader>
               <h1>Breakthrough: Cosmic Journey</h1>
               <p>Level up your life through interstellar habits and achievements.</p>
-              <div style={{ marginTop: '1.5rem', color: spaceTheme.accentGlow, fontWeight: '600', fontSize: '1.2rem' }}>
+              <div style={{ marginTop: '1.5rem', color: dashboardTheme.accentGlow, fontWeight: '600', fontSize: '1.2rem' }}>
                 {getMotivationalMessage()}
               </div>
             </GameHeader>
@@ -636,7 +615,7 @@ const BreakthroughGame = () => {
                     <p>Reward: {stage.reward}</p>
                     <p>Required Points: {stage.points}</p>
                     {isStageCompleted(stage) && (
-                      <p style={{ color: spaceTheme.accentGlow, marginTop: '1rem', fontWeight: '600' }}>✨ Stage Complete!</p>
+                      <p style={{ color: dashboardTheme.accentGlow, marginTop: '1rem', fontWeight: '600' }}>✨ Stage Complete!</p>
                     )}
                     {isCurrentStage(stage) && (
                       <div style={{ marginTop: '1rem' }}>
@@ -659,28 +638,28 @@ const BreakthroughGame = () => {
                 {getCategoryHistory(categoryId).length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={getCategoryHistory(categoryId)}>
-                      <XAxis dataKey="date" stroke={spaceTheme.textPrimary} />
-                      <YAxis stroke={spaceTheme.textPrimary} />
+                      <XAxis dataKey="date" stroke={dashboardTheme.textPrimary} />
+                      <YAxis stroke={dashboardTheme.textPrimary} />
                       <Tooltip 
                         contentStyle={{ 
-                          background: 'rgba(14, 26, 64, 0.9)', 
-                          border: `1px solid ${spaceTheme.accentGlow}`,
+                          background: dashboardTheme.glassOverlay, 
+                          border: `1px solid ${dashboardTheme.borderGlow}`,
                           borderRadius: '8px',
-                          color: spaceTheme.textPrimary
+                          color: dashboardTheme.textPrimary
                         }} 
                       />
                       <Line 
                         type="monotone" 
                         dataKey="points" 
-                        stroke={spaceTheme.accentGlow} 
+                        stroke={dashboardTheme.accentGlow} 
                         strokeWidth={3}
-                        dot={{ stroke: spaceTheme.accentGlow, strokeWidth: 2, r: 4 }}
-                        activeDot={{ stroke: spaceTheme.accentGlow, strokeWidth: 3, r: 6 }}
+                        dot={{ stroke: dashboardTheme.accentGlow, strokeWidth: 2, r: 4 }}
+                        activeDot={{ stroke: dashboardTheme.accentGlow, strokeWidth: 3, r: 6 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p style={{ textAlign: 'center', padding: '3rem', background: 'rgba(0, 0, 0, 0.1)', borderRadius: '8px' }}>
+                  <p style={{ textAlign: 'center', padding: '3rem', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px' }}>
                     No progress history yet. Start adding achievements!
                   </p>
                 )}

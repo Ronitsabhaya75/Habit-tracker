@@ -4,7 +4,7 @@ The DashboardReview component provides users with an interactive review submissi
 
 Key Features
 1. Review Form Functionality
-Name Input: Captures user's name
+Name Input: Captures user's names
 
 Star Rating System: 5-star interactive rating selector
 
@@ -164,219 +164,106 @@ This component provides a engaging way for users to submit feedback while mainta
 */
 
 import React, { useState } from 'react';
-import styled, { keyframes } from 'styled-components';
-import { theme } from '../theme';
+import styled, { keyframes, css } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 
-// **ANIMATIONS**
-const floatAnimation = keyframes`
-  0% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(2deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+// Theme from Original Dashboard (aligned with updated Track)
+const dashboardTheme = {
+  backgroundGradient: 'linear-gradient(to bottom, #0B1A2C, #152642)',
+  accentGlow: '#00FFF5',
+  accentGradientStart: '#00FFC6',
+  accentGradientEnd: '#4A90E2',
+  textPrimary: '#B8FFF9',
+  cardBackground: 'rgba(21, 38, 66, 0.8)',
+  glassOverlay: 'rgba(11, 26, 44, 0.9)',
+  borderGlow: 'rgba(0, 255, 198, 0.3)',
+  buttonGradient: 'linear-gradient(90deg, #00FFC6 0%, #4A90E2 100%)',
+};
+
+// Animations from Original Dashboard (aligned with updated Track)
+const starFloat = keyframes`
+  0% { opacity: 0; transform: translateY(0px) translateX(0px); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px) translateX(10px); }
 `;
 
-const starGlow = keyframes`
-  0% { opacity: 0.6; filter: blur(1px); }
-  50% { opacity: 1; filter: blur(0px); }
-  100% { opacity: 0.6; filter: blur(1px); }
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 `;
 
-const slowRotate = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+const glow = keyframes`
+  0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)); }
+  50% { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.9)); }
+  100% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)); }
 `;
 
-const trailAnimation = keyframes`
-  0% { opacity: 0; transform: translateX(20px); }
-  20% { opacity: 0.7; }
-  100% { opacity: 0; transform: translateX(-100px); }
+const float = keyframes`
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
 `;
 
-// **BACKGROUND**
+const fadeIn = keyframes`
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+`;
+
+// Styled Components with Dashboard Theme
 const Background = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #2b3a67 0%, #1a2233 100%);
-  overflow: hidden;
-`;
-
-// Gradient Overlay
-const GradientOverlay = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 30% 50%, rgba(114, 137, 218, 0.15) 0%, transparent 70%),
-              radial-gradient(circle at 70% 70%, rgba(90, 128, 244, 0.1) 0%, transparent 60%);
-  z-index: 1;
-`;
-
-// Mountain scenery in the background (like in the gaming controller image)
-const Scenery = styled.div`
-  position: absolute;
-  bottom: 0;
+  position: fixed;
+  top: 0;
   left: 0;
   width: 100%;
-  height: 30%;
-  background: linear-gradient(180deg, transparent 0%, rgba(48, 56, 97, 0.2) 100%);
-  z-index: 1;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 5%;
-    width: 30%;
-    height: 80%;
-    background: linear-gradient(135deg, #3b4874 20%, #2b3a67 100%);
-    clip-path: polygon(0% 100%, 50% 30%, 100% 100%);
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 15%;
-    width: 40%;
-    height: 90%;
-    background: linear-gradient(135deg, #2b3a67 20%, #1a2233 100%);
-    clip-path: polygon(0% 100%, 40% 20%, 80% 60%, 100% 100%);
-  }
+  height: 100%;
+  background: ${dashboardTheme.backgroundGradient};
+  overflow: hidden;
+  z-index: 0;
 `;
 
-// **STARS**
 const Star = styled.div`
   position: absolute;
-  width: ${props => props.size || '30px'};
-  height: ${props => props.size || '30px'};
-  background: radial-gradient(circle, rgba(255, 210, 70, 0.9) 0%, rgba(255, 210, 70, 0) 70%);
+  width: ${props => props.size || 2}px;
+  height: ${props => props.size || 2}px;
+  background-color: #ffffff;
   border-radius: 50%;
-  z-index: 2;
-  animation: ${starGlow} ${props => props.duration || '3s'} infinite ease-in-out;
-  animation-delay: ${props => props.delay || '0s'};
-  opacity: 0.7;
-  
-  &::before {
-    content: '★';
-    position: absolute;
-    font-size: ${props => parseInt(props.size) * 0.8 || '24px'};
-    color: rgba(255, 210, 70, 0.9);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-`;
-
-// **ROCKET WITH TRAIL**
-const Rocket = styled.div`
-  position: absolute;
-  top: 30%;
-  left: 15%;
-  width: 50px;
-  height: 50px;
-  z-index: 3;
-  animation: ${floatAnimation} 8s infinite ease-in-out;
-  transform-origin: center center;
-  
-  &::before {
-    content: '🚀';
-    position: absolute;
-    font-size: 28px;
-    transform: rotate(45deg);
-  }
-`;
-
-const RocketTrail = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 80px;
-  height: 8px;
-  background: linear-gradient(90deg, rgba(100, 220, 255, 0) 0%, rgba(100, 220, 255, 0.7) 100%);
-  border-radius: 4px;
-  z-index: 2;
-  opacity: 0.5;
-  filter: blur(2px);
-  transform: translateX(-80px);
-  animation: ${trailAnimation} 2s infinite;
-`;
-
-// **PROGRESS CIRCLE**
-const ProgressCircle = styled.div`
-  position: absolute;
-  bottom: 20%;
-  right: 10%;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 3px solid rgba(100, 220, 255, 0.2);
-  border-top: 3px solid rgba(100, 220, 255, 0.8);
-  animation: ${slowRotate} 8s linear infinite;
-  z-index: 2;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    border: 2px dashed rgba(100, 220, 255, 0.2);
-  }
-`;
-
-// **XP ORB - SUBTLE VERSION**
-const XPOrb = styled.div`
-  position: absolute;
-  width: 15px;
-  height: 15px;
-  background: radial-gradient(circle, rgba(160, 232, 255, 0.6) 30%, rgba(160, 232, 255, 0) 70%);
-  border-radius: 50%;
-  animation: ${floatAnimation} ${props => props.duration || '4s'} infinite ease-in-out;
-  animation-delay: ${props => props.delay || '0s'};
-  opacity: 0.5;
-  z-index: 2;
-`;
-
-// **ACHIEVEMENT BADGE**
-const AchievementBadge = styled.div`
-  position: absolute;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(114, 137, 218, 0.2) 0%, rgba(114, 137, 218, 0) 70%);
-  border: 2px solid rgba(114, 137, 218, 0.3);
-  box-shadow: 0 0 15px rgba(114, 137, 218, 0.2);
-  top: 15%;
-  right: 15%;
-  z-index: 2;
-  
-  &::before {
-    content: '🏆';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 24px;
-  }
+  opacity: ${props => props.opacity || 0.7};
+  top: ${props => props.top}%;
+  left: ${props => props.left}%;
+  animation: ${starFloat} ${props => props.duration || 10}s linear infinite;
+  animation-delay: ${props => props.delay || 0}s;
+  box-shadow: 0 0 ${props => props.glow || 1}px ${props => props.glow || 1}px ${dashboardTheme.textPrimary};
 `;
 
 const DashboardContainer = styled.div`
   display: flex;
   min-height: 100vh;
   position: relative;
-  color: ${theme.colors.text};
+  color: ${dashboardTheme.textPrimary};
 `;
 
 const Sidebar = styled.div`
   width: 250px;
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-right: 1px solid ${theme.colors.borderWhite};
-  backdrop-filter: blur(8px);
-  z-index: 10;
+  background: ${dashboardTheme.glassOverlay};
+  border-right: 1px solid ${dashboardTheme.borderGlow};
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+  
+  h2 {
+    color: ${dashboardTheme.accentGlow};
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(0, 255, 245, 0.5);
+  }
 `;
 
 const NavList = styled.ul`
@@ -394,40 +281,47 @@ const NavItem = styled.li`
   display: flex;
   align-items: center;
   gap: 1rem;
+  color: ${dashboardTheme.textPrimary};
+  
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 255, 198, 0.1);
+    transform: translateX(5px);
   }
+  
   &.active {
-    background: ${theme.colors.secondary};
+    background: linear-gradient(90deg, rgba(0, 255, 198, 0.3), rgba(74, 144, 226, 0.3));
+    border-left: 3px solid ${dashboardTheme.accentGradientStart};
+    color: ${dashboardTheme.accentGlow};
   }
 `;
 
 const MainContent = styled.div`
   flex: 1;
   padding: 3rem;
-  margin-left: -100px;
+  margin-left: 250px;
   z-index: 10;
+  overflow-y: auto;
+  max-height: 100vh;
 `;
 
-// **REVIEW FORM STYLES**
 const ReviewFormContainer = styled.div`
-  background: rgba(30, 39, 73, 0.6);
+  background: ${dashboardTheme.cardBackground};
   padding: 2.5rem;
-  border-radius: 12px;
+  border-radius: 16px;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(114, 137, 218, 0.2);
-  max-width: 600px;
+  border: 1px solid ${dashboardTheme.borderGlow};
+  max-width: 800px;
   margin: 0 auto;
-  color: ${theme.colors.text};
-  box-shadow: 0 8px 32px rgba(14, 21, 47, 0.2), 
-              0 0 0 1px rgba(114, 137, 218, 0.1), 
-              inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  color: ${dashboardTheme.textPrimary};
+  box-shadow: 0 0 15px rgba(0, 255, 198, 0.2);
+  animation: ${css`${fadeIn} 0.5s ease-out`};
 `;
 
 const FormTitle = styled.h2`
   text-align: center;
-  margin-bottom: 1.5rem;
-  color: #ffffff;
+  margin-bottom: 2rem;
+  color: ${dashboardTheme.accentGlow};
+  text-shadow: 0 0 10px rgba(0, 255, 245, 0.5);
 `;
 
 const FormGroup = styled.div`
@@ -438,28 +332,41 @@ const Label = styled.label`
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
+  color: ${dashboardTheme.textPrimary};
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 0.75rem;
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid ${theme.colors.borderWhite};
+  border: 1px solid ${dashboardTheme.borderGlow};
   border-radius: 8px;
-  color: ${theme.colors.text};
+  color: ${dashboardTheme.textPrimary};
   font-size: 1rem;
   &::placeholder {
     color: rgba(255, 255, 255, 0.6);
   }
 `;
 
+const Select = styled.select`
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid ${dashboardTheme.borderGlow};
+  border-radius: 8px;
+  color: ${dashboardTheme.textPrimary};
+  font-size: 1rem;
+  appearance: none;
+  cursor: pointer;
+`;
+
 const TextArea = styled.textarea`
   width: 100%;
   padding: 0.75rem;
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid ${theme.colors.borderWhite};
+  border: 1px solid ${dashboardTheme.borderGlow};
   border-radius: 8px;
-  color: ${theme.colors.text};
+  color: ${dashboardTheme.textPrimary};
   font-size: 1rem;
   resize: vertical;
   min-height: 120px;
@@ -477,30 +384,31 @@ const RatingContainer = styled.div`
 const RatingStar = styled.span`
   font-size: 1.5rem;
   cursor: pointer;
-  color: ${props => (props.active ? theme.colors.accent : 'rgba(255, 255, 255, 0.4)')};
+  color: ${props => (props.active ? dashboardTheme.accentGlow : 'rgba(255, 255, 255, 0.4)')};
   transition: color 0.2s ease;
   &:hover {
-    color: ${theme.colors.accent};
+    color: ${dashboardTheme.accentGlow};
   }
 `;
 
 const SubmitButton = styled.button`
   width: 100%;
   padding: 1rem;
-  background: ${theme.colors.accent};
+  background: ${dashboardTheme.buttonGradient};
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 198, 0.3);
   &:hover {
-    background: ${theme.colors.secondary};
     transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.5);
   }
   &:disabled {
-    background: rgba(114, 137, 218, 0.5);
+    background: rgba(0, 255, 198, 0.5);
     cursor: not-allowed;
     transform: none;
   }
@@ -509,12 +417,12 @@ const SubmitButton = styled.button`
 const SuccessMessage = styled.div`
   text-align: center;
   margin-top: 1rem;
-  color: ${theme.colors.accent};
+  color: ${dashboardTheme.accentGlow};
   font-weight: 600;
 `;
 
 const ErrorMessage = styled.div`
-  color: #ff4d4d;
+  color: rgba(255, 82, 82, 0.9);
   margin-top: 1rem;
   text-align: center;
 `;
@@ -522,6 +430,10 @@ const ErrorMessage = styled.div`
 const DashboardReview = () => {
   const [name, setName] = useState('');
   const [rating, setRating] = useState(0);
+  const [usageFrequency, setUsageFrequency] = useState('');
+  const [favoriteFeatures, setFavoriteFeatures] = useState('');
+  const [improvements, setImprovements] = useState('');
+  const [recommendation, setRecommendation] = useState('');
   const [review, setReview] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -535,57 +447,86 @@ const DashboardReview = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Basic validation
-    if (!name.trim() || !review.trim() || rating === 0) {
-      setError('Please fill out all fields and select a rating.');
+    // Validation
+    if (!name.trim() || rating === 0 || !usageFrequency || !favoriteFeatures.trim() || 
+        !improvements.trim() || !recommendation || !review.trim()) {
+      setError('Please fill out all fields.');
       return;
     }
 
-    // Simulate form submission (e.g., send to backend)
-    console.log('Review Submitted:', { name, rating, review });
+    // Simulate form submission
+    console.log('Review Submitted:', { 
+      name, 
+      rating, 
+      usageFrequency, 
+      favoriteFeatures, 
+      improvements, 
+      recommendation, 
+      review 
+    });
 
-    // Clear form and show success message
+    // Clear form and show success
     setName('');
     setRating(0);
+    setUsageFrequency('');
+    setFavoriteFeatures('');
+    setImprovements('');
+    setRecommendation('');
     setReview('');
     setSubmitted(true);
     setError('');
   };
 
+  const generateStars = (count) => {
+    const stars = [];
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        id: i,
+        size: Math.random() * 3 + 1,
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        opacity: Math.random() * 0.7 + 0.3,
+        duration: Math.random() * 15 + 10,
+        delay: Math.random() * 10,
+        glow: Math.random() > 0.8 ? 3 : 1,
+      });
+    }
+    return stars;
+  };
+
+  const stars = generateStars(100);
+
   return (
     <DashboardContainer>
       <Background>
-        <GradientOverlay />
-        <Scenery />
-        <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
-        <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
-        <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
-        <Rocket>
-          <RocketTrail />
-        </Rocket>
-        <AchievementBadge />
-        <ProgressCircle />
-        <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
-        <XPOrb style={{ top: '30%', right: '25%' }} duration="5s" delay="1.2s" />
-        <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
-        <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
+        {stars.map(star => (
+          <Star
+            key={star.id}
+            size={star.size}
+            top={star.top}
+            left={star.left}
+            opacity={star.opacity}
+            duration={star.duration}
+            delay={star.delay}
+            glow={star.glow}
+          />
+        ))}
       </Background>
 
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
-          <NavItem onClick={() => navigate('/dashboard')}>Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/breakthrough-game')}>Mini Games</NavItem>
-          <NavItem onClick={() => navigate('/track')}>Calender Tracker</NavItem>
-          <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
-          <NavItem onClick={() => navigate('/shop')}>Shop</NavItem>
-          <NavItem className="active">Review</NavItem>
+          <NavItem onClick={() => navigate('/dashboard')}>👾 Dashboard</NavItem>
+          <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Mini Games</NavItem>
+          <NavItem onClick={() => navigate('/track')}>📅 Calendar Tracker</NavItem>
+          <NavItem onClick={() => navigate('/new-habit')}>✨ Habit Creation</NavItem>
+          <NavItem onClick={() => navigate('/shop')}>🛒 Shop</NavItem>
+          <NavItem onClick={() => navigate('/review')}>📊 Review</NavItem>
         </NavList>
       </Sidebar>
-
       <MainContent>
         <ReviewFormContainer>
-          <FormTitle>Leave a Review</FormTitle>
+          <FormTitle>HabitQuest Review</FormTitle>
           <form onSubmit={handleSubmit}>
             <FormGroup>
               <Label>Your Name</Label>
@@ -598,7 +539,7 @@ const DashboardReview = () => {
             </FormGroup>
 
             <FormGroup>
-              <Label>Rating</Label>
+              <Label>Overall Rating</Label>
               <RatingContainer>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <RatingStar
@@ -613,9 +554,54 @@ const DashboardReview = () => {
             </FormGroup>
 
             <FormGroup>
-              <Label>Your Review</Label>
+              <Label>How often do you use HabitQuest?</Label>
+              <Select
+                value={usageFrequency}
+                onChange={(e) => setUsageFrequency(e.target.value)}
+              >
+                <option value="">Select an option</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="rarely">Rarely</option>
+              </Select>
+            </FormGroup>
+
+            <FormGroup>
+              <Label>What features do you like most?</Label>
               <TextArea
-                placeholder="Write your review here..."
+                placeholder="Tell us what you enjoy..."
+                value={favoriteFeatures}
+                onChange={(e) => setFavoriteFeatures(e.target.value)}
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label>How can we improve?</Label>
+              <TextArea
+                placeholder="Suggestions for improvement..."
+                value={improvements}
+                onChange={(e) => setImprovements(e.target.value)}
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Would you recommend HabitQuest?</Label>
+              <Select
+                value={recommendation}
+                onChange={(e) => setRecommendation(e.target.value)}
+              >
+                <option value="">Select an option</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+                <option value="maybe">Maybe</option>
+              </Select>
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Additional Comments</Label>
+              <TextArea
+                placeholder="Anything else to share?"
                 value={review}
                 onChange={(e) => setReview(e.target.value)}
               />
