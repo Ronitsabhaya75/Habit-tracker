@@ -4,7 +4,7 @@ The DashboardReview component provides users with an interactive review submissi
 
 Key Features
 1. Review Form Functionality
-Name Input: Captures user's name
+Name Input: Captures user's names
 
 Star Rating System: 5-star interactive rating selector
 
