@@ -1,27 +1,386 @@
-/**
- * HabitQuizGame Component
- *
- * This interactive game component allows users to test their knowledge
- * about habits through 3 rounds of multiple-choice questions. It awards XP,
- * offers feedback, and provides SpinWheel XP bonuses between rounds.
- *
- * Features:
- * - 3 rounds of randomized habit-related questions.
- * - XP awarded for each correct answer (10 XP each).
- * - SpinWheel modal popup for bonus XP before each round.
- * - XP stored in localStorage across sessions.
- * - Visual feedback on correct/incorrect answers.
- * - Final game summary with total XP and performance emojis.
- *
- * React hooks used: useState, useEffect.
- * Components used: SpinWheelPopup.
- */
-
 import React, { useState, useEffect } from 'react';
+import styled, { keyframes, css } from 'styled-components';
 import SpinWheelPopup from './SpinWheelPopup';
 import { useHabit } from '../../context/HabitContext';
+import { useNavigate } from 'react-router-dom';
 
-// Full questions for the Quiz (randomly shuffled in loadQuestions)
+const spaceTheme = {
+  deepSpace: '#0E1A40',
+  deepSpaceGradient: 'linear-gradient(135deg, #0E1A40 0%, #13294B 100%)',
+  accentGlow: '#32FFC0',
+  accentGold: '#FFDF6C',
+  textPrimary: '#D0E7FF',
+  actionButton: '#00F9FF',
+  actionButtonAlt: '#FF5DA0',
+  highlight: '#FFFA81',
+  highlightAlt: '#FBC638',
+  calendarCell: '#1C2A4A',
+  glassOverlay: 'rgba(30, 39, 73, 0.8)'
+};
+
+const floatAnimation = keyframes`
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+`;
+
+const starGlow = keyframes`
+  0% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
+  50% { opacity: 1; filter: blur(0px); transform: scale(1.1); }
+  100% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
+`;
+
+const pulseGlow = keyframes`
+  0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
+  50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
+  100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
+`;
+
+const glowPulse = keyframes`
+  0% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
+  50% { text-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
+  100% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
+`;
+
+const warping = keyframes`
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+const GameContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  background: ${spaceTheme.deepSpaceGradient};
+  color: ${spaceTheme.textPrimary};
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+`;
+
+const BackgroundOverlay = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 30% 50%, rgba(50, 255, 192, 0.1) 0%, transparent 70%),
+              radial-gradient(circle at 70% 70%, rgba(0, 249, 255, 0.1) 0%, transparent 60%);
+  z-index: 1;
+`;
+
+const Star = styled.div`
+  position: absolute;
+  width: ${props => props.size || '15px'};
+  height: ${props => props.size || '15px'};
+  background: radial-gradient(circle, ${props => props.color || 'rgba(255, 223, 108, 0.9)'} 0%, rgba(255, 255, 255, 0) 70%);
+  border-radius: 50%;
+  z-index: 2;
+  animation: ${starGlow} ${props => props.duration || '3s'} infinite ease-in-out;
+  animation-delay: ${props => props.delay || '0s'};
+  opacity: 0.7;
+
+  &::before {
+    content: '★';
+    position: absolute;
+    font-size: ${props => parseInt(props.size) * 0.8 || '12px'};
+    color: ${props => props.color || 'rgba(255, 223, 108, 0.9)'};
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+`;
+
+const GameHeader = styled.div`
+  margin-bottom: 1rem;
+  text-align: center;
+  z-index: 10;
+`;
+
+const GameTitle = styled.h1`
+  font-size: 1.8rem;
+  color: ${spaceTheme.accentGlow};
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px ${spaceTheme.accentGlow}, 0 0 20px ${spaceTheme.accentGlow};
+  animation: ${glowPulse} 3s infinite ease-in-out;
+  margin-bottom: 0.25rem;
+`;
+
+const GameSubtitle = styled.p`
+  font-size: 0.9rem;
+  max-width: 600px;
+  margin: 0.5rem auto;
+  color: ${spaceTheme.textPrimary};
+  opacity: 0.9;
+`;
+
+const QuestionCard = styled.div`
+  background: rgba(14, 26, 64, 0.8);
+  backdrop-filter: blur(8px);
+  padding: 1.5rem;
+  border-radius: 12px;
+  max-width: 700px;
+  width: 90%;
+  margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(50, 255, 192, 0.3);
+  z-index: 10;
+  animation: ${css`${warping} 0.5s ease-out`};
+`;
+
+const QuestionHeader = styled.h2`
+  font-size: 1.3rem;
+  color: ${spaceTheme.accentGlow};
+  margin-bottom: 0.75rem;
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 5px ${spaceTheme.accentGlow};
+`;
+
+const QuestionText = styled.p`
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  color: ${spaceTheme.textPrimary};
+`;
+
+const OptionButton = styled.button`
+  display: block;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  margin-bottom: 0.6rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  border: 1px solid rgba(50, 255, 192, 0.3);
+  font-weight: 500;
+  cursor: ${props => props.disabled ? 'default' : 'pointer'};
+  transition: all 0.2s ease;
+  background: ${props => {
+    if (props.answered) {
+      if (props.isCorrect) return 'rgba(50, 255, 192, 0.7)';
+      if (props.isSelected && !props.isCorrect) return 'rgba(255, 93, 160, 0.7)';
+      return 'rgba(28, 42, 74, 0.6)';
+    }
+    return 'rgba(28, 42, 74, 0.4)';
+  }};
+  color: ${props => {
+    if (props.answered && (props.isCorrect || (props.isSelected && !props.isCorrect))) {
+      return spaceTheme.deepSpace;
+    }
+    return spaceTheme.textPrimary;
+  }};
+
+  &:hover {
+    transform: ${props => props.disabled ? 'none' : 'translateY(-2px)'};
+    box-shadow: ${props => props.disabled ? 'none' : `0 0 15px rgba(50, 255, 192, 0.3)`};
+    background: ${props => {
+      if (props.answered) {
+        if (props.isCorrect) return 'rgba(50, 255, 192, 0.8)';
+        if (props.isSelected && !props.isCorrect) return 'rgba(255, 93, 160, 0.8)';
+        return 'rgba(28, 42, 74, 0.7)';
+      }
+      return 'rgba(28, 42, 74, 0.6)';
+    }};
+  }
+`;
+
+const ProgressInfo = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  width: 100%;
+  padding: 0.3rem 0;
+`;
+
+const XPCounter = styled.div`
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: ${spaceTheme.accentGold};
+  display: flex;
+  align-items: center;
+
+  &::before {
+    content: '⭐';
+    margin-right: 0.5rem;
+  }
+`;
+
+const QuestionCounter = styled.div`
+  font-size: 0.85rem;
+  opacity: 0.8;
+`;
+
+const SummaryCard = styled.div`
+  background: rgba(14, 26, 64, 0.8);
+  backdrop-filter: blur(8px);
+  padding: 1.75rem;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  border: 1px solid rgba(50, 255, 192, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  animation: ${css`${warping} 0.5s ease-out`};
+`;
+
+const SummaryTitle = styled.h2`
+  font-size: 1.5rem;
+  color: ${spaceTheme.accentGlow};
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 10px ${spaceTheme.accentGlow};
+`;
+
+const SummaryText = styled.p`
+  font-size: 1rem;
+  margin: 0.5rem 0;
+  color: ${spaceTheme.textPrimary};
+`;
+
+const ResultEmoji = styled.h3`
+  font-size: 1.4rem;
+  margin: 1rem 0;
+  color: ${spaceTheme.accentGold};
+  text-shadow: 0 0 10px rgba(255, 223, 108, 0.5);
+`;
+
+const ButtonsContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+`;
+
+const Button = styled.button`
+  background: ${props => props.primary ? spaceTheme.actionButton : spaceTheme.actionButtonAlt};
+  color: ${spaceTheme.deepSpace};
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: bold;
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.3s;
+  box-shadow: 0 0 10px rgba(0, 249, 255, 0.3);
+  min-width: 120px;
+
+  &:hover {
+    background: ${spaceTheme.accentGlow};
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(50, 255, 192, 0.5);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+`;
+
+const WelcomeContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1.5rem;
+  z-index: 10;
+  margin-top: 1rem;
+`;
+
+const WelcomeTitle = styled.h1`
+  font-size: 2rem;
+  color: ${spaceTheme.accentGlow};
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px ${spaceTheme.accentGlow}, 0 0 20px ${spaceTheme.accentGlow};
+  animation: ${glowPulse} 3s infinite ease-in-out;
+  margin-bottom: 1rem;
+`;
+
+const WelcomeDescription = styled.p`
+  font-size: 1rem;
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+  color: ${spaceTheme.textPrimary};
+  line-height: 1.5;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 15, 30, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background: ${spaceTheme.deepSpaceGradient};
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 90%;
+  width: ${props => props.width || '450px'};
+  border: 1px solid ${spaceTheme.accentGlow};
+  box-shadow: 0 0 20px rgba(50, 255, 192, 0.3);
+  animation: ${css`${warping} 0.3s ease-out`};
+`;
+
+const RoundBadge = styled.div`
+  background: ${spaceTheme.calendarCell};
+  color: ${spaceTheme.accentGold};
+  border-radius: 20px;
+  padding: 0.15rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(255, 223, 108, 0.3);
+`;
+
+const NavButtons = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  z-index: 10;
+  width: 100%;
+  max-width: 600px;
+`;
+
+const NavButton = styled.button`
+  background: linear-gradient(to right, ${spaceTheme.actionButton}, ${spaceTheme.accentGlow});
+  color: ${spaceTheme.deepSpace};
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 249, 255, 0.3);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  flex: 1;
+  max-width: 180px;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 15px rgba(50, 255, 192, 0.5);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+`;
+
 const fullQuestionSet = [
   { question: 'What is the ideal time to build a habit?', options: ['Morning', 'Night', 'When motivated', 'Anytime'], correctAnswer: 0 },
   { question: 'Which strategy helps you stay consistent?', options: ['Reminders', 'Relying on willpower', 'Avoiding routine', 'Multitasking'], correctAnswer: 0 },
@@ -72,7 +431,7 @@ const fullQuestionSet = [
   { question: 'Which helps you stay motivated?', options: ['Discipline + rewards', 'Complaints', 'Avoid planning', 'Stress'], correctAnswer: 0 },
   { question: 'What is the benefit of journaling habits?', options: ['Forget goals', 'Track thoughts + progress', 'Add confusion', 'Remove goals'], correctAnswer: 1 },
   { question: 'Why celebrate small wins?', options: ['Boosts confidence', 'No reason', 'Distracts', 'Reduces motivation'], correctAnswer: 0 },
-  { question: 'Why is environment important?', options: ['Affects behavior', 'Doesn’t matter', 'Only location', 'None'], correctAnswer: 0 },
+  { question: 'Why is environment important?', options: ['Affects behavior', 'Does not matter', 'Only location', 'None'], correctAnswer: 0 },
   { question: 'How to create a habit loop?', options: ['Cue → Routine → Reward', 'Skip → Act → Think', 'Plan → Delay → Quit', 'None'], correctAnswer: 0 },
   { question: 'What is habit temptation bundling?', options: ['Pair fun task with a habit', 'Avoid tasks', 'Do everything at once', 'Skip chores'], correctAnswer: 0 },
   { question: 'Which breaks bad habits?', options: ['Avoid cues', 'Reward them', 'Repeat randomly', 'None'], correctAnswer: 0 },
@@ -90,18 +449,19 @@ const fullQuestionSet = [
   { question: 'How to stay consistent?', options: ['Daily check-ins', 'Ignore app', 'Guess time', 'Random acts'], correctAnswer: 0 }
 ];
 
-
-/** Main Component of the Habit Quiz Game */
 const HabitQuizGame = () => {
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const navigate = useNavigate();
   const { updateProgress } = useHabit();
-  const [xp, setXP] = useState(0);
+  const [xp, setXP] = useState(() => {
+    const saved = localStorage.getItem('quizXP');
+    return saved ? parseInt(saved) : 0;
+  });
   const [answered, setAnswered] = useState(false);
   const [selected, setSelected] = useState(null);
   const [gameEnded, setGameEnded] = useState(false);
   const [started, setStarted] = useState(false);
-// This shows the Round tracking
   const [correctCount, setCorrectCount] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
   const [roundNumber, setRoundNumber] = useState(1);
@@ -109,10 +469,8 @@ const HabitQuizGame = () => {
   const [totalCorrect, setTotalCorrect] = useState(0);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
   const [showSpinWheel, setShowSpinWheel] = useState(false);
-
   const [initialSpinDone, setInitialSpinDone] = useState(false);
 
-// Load questions when quiz starts or next round begins
   useEffect(() => {
     if (started && !showSpinWheel && !initialSpinDone) {
       setShowSpinWheel(true);
@@ -123,9 +481,8 @@ const HabitQuizGame = () => {
       }
       loadQuestions();
     }
-  }, [started, roundNumber, showSpinWheel, initialSpinDone]);
+  }, [started, showSpinWheel, initialSpinDone]);
 
-/** Load and shuffle questions for each round */
   const loadQuestions = () => {
     const questionCount = Math.floor(Math.random() * 3) + 6;
     const shuffled = [...fullQuestionSet].sort(() => 0.5 - Math.random());
@@ -138,12 +495,12 @@ const HabitQuizGame = () => {
     setShowSummary(false);
   };
 
- /** This handles the answer selection */
   const handleAnswer = (index) => {
     if (answered || gameEnded) return;
+
     setSelected(index);
     const currentQuestion = questions[currentIndex];
-// If correct,it adds XP and increase correct count
+
     if (index === currentQuestion.correctAnswer) {
       const newXP = xp + 10;
       setXP(newXP);
@@ -151,8 +508,10 @@ const HabitQuizGame = () => {
       updateProgress('games', 10);
       setCorrectCount(prev => prev + 1);
     }
+
     setAnswered(true);
-// Moves to the next question after short delay of split seconds
+
+
     setTimeout(() => {
       if (currentIndex + 1 >= questions.length) {
         setGameEnded(true);
@@ -161,10 +520,10 @@ const HabitQuizGame = () => {
         setAnswered(false);
         setSelected(null);
       }
-    }, 1000);
+    }, 1200);
   };
 
-/** This returns emojis message based on round score */
+
   const getEmoji = () => {
     const ratio = correctCount / questions.length;
     if (ratio === 1) return "🏆 Perfect!";
@@ -173,17 +532,16 @@ const HabitQuizGame = () => {
     return "💡 Keep practicing!";
   };
 
-/** Proceeds to next round or final summary */
-const handleNextRound = () => {
-  setTotalCorrect(prev => prev + correctCount);
-  if (roundNumber < 3) {
-    setRoundNumber(prev => prev + 1);
-  } else {
-    setFinalSummary(true);
-  }
-};
+  const handleNextRound = () => {
+    setTotalCorrect(prev => prev + correctCount);
+    if (roundNumber < 3) {
+      setRoundNumber(prev => prev + 1);
+      loadQuestions();
+    } else {
+      setFinalSummary(true);
+    }
+  };
 
-/** Restart the quiz from the beginning */
   const handleReplay = () => {
     setRoundNumber(1);
     setXP(0);
@@ -191,83 +549,85 @@ const handleNextRound = () => {
     setStarted(true);
     setFinalSummary(false);
     setInitialSpinDone(false);
+    setShowSpinWheel(true);
   };
 
-/** Add XP from SpinWheel rewards */
   const handleXPReward = (reward) => {
     const newXP = xp + reward;
     setXP(newXP);
     localStorage.setItem('quizXP', newXP.toString());
+    updateProgress('games', reward);
   };
 
-  const popupOverlayStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'rgba(0, 0, 0, 0.7)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000
+  const navigateToDashboard = () => {
+    navigate('/dashboard');
   };
 
   if (!started) {
- // Welcome screen with Start button present
     return (
-      <div style={welcomeStyle}>
-        <h1>🎯 Welcome to the Habit Quiz Game!</h1>
-        <p style={{ maxWidth: '500px', marginTop: '1rem', fontSize: '1.2rem' }}>
-          Test your knowledge across 3 rounds and earn XP! Click below to begin.
-        </p>
-        <button onClick={() => setShowStartConfirm(true)} style={startButtonStyle}>
-          Start Quiz
-        </button>
+      <GameContainer>
+        <BackgroundOverlay />
+        <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" color="rgba(255, 223, 108, 0.9)" />
+        <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" color="rgba(50, 255, 192, 0.9)" />
+        <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" color="rgba(0, 249, 255, 0.9)" />
+        <Star size="18px" style={{ bottom: '20%', right: '15%' }} duration="4.5s" delay="0.7s" color="rgba(255, 223, 108, 0.9)" />
+
+        <WelcomeContainer>
+          <WelcomeTitle>Habit Quiz Challenge</WelcomeTitle>
+          <WelcomeDescription>
+            Test your knowledge across 3 rounds and earn XP! Answer habit questions correctly to level up your understanding.
+          </WelcomeDescription>
+          <Button primary onClick={() => setShowStartConfirm(true)}>
+            Start Quiz
+          </Button>
+        </WelcomeContainer>
 
         {showStartConfirm && (
-          <div style={popupOverlayStyle}>
-            <div style={{
-              background: 'white', padding: '2rem', borderRadius: '12px',
-              textAlign: 'center', maxWidth: '400px'
-            }}>
-              <h3>🚀 Ready to begin?</h3>
-              <p>This quiz includes 3 rounds of random habit-related questions. You'll earn XP and spin rewards after each round.</p>
-              <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-                <button
+          <ModalOverlay>
+            <ModalContent>
+              <SummaryTitle>🚀 Ready to begin?</SummaryTitle>
+              <SummaryText>
+                This quiz includes 3 rounds of random habit-related questions. You'll earn XP for correct answers and get SpinWheel bonuses between rounds.
+              </SummaryText>
+              <ButtonsContainer>
+                <Button
+                  primary
                   onClick={() => {
                     setStarted(true);
                     setShowStartConfirm(false);
                   }}
-                  style={{ ...actionButtonStyle, background: '#4CAF50' }}
                 >
-                  Yes, Start
-                </button>
-                <button
+                  Begin Challenge
+                </Button>
+                <Button
                   onClick={() => setShowStartConfirm(false)}
-                  style={{ ...actionButtonStyle, background: '#999' }}
                 >
                   Cancel
-                </button>
-              </div>
-            </div>
-          </div>
+                </Button>
+              </ButtonsContainer>
+            </ModalContent>
+          </ModalOverlay>
         )}
-      </div>
+      </GameContainer>
     );
   }
 
   return (
-    <div style={mainContainerStyle}>
+    <GameContainer>
+      <BackgroundOverlay />
+      <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" color="rgba(255, 223, 108, 0.9)" />
+      <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" color="rgba(50, 255, 192, 0.9)" />
+      <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" color="rgba(0, 249, 255, 0.9)" />
+      <Star size="18px" style={{ bottom: '20%', right: '15%' }} duration="4.5s" delay="0.7s" color="rgba(255, 223, 108, 0.9)" />
+
+      <GameHeader>
+        <GameTitle>Habit Quiz Challenge</GameTitle>
+        <GameSubtitle>Test your knowledge and earn XP rewards</GameSubtitle>
+      </GameHeader>
+
       {showSpinWheel && (
-        <div style={popupOverlayStyle}>
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '2rem',
-            maxWidth: '90%',
-            width: '600px'
-          }}>
+        <ModalOverlay>
+          <ModalContent width="600px">
             <SpinWheelPopup
               onClose={() => {
                 setShowSpinWheel(false);
@@ -276,162 +636,70 @@ const handleNextRound = () => {
               roundNumber={roundNumber}
               onXPReward={handleXPReward}
             />
-          </div>
-        </div>
+          </ModalContent>
+        </ModalOverlay>
       )}
 
       {!gameEnded ? (
-        <div style={questionCardStyle}>
-          <h2 style={{ fontSize: '1.75rem' }}>Round {roundNumber} - Question {currentIndex + 1}</h2>
-          <p style={{ fontWeight: 'bold', marginBottom: '1rem', fontSize: '1.3rem' }}>{questions[currentIndex]?.question}</p>
+        <QuestionCard>
+          <RoundBadge>Round {roundNumber}</RoundBadge>
+          <QuestionHeader>Question {currentIndex + 1}</QuestionHeader>
+          <QuestionText>{questions[currentIndex]?.question}</QuestionText>
           <div>
-            {questions[currentIndex]?.options.map((option, i) => {
-              let bg = '#e0e0e0';
-              if (answered) {
-                if (i === questions[currentIndex].correctAnswer) bg = '#4CAF50';
-                else if (i === selected) bg = '#f44336';
-                else bg = '#ccc';
-              }
-              return (
-                <button
-                  key={i}
-                  onClick={() => handleAnswer(i)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '1rem',
-                    marginBottom: '0.75rem',
-                    fontSize: '1.1rem',
-                    background: bg,
-                    border: 'none',
-                    borderRadius: '5px',
-                    fontWeight: 'bold',
-                    cursor: answered ? 'default' : 'pointer'
-                  }}
-                >
-                  {option}
-                </button>
-              );
-            })}
+            {questions[currentIndex]?.options.map((option, i) => (
+              <OptionButton
+                key={i}
+                onClick={() => handleAnswer(i)}
+                answered={answered}
+                isCorrect={i === questions[currentIndex].correctAnswer}
+                isSelected={i === selected}
+                disabled={answered}
+              >
+                {option}
+              </OptionButton>
+            ))}
           </div>
-          <div style={{ marginTop: '1rem', fontSize: '1.1rem' }}>⭐ XP: {xp}</div>
-          <div style={{ fontSize: '1rem' }}>Question {currentIndex + 1} of {questions.length}</div>
-        </div>
+          <ProgressInfo>
+            <XPCounter>{xp} XP</XPCounter>
+            <QuestionCounter>Question {currentIndex + 1} of {questions.length}</QuestionCounter>
+          </ProgressInfo>
+        </QuestionCard>
       ) : !showSummary ? (
-        <div style={summaryCardStyle}>
-          <h2>🎉 Round {roundNumber} Complete!</h2>
-          <p style={{ fontSize: '1.2rem' }}><strong>Correct Answers:</strong> {correctCount} / {questions.length}</p>
-          <p style={{ fontSize: '1.2rem' }}><strong>XP This Round:</strong> {correctCount * 10}</p>
-          <h3 style={{ fontSize: '1.4rem' }}>{getEmoji()}</h3>
+        <SummaryCard>
+          <SummaryTitle>Round {roundNumber} Complete!</SummaryTitle>
+          <SummaryText><strong>Correct Answers:</strong> {correctCount} / {questions.length}</SummaryText>
+          <SummaryText><strong>XP Earned:</strong> {correctCount * 10}</SummaryText>
+          <ResultEmoji>{getEmoji()}</ResultEmoji>
 
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <button onClick={() => {
-              setShowSummary(true);
-              handleNextRound();
-            }} style={actionButtonStyle}>
-              {roundNumber < 3 ? 'Start Next Round' : 'Finish'}
-            </button>
-            <button onClick={() => window.location.href = '/dashboard'} style={secondaryButtonStyle}>
-              Home
-            </button>
-          </div>
-        </div>
+          <ButtonsContainer>
+            <Button
+              primary
+              onClick={() => {
+                setShowSummary(true);
+                handleNextRound();
+              }}
+            >
+              {roundNumber < 3 ? 'Next Round' : 'See Final Results'}
+            </Button>
+            <Button onClick={navigateToDashboard}>
+              Exit to Home
+            </Button>
+          </ButtonsContainer>
+        </SummaryCard>
       ) : finalSummary ? (
-        <div style={summaryCardStyle}>
-          <h2>📊 Final Game Summary</h2>
-          <p style={{ fontSize: '1.2rem' }}><strong>Total Correct:</strong> {totalCorrect + correctCount}</p>
-          <p style={{ fontSize: '1.2rem' }}><strong>Total XP Earned:</strong> {(totalCorrect + correctCount) * 10}</p>
-          <h3 style={{ marginTop: '1rem', fontSize: '1.5rem' }}>🌟 Thanks for playing!</h3>
-          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-            <button onClick={handleReplay} style={uniformButtonStyle}>Replay</button>
-            <button onClick={() => window.location.href = '/dashboard'} style={uniformButtonStyle}>Home</button>
-          </div>
-        </div>
+        <SummaryCard>
+          <SummaryTitle>Quiz Complete!</SummaryTitle>
+          <SummaryText><strong>Total Correct:</strong> {totalCorrect}</SummaryText>
+          <SummaryText><strong>Total XP Earned:</strong> {xp}</SummaryText>
+          <ResultEmoji>🌟 Cosmic Achievement!</ResultEmoji>
+          <ButtonsContainer>
+            <Button primary onClick={handleReplay}>Play Again</Button>
+            <Button onClick={navigateToDashboard}>Return Home</Button>
+          </ButtonsContainer>
+        </SummaryCard>
       ) : null}
-    </div>
+    </GameContainer>
   );
-};
-
-// Styles (all existing styles remain the same as in your original file)
-const welcomeStyle = {
-  background: '#1e3c72',
-  minHeight: '100vh',
-  color: '#000000',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexDirection: 'column',
-  textAlign: 'center',
-  padding: '2rem'
-};
-
-const mainContainerStyle = {
-  background: 'linear-gradient(to bottom right, #1e3c72, #2a5298)',
-  minHeight: '100vh',
-  padding: '2rem',
-  color: 'white',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center'
-};
-
-const questionCardStyle = {
-  maxWidth: '720px',
-  background: 'linear-gradient(to bottom right, #2a5298, #1e3c72)',
-  borderRadius: '12px',
-  padding: '2.5rem',
-  color: '#fff',
-  fontSize: '1.2rem'
-};
-
-const summaryCardStyle = {
-  textAlign: 'center',
-  background: '#fff',
-  padding: '2.5rem',
-  borderRadius: '12px',
-  color: '#000',
-  maxWidth: '600px'
-};
-
-const startButtonStyle = {
-  marginTop: '2rem',
-  padding: '1rem 2rem',
-  background: '#4CAF50',
-  color: 'white',
-  fontWeight: 'bold',
-  border: 'none',
-  borderRadius: '10px',
-  fontSize: '1.2rem',
-  cursor: 'pointer'
-};
-
-const actionButtonStyle = {
-  padding: '0.85rem 2rem',
-  background: '#4CAF50',
-  color: 'white',
-  border: 'none',
-  borderRadius: '8px',
-  fontWeight: 'bold',
-  fontSize: '1rem',
-  cursor: 'pointer'
-};
-
-const secondaryButtonStyle = {
-  ...actionButtonStyle,
-  background: '#9E9E9E'
-};
-
-const uniformButtonStyle = {
-  padding: '0.85rem 2rem',
-  fontSize: '1rem',
-  background: '#4CAF50',
-  color: 'white',
-  border: 'none',
-  borderRadius: '8px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  minWidth: '120px'
 };
 
 export default HabitQuizGame;
