@@ -19,6 +19,30 @@ import { requestLogger, logSystemEvent, logError } from './middleware/loggingMid
 // Configure environment variables
 dotenv.config();
 
+// Check for required environment variables
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error(`ERROR: Missing required environment variables: ${missingEnvVars.join(', ')}`);
+  console.error('Please configure these environment variables in your .env file or in your deployment environment.');
+  
+  // In development, exit the process
+  if (process.env.NODE_ENV !== 'production' && process.env.VERCEL !== '1') {
+    process.exit(1);
+  }
+}
+
+// Log all environment variables in development (except sensitive ones)
+if (process.env.NODE_ENV === 'development') {
+  console.log('Environment variables loaded:');
+  Object.keys(process.env)
+    .filter(key => !key.includes('SECRET') && !key.includes('PASSWORD') && !key.includes('KEY'))
+    .forEach(key => {
+      console.log(`${key}: ${key.includes('URI') ? '**********' : process.env[key]}`);
+    });
+}
+
 // Initialize Express
 const app = express();
 
@@ -44,6 +68,14 @@ async function connectToDatabase() {
   
   if (connectionPromise) {
     return connectionPromise;
+  }
+
+  // Check if MONGODB_URI is available
+  if (!process.env.MONGODB_URI) {
+    const error = new Error('MONGODB_URI environment variable is not defined');
+    console.error('MongoDB Connection Error:', error.message);
+    logError(error, { context: 'Database Connection Setup' });
+    throw error;
   }
 
   logSystemEvent('DB_CONNECTION_ATTEMPT', { uri: process.env.MONGODB_URI?.substring(0, 20) + '...' });
@@ -108,15 +140,22 @@ app.use('/api/leaderboard', leaderboardRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+  // Check for required environment variables
+  const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
+  const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+  
   logSystemEvent('HEALTH_CHECK', { 
-    dbStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' 
+    dbStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    configComplete: missingEnvVars.length === 0
   });
 
   res.status(200).json({ 
     status: 'healthy',
     dbStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
     environment: process.env.NODE_ENV || 'development',
-    deployedOn: process.env.VERCEL === '1' ? 'Vercel' : 'Other'
+    deployedOn: process.env.VERCEL === '1' ? 'Vercel' : 'Other',
+    configStatus: missingEnvVars.length === 0 ? 'complete' : 'incomplete',
+    missingConfig: missingEnvVars.length > 0 ? missingEnvVars : undefined
   });
 });
 
@@ -129,6 +168,15 @@ app.use((err, req, res, next) => {
   });
   
   console.error(err.stack);
+  
+  // Special handling for environment variable errors
+  if (err.message && err.message.includes('environment variable')) {
+    return res.status(500).json({
+      error: 'Configuration Error',
+      message: 'The server is missing critical configuration. Please contact the administrator.',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
   
   // Special handling for MongoDB connection errors
   if (err.name === 'MongooseServerSelectionError') {
