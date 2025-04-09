@@ -1,135 +1,234 @@
-/**
- * Habit Challenge Center Component
- *
- * This file implements the HabitChallengeDashboard component, which serves as an engaging
- * challenge hub within the habit tracking application. It provides two interactive sections:
- *
- * -  Hourly Challenges:
- *    • 10 short, productivity-boosting activities.
- *    • Users can select a difficulty level (easy/moderate/hard) to earn XP.
- *    • Feedback messages reinforce motivation and habit strength.
- *    • XP is tracked and stored in localStorage.
- *
- * -  Weekly Challenge:
- *    • Seven-day habit planner with three tasks per day.
- *    • Users toggle task status: unchecked → checked → crossed → unchecked.
- *    • XP rewards are granted for successful habit completions.
- *    • Weekly level progression and visual badges are displayed.
- *
- * The component tracks XP across three categories (hourly, weekly, and total) and features:
- * - Persistent XP storage via localStorage.
- * - Visual feedback through styled-components (XP bar, badges, colored buttons).
- * - Dynamic habit generation and streak recognition.
- * - Reset functions for all XP and challenge states.
- *
- * The code emphasizes modularity and readability, reusing helper functions like
- * `getWeeklyHabits()` and `getBadges()` to maintain clean logic separation.
- *
- *  Themed styling is applied using `styled-components`, adhering to a consistent color palette.
- */
-
-// Import necessary React and styled-components modules
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import { theme } from '../../theme';
+import styled, { keyframes, css } from 'styled-components';
 import { useHabit } from '../../context/HabitContext';
+import { useNavigate } from 'react-router-dom';
 
-// Main layout container for the Habit Challenge Center
-const Container = styled.div`
-  min-height: 100vh;
-  background: linear-gradient(to bottom right, #1a2038, #293462);
-  color: white;
-  padding: 2rem;
+const spaceTheme = {
+  deepSpace: '#0E1A40',
+  deepSpaceGradient: 'linear-gradient(135deg, #0E1A40 0%, #13294B 100%)',
+  accentGlow: '#32FFC0',
+  accentGold: '#FFDF6C',
+  textPrimary: '#D0E7FF',
+  actionButton: '#00F9FF',
+  actionButtonAlt: '#FF5DA0',
+  highlight: '#FFFA81',
+  highlightAlt: '#FBC638',
+  calendarCell: '#1C2A4A',
+  glassOverlay: 'rgba(30, 39, 73, 0.8)'
+};
+
+const floatAnimation = keyframes`
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+`;
+
+const starGlow = keyframes`
+  0% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
+  50% { opacity: 1; filter: blur(0px); transform: scale(1.1); }
+  100% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
+`;
+
+const pulseGlow = keyframes`
+  0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
+  50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
+  100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
+`;
+
+const glowPulse = keyframes`
+  0% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
+  50% { text-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
+  100% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
+`;
+
+const warping = keyframes`
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+const slideInRight = keyframes`
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+`;
+
+const fadeOut = keyframes`
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+`;
+
+const GameContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  background: ${spaceTheme.deepSpaceGradient};
+  color: ${spaceTheme.textPrimary};
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
   font-family: 'Montserrat', sans-serif;
 `;
 
-// Styled title for page header
-const Title = styled.h1`
-  font-size: 2.5rem;
-  background: linear-gradient(to right, #e6c200, #ffeb99);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 1.5rem;
-  text-align: center;
+const BackgroundOverlay = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 30% 50%, rgba(50, 255, 192, 0.1) 0%, transparent 70%),
+              radial-gradient(circle at 70% 70%, rgba(0, 249, 255, 0.1) 0%, transparent 60%);
+  z-index: 1;
 `;
 
-// Stats container to display XP information
+const Star = styled.div`
+  position: absolute;
+  width: ${props => props.size || '20px'};
+  height: ${props => props.size || '20px'};
+  background: radial-gradient(circle, ${props => props.color || 'rgba(255, 223, 108, 0.9)'} 0%, rgba(255, 255, 255, 0) 70%);
+  border-radius: 50%;
+  z-index: 2;
+  animation: ${starGlow} ${props => props.duration || '3s'} infinite ease-in-out;
+  animation-delay: ${props => props.delay || '0s'};
+  opacity: 0.7;
+
+  &::before {
+    content: '★';
+    position: absolute;
+    font-size: ${props => parseInt(props.size) * 0.8 || '16px'};
+    color: ${props => props.color || 'rgba(255, 223, 108, 0.9)'};
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+`;
+
+const GameHeader = styled.div`
+  margin-bottom: 1rem;
+  text-align: center;
+  z-index: 10;
+  width: 100%;
+`;
+
+const GameTitle = styled.h1`
+  font-size: 1.8rem;
+  color: ${spaceTheme.accentGlow};
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px ${spaceTheme.accentGlow}, 0 0 20px ${spaceTheme.accentGlow};
+  animation: ${glowPulse} 3s infinite ease-in-out;
+  margin-bottom: 0.25rem;
+`;
+
+const GameSubtitle = styled.p`
+  font-size: 0.9rem;
+  max-width: 600px;
+  margin: 0.25rem auto;
+  color: ${spaceTheme.textPrimary};
+  opacity: 0.9;
+`;
+
 const StatsContainer = styled.div`
-  background: ${theme.colors.glassWhite};
-  padding: 1rem;
+  background: rgba(28, 42, 74, 0.7);
+  backdrop-filter: blur(8px);
+  padding: 0.8rem;
   border-radius: 12px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   display: flex;
   gap: 1.5rem;
-  box-shadow: ${theme.shadows.card};
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(50, 255, 192, 0.2);
+  z-index: 10;
+  width: 90%;
+  max-width: 700px;
 `;
 
 const StatItem = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
 `;
 
 const StatValue = styled.div`
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: bold;
-  color: ${theme.colors.accent};
+  color: ${spaceTheme.accentGold};
+  text-shadow: 0 0 10px rgba(255, 223, 108, 0.5);
 `;
 
 const StatLabel = styled.div`
-  font-size: 0.9rem;
-  color: ${theme.colors.text};
+  font-size: 0.75rem;
+  color: ${spaceTheme.textPrimary};
   opacity: 0.8;
+  margin-top: 0.15rem;
 `;
 
-// Button container for switching between Hourly and Weekly tabs
 const Tabs = styled.div`
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
   width: 100%;
   max-width: 600px;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.5rem;
-  border-radius: 12px;
+  background: rgba(28, 42, 74, 0.6);
+  backdrop-filter: blur(8px);
+  padding: 0.4rem;
+  border-radius: 10px;
+  z-index: 10;
+  border: 1px solid rgba(50, 255, 192, 0.2);
 `;
 
-// Tab button style — visually highlights active tab
 const TabButton = styled.button`
-  padding: 0.6rem 1rem;
-  background: ${({ active }) => (active ? theme.colors.secondary : 'transparent')};
-  color: ${({ active }) => (active ? 'white' : theme.colors.text)};
-  border: none;
+  padding: 0.5rem 0.8rem;
+  background: ${({ active }) => (active ? 'rgba(50, 255, 192, 0.3)' : 'transparent')};
+  color: ${({ active }) => (active ? spaceTheme.accentGlow : spaceTheme.textPrimary)};
+  border: ${({ active }) => (active ? `1px solid ${spaceTheme.accentGlow}` : '1px solid transparent')};
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
   flex: 1;
   transition: all 0.3s ease;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  text-shadow: ${({ active }) => (active ? `0 0 5px ${spaceTheme.accentGlow}` : 'none')};
 
   &:hover {
-    background: ${({ active }) => (active ? theme.colors.secondary : 'rgba(255, 255, 255, 0.3)')};
+    background: ${({ active }) => (active ? 'rgba(50, 255, 192, 0.4)' : 'rgba(50, 255, 192, 0.1)')};
+    text-shadow: 0 0 5px ${spaceTheme.accentGlow};
   }
 `;
 
 const HabitGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.8rem;
   width: 100%;
   max-width: 1000px;
+  z-index: 10;
 `;
 
 const HabitCard = styled.div`
-  background: ${theme.colors.glassWhite};
-  border-radius: 16px;
-  padding: 1.2rem;
-  box-shadow: ${theme.shadows.card};
+  background: rgba(14, 26, 64, 0.8);
+  backdrop-filter: blur(8px);
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(50, 255, 192, 0.3);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
+  animation: ${css`${warping} 0.5s ease-out`};
 
   &:before {
     content: '';
@@ -138,127 +237,112 @@ const HabitCard = styled.div`
     left: 0;
     width: 4px;
     height: 100%;
-    background: ${({ color }) => color || theme.colors.primary};
+    background: ${({ color }) => color || spaceTheme.accentGlow}; /* Restored colorful sidebar */
+    box-shadow: 0 0 10px ${({ color }) => color || spaceTheme.accentGlow};
   }
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  }
-`;
-
-// Bold title inside each habit card, with color based on index
-const HabitTitle = styled.strong`
-  display: block;
-  margin-bottom: 0.8rem;
-  color: ${({ color }) => color};
-  font-size: 1.1rem;
-`;
-
-// Button for marking difficulty levels and granting XP
-const Button = styled.button`
-  margin: 0.5rem 0.25rem;
-  background: ${({ selected, difficulty }) =>
-    selected
-      ? (difficulty === 'easy'
-          ? '#2ecc71'
-          : difficulty === 'moderate'
-          ? '#f39c12'
-          : '#e74c3c')
-      : '#e4d2b0'};
-  color: ${({ selected }) => (selected ? '#fff' : '#333')};
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-
-  &:hover {
-    background: ${({ selected, difficulty }) =>
-      selected
-        ? (difficulty === 'easy'
-            ? '#27ae60'
-            : difficulty === 'moderate'
-            ? '#d35400'
-            : '#c0392b')
-        : '#d9c8a9'};
-    transform: translateY(-2px);
-  }
-
-  &:active {
-    transform: translateY(1px);
-  }
-`;
-
-// Message box for showing feedback after habit completion
-const MessageBox = styled.div`
-  margin-top: 0.8rem;
-  padding: 0.8rem;
-  font-size: 0.95rem;
-  color: white;
-  background: ${({ type }) =>
-    type === 'easy' ? '#2ecc71' :
-    type === 'moderate' ? '#f39c12' : '#e74c3c'};
-  border-radius: 8px;
-  transform: translateY(0);
-  animation: slideIn 0.3s ease-out;
-
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-// Complete set button shown when all hourly habits are completed
-const CompleteSetButton = styled.button`
-  margin-top: 2rem;
-  background: linear-gradient(to right, #4CAF50, #66BB6A); /* green gradient */
-  color: white;
-  border: none;
-  padding: 0.85rem 2rem;
-  border-radius: 12px;
-  font-weight: bold;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 
   &:hover {
     transform: translateY(-3px);
-    background: linear-gradient(to right, #43A047, #81C784); /* brighter green */
-    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);
-  }
-
-  &:active {
-    transform: translateY(1px);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
   }
 `;
 
-const NextDayButton = styled.button`
-  margin-top: 1.5rem;
-  background: linear-gradient(to right, #FF9800, #FFB74D);
-  color: white;
-  border: none;
-  padding: 0.75rem 2rem;
-  border-radius: 10px;
+const HabitTitle = styled.h3`
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  color: ${({ color }) => color || spaceTheme.accentGlow}; /* Colorful text but no animation */
+  font-size: 0.9rem;
+  font-family: 'Montserrat', sans-serif; /* Normal font, not heading font */
+  font-weight: normal;
+  text-shadow: none; /* Removed text shadow animation */
+`;
+
+const HabitEmoji = styled.span`
+  font-size: 1.1rem;
+  margin-right: 0.5rem;
+`;
+
+const Button = styled.button`
+  margin: 0.25rem 0.15rem;
+  background: ${({ selected, difficulty }) =>
+    selected
+      ? (difficulty === 'easy'
+          ? 'rgba(50, 255, 192, 0.7)'
+          : difficulty === 'moderate'
+          ? 'rgba(255, 223, 108, 0.7)'
+          : 'rgba(255, 93, 160, 0.7)')
+      : 'rgba(28, 42, 74, 0.4)'};
+  color: ${({ selected }) => (selected ? spaceTheme.deepSpace : spaceTheme.textPrimary)};
+  border: 1px solid ${({ selected, difficulty }) =>
+    selected
+      ? (difficulty === 'easy'
+          ? spaceTheme.accentGlow
+          : difficulty === 'moderate'
+          ? spaceTheme.accentGold
+          : spaceTheme.actionButtonAlt)
+      : 'rgba(50, 255, 192, 0.3)'};
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  cursor: ${props => props.disabled ? 'default' : 'pointer'};
   font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: ${({ selected }) => (selected ? 'none' : `0 0 5px rgba(208, 231, 255, 0.5)`)};
+  font-size: 0.75rem;
 
   &:hover {
-    background: linear-gradient(to right, #FB8C00, #FFA726);
-    transform: translateY(-2px);
+    transform: ${props => props.disabled ? 'none' : 'translateY(-2px)'};
+    box-shadow: ${props => props.disabled ? 'none' : `0 0 15px rgba(50, 255, 192, 0.3)`};
+    background: ${({ selected, difficulty }) => {
+      if (selected) {
+        if (difficulty === 'easy') return 'rgba(50, 255, 192, 0.8)';
+        if (difficulty === 'moderate') return 'rgba(255, 223, 108, 0.8)';
+        return 'rgba(255, 93, 160, 0.8)';
+      }
+      return 'rgba(28, 42, 74, 0.6)';
+    }};
+  }
+`;
+
+const MessageBox = styled.div`
+  margin-top: 0.75rem;
+  padding: 0.6rem;
+  font-size: 0.8rem;
+  color: white;
+  background: ${({ type }) =>
+    type === 'easy'
+      ? 'linear-gradient(135deg, rgba(50, 255, 192, 0.9), rgba(50, 255, 192, 0.7))'
+      : type === 'moderate'
+      ? 'linear-gradient(135deg, rgba(255, 223, 108, 0.9), rgba(255, 223, 108, 0.7))'
+      : 'linear-gradient(135deg, rgba(255, 93, 160, 0.9), rgba(255, 93, 160, 0.7))'};
+  border-radius: 6px;
+  transform: translateY(0);
+  animation: ${css`${warping} 0.3s ease-out`};
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+`;
+
+const CompleteSetButton = styled.button`
+  margin-top: 1.25rem;
+  background: linear-gradient(to right, ${spaceTheme.accentGlow}, ${spaceTheme.actionButton});
+  color: ${spaceTheme.deepSpace};
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(50, 255, 192, 0.5);
+  z-index: 10;
+  font-family: 'Orbitron', sans-serif;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 25px rgba(50, 255, 192, 0.7);
   }
 
   &:active {
@@ -266,120 +350,83 @@ const NextDayButton = styled.button`
   }
 `;
 
-// Completion message that appears when all habits are done
 const CompletionMessage = styled.div`
-  background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
-  color: #2d3748;
-  padding: 1.5rem;
-  border-radius: 16px;
-  margin: 2rem 0;
+  background: linear-gradient(120deg, rgba(50, 255, 192, 0.3) 0%, rgba(0, 249, 255, 0.3) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid ${spaceTheme.accentGlow};
+  color: ${spaceTheme.textPrimary};
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin: 1.25rem 0;
   text-align: center;
   max-width: 600px;
   width: 90%;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 0 20px rgba(50, 255, 192, 0.3);
+  animation: ${css`${warping} 0.5s ease-out`};
   position: relative;
-
-  @keyframes popIn {
-    0% {
-      opacity: 0;
-      transform: scale(0.8);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
+  z-index: 10;
 
   h3 {
     margin-bottom: 0.5rem;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+    color: ${spaceTheme.accentGlow};
+    font-family: 'Orbitron', sans-serif;
+    text-shadow: 0 0 10px ${spaceTheme.accentGlow};
   }
 
   p {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
   }
 `;
 
 const WeekCompletionMessage = styled(CompletionMessage)`
-  background: linear-gradient(120deg, #FFC107 0%, #FF9800 100%);
-`;
+  background: linear-gradient(120deg, rgba(255, 223, 108, 0.3) 0%, rgba(255, 193, 7, 0.3) 100%);
+  border: 1px solid ${spaceTheme.accentGold};
 
-const ScheduleCard = styled.div`
-  background: ${theme.colors.glassWhite};
-  padding: 1.5rem;
-  border-radius: 16px;
-  margin-bottom: 1.5rem;
-  max-width: 700px;
-  width: 100%;
-  box-shadow: ${theme.shadows.card};
-  position: relative;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
-  }
-
-  &:after {
-    content: '${({ isComplete }) => isComplete ? '✓' : ''}';
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    color: #10B981;
-    font-size: 1.5rem;
-    font-weight: bold;
+  h3 {
+    color: ${spaceTheme.accentGold};
+    text-shadow: 0 0 10px ${spaceTheme.accentGold};
   }
 `;
 
-const ScheduleHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
-  padding-bottom: 0.8rem;
-`;
-
-const ScheduleTitle = styled.strong`
-  font-size: 1.2rem;
+const LevelInfo = styled.div`
+  font-weight: bold;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-`;
+  z-index: 10;
+  color: ${spaceTheme.textPrimary};
 
-const SectionTitle = styled.h2`
-  margin-top: 2rem;
-  margin-bottom: 1.5rem;
-  position: relative;
-  display: inline-block;
-
-  &:after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: ${theme.colors.accent};
-    border-radius: 3px;
+  span {
+    background: rgba(50, 255, 192, 0.2);
+    color: ${spaceTheme.accentGlow};
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-family: 'Orbitron', sans-serif;
+    border: 1px solid rgba(50, 255, 192, 0.3);
+    text-shadow: 0 0 5px ${spaceTheme.accentGlow};
   }
 `;
 
-// XP progress bar container for weekly XP tracking
 const XPBar = styled.div`
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(28, 42, 74, 0.6);
   border-radius: 20px;
   width: 100%;
   max-width: 600px;
-  height: 20px;
+  height: 15px;
   overflow: hidden;
-  margin: 0.5rem 0 1.5rem;
-  box-shadow: inset 0 1px 4px rgba(0,0,0,0.2);
+  margin: 0.3rem 0 0.75rem;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(50, 255, 192, 0.2);
+  z-index: 10;
 `;
 
 const XPProgress = styled.div`
-  background: linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondary});
+  background: linear-gradient(90deg, ${spaceTheme.accentGlow}, ${spaceTheme.actionButton});
   height: 100%;
   width: ${({ xp }) => `${(xp / 50) * 100}%`};
   transition: width 0.5s ease;
@@ -392,74 +439,67 @@ const XPProgress = styled.div`
     right: 10px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 0.75rem;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-  }
-`;
-
-const LevelInfo = styled.div`
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  span {
-    background: ${theme.colors.secondary};
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    font-size: 0.6rem;
+    color: ${spaceTheme.deepSpace};
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    font-weight: bold;
   }
 `;
 
 const BadgeList = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  z-index: 10;
+  justify-content: center;
 `;
 
 const Badge = styled.span`
-  background: ${props => props.color || theme.colors.accent};
-  color: white;
-  padding: 0.4rem 0.8rem;
+  background: ${props => props.color || spaceTheme.accentGlow};
+  color: ${spaceTheme.deepSpace};
+  padding: 0.3rem 0.6rem;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 0 10px ${props => props.color || spaceTheme.accentGlow};
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.3rem;
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 
   &:before {
     content: '🏆';
   }
 `;
 
-// Container and button style for XP reset controls
 const ResetXPButtons = styled.div`
   display: flex;
   gap: 1rem;
   margin: 1rem 0;
   flex-wrap: wrap;
   justify-content: center;
+  z-index: 10;
 `;
 
 const ResetButton = styled.button`
-  padding: 0.5rem 1rem;
-  background: ${theme.colors.secondary};
-  color: white;
-  border: none;
+  padding: 0.4rem 1rem;
+  background: rgba(255, 93, 160, 0.3);
+  color: ${spaceTheme.textPrimary};
+  border: 1px solid ${spaceTheme.actionButtonAlt};
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
 
   &:hover {
-    background: ${theme.colors.accent};
+    background: rgba(255, 93, 160, 0.5);
     transform: translateY(-2px);
+    box-shadow: 0 0 10px rgba(255, 93, 160, 0.5);
+    color: white;
   }
 
   &:active {
@@ -467,30 +507,36 @@ const ResetButton = styled.button`
   }
 `;
 
-// Navigation buttons styled like in WordScramblerGame
 const NavigationButtons = styled.div`
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
   flex-wrap: wrap;
+  z-index: 10;
+  width: 100%;
+  max-width: 600px;
 `;
 
 const NavigationButton = styled.button`
-  background: linear-gradient(to right, #3498db, #2980b9);
-  color: white;
+  background: linear-gradient(to right, ${spaceTheme.actionButton}, ${spaceTheme.accentGlow});
+  color: ${spaceTheme.deepSpace};
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.2rem;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 249, 255, 0.3);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  flex: 1;
+  max-width: 200px;
 
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 15px rgba(50, 255, 192, 0.5);
   }
 
   &:active {
@@ -498,199 +544,233 @@ const NavigationButton = styled.button`
   }
 `;
 
-// Improved styling for weekly habits with colorful backgrounds and animations
-const HabitOptionsContainer = styled.div`
+const WeeklyProgress = styled.div`
+  width: 100%;
+  max-width: 600px;
+  background: rgba(28, 42, 74, 0.7);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
-  margin-top: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(50, 255, 192, 0.2);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 10;
 `;
 
-const HabitOption = styled.div`
-  background: ${({ status }) =>
-    status === 'checked' ? 'linear-gradient(135deg, #a3e635, #65a30d)' :
-    status === 'crossed' ? 'linear-gradient(135deg, #f87171, #dc2626)' :
-    'linear-gradient(135deg, #f0f9ff, #bfdbfe)'};
-  padding: 1.2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  cursor: pointer;
-  flex: 1 1 calc(33% - 1rem);
-  min-width: 150px;
-  max-width: 180px;
+const ProgressCircle = styled.div`
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: ${({ active }) => active ? spaceTheme.deepSpace : spaceTheme.textPrimary};
+  background: ${({ active }) =>
+    active ? `linear-gradient(135deg, ${spaceTheme.accentGlow}, ${spaceTheme.actionButton})` :
+    'rgba(28, 42, 74, 0.5)'};
+  border: 1px solid ${({ active }) => active ? spaceTheme.accentGlow : 'rgba(208, 231, 255, 0.3)'};
+  box-shadow: ${({ active }) =>
+    active ? `0 0 10px ${spaceTheme.accentGlow}` : 'none'};
   transition: all 0.3s ease;
-  text-align: center;
-  border: 2px solid transparent;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+
+  &:hover {
+    transform: ${({ active }) => active ? 'scale(1.1)' : 'scale(1.05)'};
+    box-shadow: 0 0 8px rgba(50, 255, 192, 0.5);
+  }
+`;
+
+const DayCard = styled.div`
+  background: rgba(14, 26, 64, 0.8);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  max-width: 700px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(50, 255, 192, 0.3);
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  z-index: 10;
+  animation: ${css`${warping} 0.5s ease-out`};
 
   &:before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 5px;
     height: 100%;
-    background: ${({ status }) =>
-      status === 'checked' ? 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h20L0 20z\' fill=\'rgba(255,255,255,0.1)\' /%3E%3C/svg%3E")' : 
-      status === 'crossed' ? 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h20L0 20z\' fill=\'rgba(0,0,0,0.1)\' /%3E%3C/svg%3E")' : 
-      'none'};
-    opacity: 0.2;
+    background: ${({ isComplete }) => isComplete ? spaceTheme.accentGlow : spaceTheme.actionButton};
+    box-shadow: 0 0 15px ${({ isComplete }) => isComplete ? spaceTheme.accentGlow : spaceTheme.actionButton};
   }
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    border-color: ${({ status }) =>
-      status === 'checked' ? '#65a30d' :
-      status === 'crossed' ? '#dc2626' :
-      '#93c5fd'};
-  }
-
-  &:after {
-    content: '${({ status }) => status === 'checked' ? '✓' : status === 'crossed' ? '✕' : ''}';
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    font-size: 1rem;
-    color: white;
-    font-weight: bold;
-  }
-`;
-
-const HabitEmoji = styled.div`
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-`;
-
-const HabitText = styled.div`
-  font-weight: bold;
-  font-size: 0.95rem;
-  color: ${({ status }) =>
-    status === 'checked' || status === 'crossed' ? 'white' : '#374151'};
-`;
-
-const WeeklyProgress = styled.div`
-  width: 100%;
-  max-width: 600px;
-  background: ${theme.colors.glassWhite};
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const ProgressCircle = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: white;
-  background: ${({ active }) =>
-    active ? 'linear-gradient(135deg, #a3e635, #65a30d)' :
-    'linear-gradient(135deg, #d1d5db, #9ca3af)'};
-  box-shadow: ${({ active }) =>
-    active ? '0 4px 6px rgba(101, 163, 13, 0.3)' : 'none'};
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: ${({ active }) => active ? 'scale(1.1)' : 'none'};
-  }
-`;
-
-// Animated XP notification that appears when XP is gained
-const XPNotification = styled.div`
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: linear-gradient(120deg, #4CAF50, #8BC34A);
-  color: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  z-index: 100;
-  animation: slideInRight 0.5s ease forwards, fadeOut 0.5s ease 2.5s forwards;
-
-  @keyframes slideInRight {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes fadeOut {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0;
-    }
-  }
-`;
-
-// Day card with improved styling
-const DayCard = styled.div`
-  background: ${theme.colors.glassWhite};
-  border-radius: 16px;
-  padding: 1.2rem;
-  margin-bottom: 1.5rem;
-  width: 100%;
-  max-width: 700px;
-  box-shadow: ${theme.shadows.card};
-  transition: all 0.3s ease;
-  border-left: 5px solid ${({ isComplete }) => isComplete ? '#10B981' : '#3B82F6'};
-  position: relative;
-  overflow: hidden;
 
   &:after {
     content: '${({ isComplete }) => isComplete ? 'COMPLETED' : ''}';
     position: absolute;
     top: 10px;
     right: 10px;
-    background: #10B981;
-    color: white;
-    font-size: 0.7rem;
+    background: rgba(50, 255, 192, 0.2);
+    color: ${spaceTheme.accentGlow};
+    font-size: 0.6rem;
     font-weight: bold;
-    padding: 0.3rem 0.6rem;
-    border-radius: 12px;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
     opacity: ${({ isComplete }) => isComplete ? '1' : '0'};
+    border: 1px solid ${spaceTheme.accentGlow};
+    font-family: 'Orbitron', sans-serif;
+    text-shadow: 0 0 5px ${spaceTheme.accentGlow};
   }
 
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
   }
 `;
 
 const DayTitle = styled.h3`
-  color: #3B82F6;
+  color: ${spaceTheme.actionButton};
   margin-bottom: 1rem;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   position: relative;
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 5px ${spaceTheme.actionButton};
 
   &:after {
     content: '';
     position: absolute;
-    bottom: -5px;
+    bottom: -6px;
     left: 0;
     width: 40px;
-    height: 3px;
-    background: #3B82F6;
+    height: 2px;
+    background: ${spaceTheme.actionButton};
     border-radius: 2px;
+    box-shadow: 0 0 5px ${spaceTheme.actionButton};
   }
 `;
 
-// All possible weekly habits
+const HabitOptionsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1rem;
+`;
+
+const HabitOption = styled.div`
+  background: ${({ status }) =>
+    status === 'checked'
+      ? 'linear-gradient(135deg, rgba(50, 255, 192, 0.4), rgba(0, 249, 255, 0.4))'
+      : status === 'crossed'
+      ? 'linear-gradient(135deg, rgba(255, 93, 160, 0.4), rgba(236, 72, 153, 0.4))'
+      : 'linear-gradient(135deg, rgba(28, 42, 74, 0.6), rgba(19, 41, 75, 0.6))'};
+  padding: 0.9rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  flex: 1 1 calc(33% - 0.75rem);
+  min-width: 100px;
+  max-width: 160px;
+  transition: all 0.3s ease;
+  text-align: center;
+  border: 1px solid ${({ status }) =>
+    status === 'checked' ? 'rgba(50, 255, 192, 0.5)' :
+    status === 'crossed' ? 'rgba(255, 93, 160, 0.5)' :
+    'rgba(208, 231, 255, 0.2)'};
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    border-color: ${({ status }) =>
+      status === 'checked' ? spaceTheme.accentGlow :
+      status === 'crossed' ? spaceTheme.actionButtonAlt :
+      spaceTheme.actionButton};
+  }
+
+  &:after {
+    content: '${({ status }) => status === 'checked' ? '✓' : status === 'crossed' ? '✕' : ''}';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 0.8rem;
+    color: ${({ status }) =>
+      status === 'checked' ? spaceTheme.accentGlow :
+      status === 'crossed' ? spaceTheme.actionButtonAlt :
+      'transparent'};
+    text-shadow: ${({ status }) =>
+      status === 'checked' ? `0 0 5px ${spaceTheme.accentGlow}` :
+      status === 'crossed' ? `0 0 5px ${spaceTheme.actionButtonAlt}` :
+      'none'};
+    font-weight: bold;
+  }
+`;
+
+const HabitText = styled.div`
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: ${({ status }) =>
+    status === 'checked' ? spaceTheme.accentGlow :
+    status === 'crossed' ? spaceTheme.actionButtonAlt :
+    spaceTheme.textPrimary};
+  text-shadow: ${({ status }) =>
+    status === 'checked' ? `0 0 5px ${spaceTheme.accentGlow}` :
+    status === 'crossed' ? `0 0 5px ${spaceTheme.actionButtonAlt}` :
+    'none'};
+`;
+
+const NextDayButton = styled.button`
+  margin-top: 1.5rem;
+  background: linear-gradient(to right, ${spaceTheme.accentGold}, ${spaceTheme.highlightAlt});
+  color: ${spaceTheme.deepSpace};
+  border: none;
+  padding: 0.85rem 2rem;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(255, 223, 108, 0.4);
+  transition: all 0.3s ease;
+  font-family: 'Orbitron', sans-serif;
+  z-index: 10;
+
+  &:hover {
+    background: linear-gradient(to right, ${spaceTheme.highlightAlt}, ${spaceTheme.accentGold});
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(255, 223, 108, 0.6);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+`;
+
+const XPNotification = styled.div`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(120deg, ${spaceTheme.accentGlow}, ${spaceTheme.actionButton});
+  color: ${spaceTheme.deepSpace};
+  padding: 1.2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(50, 255, 192, 0.6);
+  z-index: 100;
+  animation: ${slideInRight} 0.5s ease forwards, ${fadeOut} 0.5s ease 2.5s forwards;
+  font-weight: bold;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+`;
+
 const allWeeklyHabits = [
   "Drink 8 glasses of water", "Stretch for 5 mins", "Journal for 3 mins", "Meditate 5 mins", "Walk 15 mins",
   "Plan tomorrow's tasks", "No sugar today", "Read 10 mins", "Sleep by 10 PM", "Digital detox 1hr",
@@ -705,7 +785,6 @@ const allWeeklyHabits = [
   "Watch a motivational video", "Fix one small annoyance"
 ];
 
-// All possible hourly habits with emojis
 const allHourlyHabits = [
   {text: "Prepare a mind map summarizing a topic you studied", emoji: "🧠"},
   {text: "Complete one coding problem from a practice platform", emoji: "💻"},
@@ -739,47 +818,43 @@ const allHourlyHabits = [
   {text: "List three ways to improve your productivity tomorrow", emoji: "⚡"}
 ];
 
-// Emojis for weekly habits
 const weeklyEmojis = ["💧", "🧘", "📝", "🧠", "🚶", "📋", "🍎", "📚", "😴", "📵",
-                      "🙏", "🎧", "🍽️", "⏰", "🧹", "💭", "🌳", "📱", "🎯", "🎉",
-                      "💪", "✍️", "📺", "😊", "🍏", "❤️", "📖", "💻", "📊", "🧽",
-                      "🧩", "✨", "💌", "🌬️", "🍔", "🧘", "📔", "🍵", "📨", "🌅",
-                      "🛌", "🌈", "🎨", "🔄", "📑", "📰", "⚡", "🎬", "🔧"];
+                    "🙏", "🎧", "🍽️", "⏰", "🧹", "💭", "🌳", "📱", "🎯", "🎉",
+                    "💪", "✍️", "📺", "😊", "🍏", "❤️", "📖", "💻", "📊", "🧽",
+                    "🧩", "✨", "💌", "🌬️", "🍔", "🧘", "📔", "🍵", "📨", "🌅",
+                    "🛌", "🌈", "🎨", "🔄", "📑", "📰", "⚡", "🎬", "🔧"];
 
-// Generate positive feedback messages for each difficulty level
 const feedbackMessages = {
   easy: [
-    "Great start! Every small step counts.",
-    "Nice job! Progress is progress.",
-    "Well done! Keep building momentum.",
-    "Good choice! Consistency beats intensity.",
-    "That's 5 XP added! Simple habits create big changes."
+    "Great start! Every small step counts in your journey.",
+    "Nice job! Progress sparkles across the constellation of habits.",
+    "Well done! Keep building momentum through the galaxy of consistency.",
+    "Good choice! Steady habits outshine even the brightest stars.",
+    "5 XP added to your stellar collection! Small steps create massive change."
   ],
   moderate: [
-    "Impressive effort! You're really pushing forward.",
-    "Solid work! You're building real discipline.",
-    "Strong choice! Your commitment is showing.",
-    "That's 7 XP earned! You're making significant progress.",
-    "Excellent! You're in the growth zone."
+    "Impressive effort! Your commitment shines like a supernova.",
+    "Solid work! You're navigating the habit universe with real skill.",
+    "Strong choice! Your dedication illuminates the path forward.",
+    "7 XP earned for your collection! You're reaching escape velocity.",
+    "Excellent! You're entering the growth zone where habits become automatic."
   ],
   hard: [
-    "Outstanding work! You've tackled a challenging habit.",
-    "Remarkable discipline! That's the path to mastery.",
-    "Powerful choice! You're building exceptional habits.",
-    "That's 10 XP! Your determination is inspiring.",
-    "Fantastic effort! The difficult path leads to growth."
+    "Outstanding work! You've tackled a challenging habit with power.",
+    "Remarkable discipline! That's the path to becoming a habit master.",
+    "Powerful choice! You're building habits that will transform your universe.",
+    "10 XP added to your galactic score! Your determination creates new stars.",
+    "Fantastic effort! The difficult path leads to the greatest growth and rewards."
   ]
 };
 
-// Completion messages that vary based on XP earned
 const getCompletionMessage = (xp) => {
   if (xp >= 90) return "Legendary Performance!";
-  if (xp >= 70) return "Outstanding Achievement!";
-  if (xp >= 50) return "Excellent Work!";
-  return "Good Job!";
+  if (xp >= 70) return "Stellar Achievement!";
+  if (xp >= 50) return "Interstellar Success!";
+  return "Galactic Progress!";
 };
 
-// Generate a new random weekly habit set with 7 days × 3 habits/day
 const getWeeklyHabits = () => {
   const shuffled = [...allWeeklyHabits].sort(() => 0.5 - Math.random());
   const weeklySet = [];
@@ -798,7 +873,6 @@ const getWeeklyHabits = () => {
   return weeklySet;
 };
 
-// Get random hourly habits
 const getHourlyHabits = () => {
   const shuffled = [...allHourlyHabits].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, 10);
@@ -806,16 +880,16 @@ const getHourlyHabits = () => {
 
 const getBadges = (level) => {
   const badgeMap = {
-    1: { title: "Starter", color: "#3B82F6" },
-    2: { title: "Explorer", color: "#8B5CF6" },
-    3: { title: "Achiever", color: "#EC4899" },
-    4: { title: "Pro", color: "#F59E0B" },
-    5: { title: "Champion", color: "#10B981" },
-    6: { title: "Master", color: "#6366F1" },
-    7: { title: "Legend", color: "#EF4444" },
-    8: { title: "Mythic", color: "#8B5CF6" },
-    9: { title: "Guru", color: "#F59E0B" },
-    10: { title: "Elite", color: "#059669" }
+    1: { title: "Starter", color: spaceTheme.actionButton },
+    2: { title: "Star Explorer", color: "#8B5CF6" },
+    3: { title: "Nebula Achiever", color: spaceTheme.actionButtonAlt },
+    4: { title: "Orbital Pro", color: spaceTheme.accentGold },
+    5: { title: "Galactic Champion", color: spaceTheme.accentGlow },
+    6: { title: "Supernova Master", color: "#6366F1" },
+    7: { title: "Celestial Legend", color: "#EF4444" },
+    8: { title: "Quantum Mythic", color: "#8B5CF6" },
+    9: { title: "Universal Guru", color: spaceTheme.accentGold },
+    10: { title: "Elite", color: spaceTheme.accentGlow }
   };
   return Object.entries(badgeMap)
     .filter(([lvl]) => parseInt(lvl) <= level)
@@ -827,19 +901,7 @@ const getDayName = (index) => {
   return days[index];
 };
 
-const uniformButtonStyle = {
-  padding: '0.85rem 2rem',
-  fontSize: '1rem',
-  background: '#4CAF50',
-  color: 'white',
-  border: 'none',
-  borderRadius: '8px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  minWidth: '140px'
-};
-
-const HabitChallengeDashboard = () => {
+const HabitChallengeCenter = () => {
   const [tab, setTab] = useState('hourly');
   const [hourlyHabits, setHourlyHabits] = useState(getHourlyHabits());
   const [weeklyHabits, setWeeklyHabits] = useState(getWeeklyHabits());
@@ -855,41 +917,38 @@ const HabitChallengeDashboard = () => {
   const [showCompletionMessage, setShowCompletionMessage] = useState(false);
   const [showWeekCompletionMessage, setShowWeekCompletionMessage] = useState(false);
   const [activeDay, setActiveDay] = useState(0);
-  const { addHabit, updateProgress } = useHabit();
+  const { updateProgress } = useHabit();
+  const navigate = useNavigate();
 
   const colors = [
-    theme.colors.primary,
-    theme.colors.secondary,
-    theme.colors.accent,
-    '#2dd4bf',
-    '#f97316',
-    '#8b5cf6',
-    '#ec4899',
+    spaceTheme.accentGlow,
+    spaceTheme.actionButton,
+    spaceTheme.accentGold,
+    spaceTheme.actionButtonAlt,
+    spaceTheme.highlight,
+    '#8B5CF6',
+    '#EC4899',
     '#14b8a6',
     '#f59e0b',
     '#6366f1'
   ];
 
   useEffect(() => {
-    // Check if all hourly habits are completed
     if (Object.keys(completedHourly).length === hourlyHabits.length &&
         Object.keys(completedHourly).length > 0) {
       setShowCompletionMessage(true);
 
-      // Hide completion message after 6 seconds
       setTimeout(() => {
         setShowCompletionMessage(false);
       }, 6000);
     }
-  }, [completedHourly]);
+  }, [completedHourly, hourlyHabits.length]);
 
-  // Update level based on total XP
   useEffect(() => {
     const newLevel = Math.floor(totalXP / 50) + 1;
     setLevel(newLevel);
   }, [totalXP]);
 
-  // Check if weekly challenge is complete
   useEffect(() => {
     const isComplete = completedWeekly.every((day, index) =>
       day.length === weeklyHabits[index].length
@@ -926,17 +985,14 @@ const HabitChallengeDashboard = () => {
         xp = 0;
     }
 
-    // Update completed habits, XP, and show notification
     setCompletedHourly(prev => ({ ...prev, [index]: difficulty }));
 
-// pick and store a random message
-const message = feedbackMessages[difficulty][Math.floor(Math.random() * feedbackMessages[difficulty].length)];
-setHourlyMessages(prev => ({ ...prev, [index]: message }));
-    setHourlyXP(hourlyXP + xp);
-    setTotalXP(totalXP + xp);
+    const message = feedbackMessages[difficulty][Math.floor(Math.random() * feedbackMessages[difficulty].length)];
+    setHourlyMessages(prev => ({ ...prev, [index]: message }));
+    setHourlyXP(prev => prev + xp);
+    setTotalXP(prev => prev + xp);
     updateProgress('games', xp);
 
-    // Show XP notification
     setXpGained(xp);
     setShowXPNotification(true);
     setTimeout(() => setShowXPNotification(false), 3000);
@@ -945,22 +1001,18 @@ setHourlyMessages(prev => ({ ...prev, [index]: message }));
   const handleWeeklyHabitToggle = (dayIndex, habitIndex) => {
     const dayCompleted = [...completedWeekly];
 
-    // Check if this habit is already completed
     const habitPos = dayCompleted[dayIndex].indexOf(habitIndex);
 
     if (habitPos > -1) {
-      // Remove if already completed
       dayCompleted[dayIndex] = dayCompleted[dayIndex].filter(idx => idx !== habitIndex);
-      setWeeklyXP(weeklyXP - 5); // Remove XP
-      setTotalXP(totalXP - 5);
+      setWeeklyXP(prev => prev - 5);
+      setTotalXP(prev => prev - 5);
     } else {
-      // Add to completed list
       dayCompleted[dayIndex] = [...dayCompleted[dayIndex], habitIndex];
-      setWeeklyXP(weeklyXP + 5); // Add XP
-      setTotalXP(totalXP + 5);
-      updateProgress('games', 5); // Each weekly habit gives 5 XP
+      setWeeklyXP(prev => prev + 5);
+      setTotalXP(prev => prev + 5);
+      updateProgress('games', 5);
 
-      // Show XP notification
       setXpGained(5);
       setShowXPNotification(true);
       setTimeout(() => setShowXPNotification(false), 3000);
@@ -987,14 +1039,12 @@ setHourlyMessages(prev => ({ ...prev, [index]: message }));
     setTotalXP(0);
   };
 
-  // Calculate completion percentage for a week
   const getTotalWeekCompletion = () => {
     const totalHabits = weeklyHabits.reduce((acc, day) => acc + day.length, 0);
     const completedHabits = completedWeekly.reduce((acc, day) => acc + day.length, 0);
     return Math.round((completedHabits / totalHabits) * 100);
   };
 
-  // Calculate completion for a specific day
   const getDayCompletion = (dayIndex) => {
     return Math.round((completedWeekly[dayIndex].length / weeklyHabits[dayIndex].length) * 100);
   };
@@ -1004,36 +1054,49 @@ setHourlyMessages(prev => ({ ...prev, [index]: message }));
     if (next <= 6) {
       setActiveDay(next);
 
-      // Optional XP bonus for completing a day
       setXpGained(5);
-      setTotalXP(prev => {
-        const updatedXP = prev + 5;
-        localStorage.setItem('totalXP', updatedXP);
-        return updatedXP;
-      });
+      setTotalXP(prev => prev + 5);
 
-      // Show XP popup
       setShowXPNotification(true);
       setTimeout(() => setShowXPNotification(false), 2500);
 
-      // Update leaderboard progress
       updateProgress('games', 5);
     }
   };
 
+  const navigateHome = () => {
+    navigate('/dashboard');
+  };
+
+  const navigateToBreakthrough = () => {
+    navigate('/breakthrough-game');
+  };
 
   return (
-    <Container>
-      <Title>Habit Challenge Center</Title>
+    <GameContainer>
+      <BackgroundOverlay />
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-    <button style={uniformButtonStyle} onClick={() => window.location.href = '/dashboard'}>
-      Home
-    </button>
-    <button style={uniformButtonStyle} onClick={() => window.location.href = '/breakthrough-game'}>
-  Back to Breakthrough
-</button>
-  </div>
+      {/* Decorative stars */}
+      <Star size="24px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" color="rgba(255, 223, 108, 0.9)" />
+      <Star size="16px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" color="rgba(50, 255, 192, 0.9)" />
+      <Star size="28px" style={{ top: '15%', right: '20%' }} duration="5s" delay="0.2s" color="rgba(0, 249, 255, 0.9)" />
+      <Star size="20px" style={{ bottom: '25%', right: '15%' }} duration="4.5s" delay="0.7s" color="rgba(255, 223, 108, 0.9)" />
+      <Star size="18px" style={{ bottom: '40%', left: '15%' }} duration="3.5s" delay="0.9s" color="rgba(50, 255, 192, 0.9)" />
+      <Star size="22px" style={{ top: '40%', right: '35%' }} duration="4.2s" delay="1.2s" color="rgba(0, 249, 255, 0.9)" />
+
+      <GameHeader>
+        <GameTitle>Habit Challenge Center</GameTitle>
+        <GameSubtitle>Complete challenges to earn XP and level up your habits</GameSubtitle>
+      </GameHeader>
+
+      <NavigationButtons>
+        <NavigationButton onClick={navigateHome}>
+          Home
+        </NavigationButton>
+        <NavigationButton onClick={navigateToBreakthrough}>
+          Breakthrough Game
+        </NavigationButton>
+      </NavigationButtons>
 
       <StatsContainer>
         <StatItem>
@@ -1089,7 +1152,7 @@ setHourlyMessages(prev => ({ ...prev, [index]: message }));
             {hourlyHabits.map((habit, index) => (
               <HabitCard key={index} color={colors[index % colors.length]}>
                 <HabitTitle color={colors[index % colors.length]}>
-                  {habit.emoji} {habit.text}
+                  <HabitEmoji>{habit.emoji}</HabitEmoji> {habit.text}
                 </HabitTitle>
 
                 <div>
@@ -1120,10 +1183,10 @@ setHourlyMessages(prev => ({ ...prev, [index]: message }));
                 </div>
 
                 {completedHourly[index] && hourlyMessages[index] && (
-  <MessageBox type={completedHourly[index]}>
-    {hourlyMessages[index]}
-  </MessageBox>
-)}
+                  <MessageBox type={completedHourly[index]}>
+                    {hourlyMessages[index]}
+                  </MessageBox>
+                )}
               </HabitCard>
             ))}
           </HabitGrid>
@@ -1179,10 +1242,10 @@ setHourlyMessages(prev => ({ ...prev, [index]: message }));
           </DayCard>
 
           {getDayCompletion(activeDay) === 100 && activeDay < 6 && (
-  <NextDayButton onClick={() => handleNextDay()}>
-    ✅ Next Day →
-  </NextDayButton>
-)}
+            <NextDayButton onClick={() => handleNextDay()}>
+              ✅ Next Day →
+            </NextDayButton>
+          )}
 
           {showWeekCompletionMessage && (
             <WeekCompletionMessage>
@@ -1209,8 +1272,8 @@ setHourlyMessages(prev => ({ ...prev, [index]: message }));
           +{xpGained} XP Earned!
         </XPNotification>
       )}
-    </Container>
+    </GameContainer>
   );
 };
 
-export default HabitChallengeDashboard;
+export default HabitChallengeCenter;
