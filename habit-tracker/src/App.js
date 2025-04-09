@@ -19,7 +19,7 @@ import HabitQuizGame from './components/games/HabitQuizGame';
 import WordScramblerGame from './components/games/WordScramblerGame';
 import PacmanGame from './components/games/pacman/PacmanGame';
 import Shop from './components/shop';
-
+import NewHabit from './components/NewHabit';
 function App() {
   return (
     <ThemeProvider theme={theme}>
@@ -34,6 +34,7 @@ function App() {
               <Route path="/track" element={<Track />} />
               <Route path="/review" element={<DashboardReview />} />
               <Route path="/shop" element={<Shop />} />
+              <Route path="/new-habit" element={<NewHabit />} />
               <Route path="/breakthrough-game" element={<BreakthroughGame />} />
               <Route path="/addiction-recovery" element={<AddictionRecoveryGame />} />
               <Route path="/chess" element={<Chess />} />

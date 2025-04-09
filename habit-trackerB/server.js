@@ -51,7 +51,7 @@ async function connectToDatabase() {
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://habit-tracker-8swi.vercel.app/',
+  origin: ["http://localhost:3000",'https://golden-warriors-levelup.netlify.app/'],
   credentials: true
 }));
 app.get('/', (req, res) => {

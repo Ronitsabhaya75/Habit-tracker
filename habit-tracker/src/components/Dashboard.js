@@ -206,7 +206,7 @@ Various context providers (Auth, Habit, Event)
 This comprehensive dashboard brings together all aspects of the HabitQuest application into a cohesive, interactive interface that motivates users through gamification and visual feedback while providing powerful tools for habit formation and task management.
 */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { theme } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { useHabit } from '../context/HabitContext';
@@ -214,257 +214,89 @@ import { useEventContext } from '../context/EventContext';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from '../components/AIChat';
-import shop from '../components/shop';
 
-const HABIT_CATEGORIES = [
-  { id: 'addiction', name: 'Addiction Recovery', icon: '🚭', description: 'Break free from harmful dependencies', stages: [
-    { level: 1, goal: 'First Week Clean', points: 50, reward: 'Self-Care Package' },
-    { level: 2, goal: 'One Month Milestone', points: 200, reward: 'Wellness Session' },
-    { level: 3, goal: 'Quarterly Achievement', points: 500, reward: 'Personal Experience Gift' },
-  ]},
-  { id: 'fitness', name: 'Fitness Transformation', icon: '💪', description: 'Build a healthier, stronger you', stages: [
-    { level: 1, goal: 'Consistent Workouts', points: 75, reward: 'Healthy Meal Coupon' },
-    { level: 2, goal: 'Nutrition Tracking', points: 250, reward: 'Fitness Gear' },
-    { level: 3, goal: 'Body Composition Change', points: 600, reward: 'Personal Training' },
-  ]},
-  {
-    id: 'games',
-    name: 'Game Achievements',
-    icon: '🎮',
-    description: 'Earn XP by playing and winning games',
-    stages: [
-      { level: 1, goal: 'First Game Win', points: 10, reward: 'Gamer Badge' },
-      { level: 2, goal: 'Five Wins', points: 50, reward: 'Pro Gamer Status' },
-      { level: 3, goal: 'Master Player', points: 200, reward: 'Elite Gaming Package' },
-    ]
-  },
-  { 
-    id: 'pacman', 
-    name: 'Pac-Man', 
-    icon: '👻', 
-    description: 'Earn XP by playing Pac-Man',
-    stages: [
-      { level: 1, goal: 'First Level Complete', points: 20, reward: 'Pac-Star' },
-      { level: 2, goal: 'Complete 5 Levels', points: 100, reward: 'Ghost Hunter' },
-      { level: 3, goal: 'Score 5000 Points', points: 500, reward: 'Pac-Master' },
-    ]
-  },
-];
-
-// Animation keyframes
-const floatAnimation = keyframes`
-  0% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(2deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+// Animation keyframes (borrowed from Shop)
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 `;
 
-const starGlow = keyframes`
-  0% { opacity: 0.6; filter: blur(1px); }
-  50% { opacity: 1; filter: blur(0px); }
-  100% { opacity: 0.6; filter: blur(1px); }
+const glow = keyframes`
+  0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)); }
+  50% { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.9)); }
+  100% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)); }
 `;
 
-const slowRotate = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+const float = keyframes`
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
 `;
 
-const trailAnimation = keyframes`
-  0% { opacity: 0; transform: translateX(20px); }
-  20% { opacity: 0.7; }
-  100% { opacity: 0; transform: translateX(-100px); }
+const starFloat = keyframes`
+  0% { opacity: 0; transform: translateY(0px) translateX(0px); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px) translateX(10px); }
 `;
 
-const pulseGlow = keyframes`
-  0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
-  50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px rgba(100, 220, 255, 0.8); }
-  100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px rgba(100, 220, 255, 0.5); }
+const fadeIn = keyframes`
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 `;
 
-// Styled components (keeping all styling as is)
-const Background = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: ${theme.colors.background};
-  overflow: hidden;
-`;
-
-const GradientOverlay = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 30% 50%, rgba(114, 137, 218, 0.15) 0%, transparent 70%),
-              radial-gradient(circle at 70% 70%, rgba(90, 128, 244, 0.1) 0%, transparent 60%);
-  z-index: 1;
-`;
-
-const Scenery = styled.div`
-  position: absolute;
-  bottom: 0;
+// Star background
+const StarBackground = styled.div`
+  position: fixed;
+  top: 0;
   left: 0;
   width: 100%;
-  height: 30%;
-  background: linear-gradient(180deg, transparent 0%, rgba(11, 38, 171, 0.2) 100%);
-  z-index: 1;
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 5%;
-    width: 30%;
-    height: 80%;
-    background: linear-gradient(135deg, #3b4874 20%, #2b3a67 100%);
-    clip-path: polygon(0% 100%, 50% 30%, 100% 100%);
-  }
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 15%;
-    width: 40%;
-    height: 90%;
-    background: linear-gradient(135deg, #2b3a67 20%, #1a2233 100%);
-    clip-path: polygon(0% 100%, 40% 20%, 80% 60%, 100% 100%);
-  }
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #0B1A2C, #152642);
 `;
 
 const Star = styled.div`
   position: absolute;
-  width: ${props => props.size || '30px'};
-  height: ${props => props.size || '30px'};
-  background: radial-gradient(circle, rgba(255, 210, 70, 0.9) 0%, rgba(255, 210, 70, 0) 70%);
+  width: ${props => props.size || 2}px;
+  height: ${props => props.size || 2}px;
+  background-color: #ffffff;
   border-radius: 50%;
-  z-index: 2;
-  animation: ${starGlow} ${props => props.duration || '3s'} infinite ease-in-out;
-  animation-delay: ${props => props.delay || '0s'};
-  opacity: 0.7;
-  &::before {
-    content: '★';
-    position: absolute;
-    font-size: ${props => parseInt(props.size) * 0.8 || '24px'};
-    color: rgba(255, 210, 70, 0.9);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
+  opacity: ${props => props.opacity || 0.7};
+  top: ${props => props.top}%;
+  left: ${props => props.left}%;
+  animation: ${starFloat} ${props => props.duration || 10}s linear infinite;
+  animation-delay: ${props => props.delay || 0}s;
+  box-shadow: 0 0 ${props => props.glow || 1}px ${props => props.glow || 1}px #B8FFF9;
 `;
 
-const AchievementBadge = styled.div`
-  position: absolute;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(114, 137, 218, 0.2) 0%, rgba(114, 137, 218, 0) 70%);
-  border: 2px solid rgba(114, 137, 218, 0.3);
-  box-shadow: 0 0 15px rgba(114, 137, 218, 0.2);
-  top: 15%;
-  right: 15%;
-  z-index: 2;
-  animation: ${pulseGlow} 4s infinite ease-in-out;
-  &::before {
-    content: '🏆';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 24px;
-  }
-`;
-
-const Rocket = styled.div`
-  position: absolute;
-  top: 30%;
-  left: 15%;
-  width: 50px;
-  height: 50px;
-  z-index: 3;
-  animation: ${floatAnimation} 8s infinite ease-in-out;
-  transform-origin: center center;
-  &::before {
-    content: '🚀';
-    position: absolute;
-    font-size: 28px;
-    transform: rotate(45deg);
-  }
-`;
-
-const RocketTrail = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 80px;
-  height: 8px;
-  background: linear-gradient(90deg, rgba(100, 220, 255, 0) 0%, rgba(100, 220, 255, 0.7) 100%);
-  border-radius: 4px;
-  z-index: 2;
-  opacity: 0.5;
-  filter: blur(2px);
-  transform: translateX(-80px);
-  animation: ${trailAnimation} 2s infinite;
-`;
-
-const ProgressCircle = styled.div`
-  position: absolute;
-  bottom: 20%;
-  right: 10%;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 3px solid rgba(100, 220, 255, 0.2);
-  border-top: 3px solid rgba(100, 220, 255, 0.8);
-  animation: ${slowRotate} 8s linear infinite;
-  z-index: 2;
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    border: 2px dashed rgba(100, 220, 255, 0.2);
-  }
-`;
-
-const XPOrb = styled.div`
-  position: absolute;
-  width: 15px;
-  height: 15px;
-  background: radial-gradient(circle, rgba(160, 232, 255, 0.6) 30%, rgba(160, 232, 255, 0) 70%);
-  border-radius: 50%;
-  animation: ${floatAnimation} ${props => props.duration || '4s'} infinite ease-in-out;
-  animation-delay: ${props => props.delay || '0s'};
-  opacity: 0.5;
-  z-index: 2;
-`;
-
+// Styled components
 const DashboardContainer = styled.div`
   display: flex;
   min-height: 100vh;
   position: relative;
-  color: ${theme.colors.text};
+  color: #B8FFF9;
 `;
 
 const Sidebar = styled.div`
   width: 280px;
   padding: 2rem;
-  background: rgba(30, 39, 73, 0.8);
-  border-right: 1px solid ${theme.colors.borderWhite};
+  background: rgba(11, 26, 44, 0.9);
+  border-right: 1px solid rgba(0, 255, 198, 0.3);
   backdrop-filter: blur(10px);
   z-index: 10;
   box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
 
   h2 {
-    color: ${theme.colors.accent};
+    color: #00FFF5;
     font-size: 1.8rem;
     margin-bottom: 2rem;
     font-weight: 700;
     letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(0, 255, 245, 0.5);
   }
 `;
 
@@ -483,19 +315,26 @@ const NavItem = styled.li`
   display: flex;
   align-items: center;
   gap: 1rem;
+  color: #B8FFF9;
+  
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 255, 198, 0.1);
+    transform: translateX(5px);
   }
+  
   &.active {
-    background: ${theme.colors.secondary};
+    background: linear-gradient(90deg, rgba(0, 255, 198, 0.3), rgba(74, 144, 226, 0.3));
+    border-left: 3px solid #00FFC6;
+    color: #00FFF5;
   }
 `;
 
 const MainContent = styled.div`
   flex: 1;
   padding: 3rem;
-  margin-left: 20px;
   z-index: 10;
+  max-width: 1200px;
+  margin: 0 auto;
 `;
 
 const Header = styled.div`
@@ -506,47 +345,60 @@ const Header = styled.div`
 `;
 
 const UserGreeting = styled.div`
-  h1 { font-size: 2.5rem; span { color: ${theme.colors.accent}; } }
+  h1 { 
+    font-size: 2.5rem; 
+    color: #00FFF5;
+    text-shadow: 0 0 10px rgba(0, 255, 245, 0.5);
+    span { color: #00FFC6; }
+  }
 `;
 
 const LevelBadge = styled.div`
-  background: ${theme.colors.secondary};
+  background: linear-gradient(90deg, #00FFC6, #4A90E2);
   padding: 0.8rem 1.5rem;
   border-radius: 25px;
   font-weight: 600;
-  box-shadow: ${theme.shadows.card};
+  box-shadow: 0 0 15px rgba(0, 255, 198, 0.2);
+  color: white;
 `;
 
 const GridContainer = styled.div`
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 1rem;
+  gap: 1.5rem;
   align-items: start;
-  justify-content: start;
 `;
 
 const Card = styled.div`
-  background: ${theme.colors.glassWhite};
+  background: rgba(21, 38, 66, 0.8);
   padding: 2rem;
   border-radius: 16px;
-  border: 1px solid ${theme.colors.borderWhite};
+  border: 1px solid rgba(0, 255, 198, 0.3);
   backdrop-filter: blur(8px);
-  transition: transform 0.2s ease;
-  &:hover { transform: translateY(-2px); }
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 255, 198, 0.2);
+  &:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 255, 198, 0.3);
+  }
+  h2 {
+    color: #00FFF5;
+    text-shadow: 0 0 5px rgba(0, 255, 245, 0.5);
+  }
 `;
 
 const Button = styled.button`
-  background: ${theme.colors.accent};
+  background: linear-gradient(90deg, #00FFC6 0%, #4A90E2 100%);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.3);
   }
 `;
 
@@ -562,23 +414,23 @@ const LeaderboardItem = styled.li`
   align-items: center;
   padding: 1rem;
   margin: 0.5rem 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(11, 26, 44, 0.7);
   border-radius: 8px;
-  &:hover { background: rgba(255, 255, 255, 0.1); }
+  &:hover { background: rgba(0, 255, 198, 0.1); }
 `;
 
 const UserRank = styled.span`
-  color: ${theme.colors.accent};
+  color: #00FFF5;
   font-weight: 600;
 `;
 
 const UserScore = styled.span`
-  color: ${theme.colors.secondary};
+  color: #00FFC6;
 `;
 
 const ProgressBarContainer = styled.div`
   width: 100%;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
   height: 10px;
   border-radius: 5px;
   overflow: hidden;
@@ -586,8 +438,8 @@ const ProgressBarContainer = styled.div`
   & div {
     width: ${props => props.progress || '30%'};
     height: 100%;
-    background: ${theme.colors.accent};
-    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #00FFC6, #4A90E2);
+    transition: width 0.5s ease;
   }
 `;
 
@@ -595,12 +447,14 @@ const AddHabitInput = styled.input`
   width: calc(100% - 20px);
   padding: 8px;
   margin-top: 1rem;
-  border: 1px solid ${theme.colors.borderWhite};
+  border: 1px solid rgba(0, 255, 198, 0.3);
   border-radius: 8px;
+  background: rgba(11, 26, 44, 0.7);
+  color: #B8FFF9;
 `;
 
 const AddHabitButton = styled.button`
-  background: ${theme.colors.accent};
+  background: linear-gradient(90deg, #00FFC6 0%, #4A90E2 100%);
   color: white;
   border: none;
   padding: 10px 15px;
@@ -608,27 +462,30 @@ const AddHabitButton = styled.button`
   cursor: pointer;
   font-size: 1rem;
   margin-top: 0.5rem;
-  &:hover { background: ${theme.colors.secondary}; }
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.3);
+  }
 `;
 
 const EditInput = styled.input`
   padding: 4px;
   margin-right: 8px;
-  border: 1px solid ${theme.colors.borderWhite};
+  border: 1px solid rgba(0, 255, 198, 0.3);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  color: ${theme.colors.text};
+  background: rgba(11, 26, 44, 0.7);
+  color: #B8FFF9;
 `;
 
 const DeleteButton = styled.button`
-  background: rgba(255, 0, 0, 0.3);
+  background: rgba(255, 82, 82, 0.3);
   color: white;
   border: none;
   padding: 4px 8px;
   border-radius: 4px;
   cursor: pointer;
   margin-left: 8px;
-  &:hover { background: rgba(255, 0, 0, 0.5); }
+  &:hover { background: rgba(255, 82, 82, 0.5); }
 `;
 
 const ChartControls = styled.div`
@@ -639,22 +496,25 @@ const ChartControls = styled.div`
 `;
 
 const ChartTypeButton = styled.button`
-  background: ${props => props.active ? theme.colors.accent : 'rgba(114, 137, 218, 0.2)'};
-  color: ${theme.colors.text};
-  border: none;
-  border-radius: 8px;
+  background: ${props => props.active ? 'rgba(0, 255, 198, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+  color: ${props => props.active ? '#00FFF5' : '#B8FFF9'};
+  border: 1px solid ${props => props.active ? 'rgba(0, 255, 198, 0.8)' : 'rgba(255, 255, 255, 0.2)'};
   padding: 0.5rem;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  &:hover { background: ${props => props.active ? theme.colors.accent : 'rgba(114, 137, 218, 0.3)'}; }
+  &:hover {
+    background: rgba(0, 255, 198, 0.2);
+    transform: translateY(-2px);
+  }
 `;
 
 const ChartContainer = styled.div`
   position: relative;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(11, 26, 44, 0.7);
   border-radius: 16px;
   padding: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 198, 0.2);
 `;
 
 const AchievementList = styled.ul`
@@ -665,41 +525,40 @@ const AchievementList = styled.ul`
 
 const AchievementItem = styled.li`
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(11, 26, 44, 0.7);
   border-radius: 8px;
   margin-bottom: 0.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: transform 0.2s ease;
+  transition: all 0.2s ease;
   &:hover {
     transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 255, 198, 0.1);
   }
 `;
 
 const AchievementTitle = styled.span`
-  color: ${theme.colors.accent};
+  color: #00FFF5;
   font-weight: 600;
 `;
 
 const AchievementDetails = styled.span`
-  color: ${theme.colors.secondary};
+  color: #00FFC6;
 `;
 
 const LogoutButton = styled.button`
-  background: ${theme.colors.secondary};
+  background: linear-gradient(90deg, #00FFC6 0%, #4A90E2 100%);
   color: white;
-  border: 1px solid rgba(253, 3, 3, 0.2);
+  border: none;
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   &:hover {
-    background: ${theme.colors.accent};
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.3);
   }
 `;
 
@@ -713,80 +572,36 @@ const Task = styled.li`
   align-items: center;
   gap: 0.8rem;
   padding: 0.7rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
-  &:last-child {
-    border-bottom: none;
-  }
+  border-bottom: 1px solid rgba(0, 255, 198, 0.2);
+  &:last-child { border-bottom: none; }
 `;
 
 const TaskCheckbox = styled.div`
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 2px solid ${props => props.completed ? theme.colors.accent : 'rgba(255, 255, 255, 0.3)'};
-  background: ${props => props.completed ? theme.colors.accent : 'transparent'};
+  border: 2px solid ${props => props.completed ? '#00FFC6' : 'rgba(255, 255, 255, 0.3)'};
+  background: ${props => props.completed ? 'linear-gradient(90deg, #00FFC6, #4A90E2)' : 'transparent'};
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-
   &::after {
     content: ${props => props.completed ? '"✓"' : '""'};
     color: white;
     font-size: 0.8rem;
   }
-
   &:hover {
-    border-color: ${theme.colors.accent};
+    border-color: #00FFC6;
     transform: scale(1.1);
   }
 `;
 
 const TaskText = styled.span`
   flex: 1;
-  color: ${props => props.completed ? 'rgba(255, 255, 255, 0.5)' : '#ffffff'};
+  color: ${props => props.completed ? 'rgba(184, 255, 249, 0.5)' : '#B8FFF9'};
   text-decoration: ${props => props.completed ? 'line-through' : 'none'};
-`;
-
-const CoachCard = styled(Card)`
-  background: rgba(30, 39, 73, 0.9);
-  border: 1px solid ${theme.colors.accent};
-`;
-
-const CoachHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-`;
-
-const CoachIcon = styled.div`
-  font-size: 2rem;
-`;
-
-const SuggestionList = styled.ul`
-  list-style: none;
-  padding: 0;
-`;
-
-const SuggestionItem = styled.li`
-  padding: 0.8rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background 0.2s ease;
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-`;
-
-const SuggestionIcon = styled.span`
-  color: ${theme.colors.accent};
 `;
 
 const NotificationContainer = styled.div`
@@ -797,15 +612,15 @@ const NotificationContainer = styled.div`
 `;
 
 const NotificationCard = styled.div`
-  background: ${theme.colors.glassWhite};
-  border: 1px solid ${theme.colors.accent};
+  background: linear-gradient(90deg, #00FFC6, #4A90E2);
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 15px rgba(0, 255, 198, 0.3);
+  color: white;
 `;
 
 const NotificationMessage = styled.span`
@@ -823,27 +638,30 @@ const TimeAllocationModal = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: ${theme.colors.glassWhite};
-  border: 1px solid ${theme.colors.accent};
+  background: rgba(21, 38, 66, 0.8);
+  border: 1px solid rgba(0, 255, 198, 0.3);
   border-radius: 16px;
   padding: 2rem;
   z-index: 200;
   width: 400px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 20px rgba(0, 255, 198, 0.2);
+  color: #B8FFF9;
 `;
 
 const TimeInput = styled.input`
   width: 100%;
   padding: 0.5rem;
   margin: 0.5rem 0;
-  border: 1px solid ${theme.colors.borderWhite};
+  border: 1px solid rgba(0, 255, 198, 0.3);
   border-radius: 8px;
+  background: rgba(11, 26, 44, 0.7);
+  color: #B8FFF9;
 `;
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { progress, getStreak, getCategoryProgress, setStreak, updateProgress } = useHabit();
+  const { habits, progress, completeHabit, getStreak, getCategoryProgress, setStreak, updateProgress } = useHabit();
   const { events, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
 
   const [chartData, setChartData] = useState([]);
@@ -855,83 +673,69 @@ const Dashboard = () => {
   const [streak, setLocalStreak] = useState(0);
   const inputRef = useRef(null);
   const [showAllAchievements, setShowAllAchievements] = useState(false);
-  const [coachSuggestions, setCoachSuggestions] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [timeAllocation, setTimeAllocation] = useState('');
 
   const addNotification = useCallback((message, actions = []) => {
-    const newNotification = {
-      id: Date.now(),
-      message,
-      actions
-    };
+    const newNotification = { id: Date.now(), message, actions };
     setNotifications(prev => [...prev, newNotification]);
-
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== newNotification.id));
-    }, 5000);
+    setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== newNotification.id)), 5000);
   }, []);
 
-  const handleTaskCompletion = async (taskId, completed) => {
-    const todayKey = new Date().toISOString().split('T')[0];
-
-    await toggleEventCompletion(todayKey, taskId, completed);
-
-    if (completed) {
-      await updateProgress('tasks', 10);
-      addNotification(`Great job! You completed the task "${events[todayKey].find(t => t.id === taskId)?.title}".`, [
-        {
-          label: 'Track Progress',
-          onClick: () => navigate('/review')
-        }
-      ]);
+  const isHabitDueToday = (habit) => {
+    const today = new Date();
+    const daysSinceCreation = Math.floor((today - new Date(habit.createdDate)) / (1000 * 60 * 60 * 24));
+    if (daysSinceCreation < 0) return false;
+    switch (habit.frequency) {
+      case 'daily':
+        return true;
+      case 'weekly':
+        return daysSinceCreation % 7 === 0;
+      case 'biweekly':
+        return daysSinceCreation % 14 === 0;
+      default:
+        return false;
     }
   };
 
-  const openTimeAllocationModal = (task) => {
-    setSelectedTask(task);
+  const handleTaskCompletion = async (taskId, completed, isHabit = false) => {
+    const todayKey = new Date().toISOString().split('T')[0];
+    if (isHabit) {
+      const habit = habits.find(h => h.id === taskId);
+      if (habit && completed && !habit.completedDates.includes(todayKey)) {
+        await completeHabit(taskId); // Awards 30 XP
+        addNotification(`Great job! You completed "${habit.name}" (+30 XP)`, [
+          { label: 'Track Progress', onClick: () => navigate('/track') },
+        ]);
+      }
+    } else {
+      await toggleEventCompletion(todayKey, taskId, completed);
+      if (completed) {
+        await updateProgress('tasks', 10);
+        addNotification(`Task "${events[todayKey].find(t => t.id === taskId)?.title}" completed! (+10 XP)`, [
+          { label: 'Review', onClick: () => navigate('/review') },
+        ]);
+      }
+    }
   };
+
+  const openTimeAllocationModal = (task) => setSelectedTask(task);
 
   const saveTimeAllocation = () => {
     if (!selectedTask || !timeAllocation) return;
-
     const todayKey = new Date().toISOString().split('T')[0];
-    const updatedTask = {
-      ...selectedTask,
-      estimatedTime: parseInt(timeAllocation, 10)
-    };
-
+    const updatedTask = { ...selectedTask, estimatedTime: parseInt(timeAllocation, 10) };
     updateEvent(todayKey, selectedTask.id, updatedTask);
     addNotification(`Time allocated for "${selectedTask.title}": ${timeAllocation} minutes`);
     setSelectedTask(null);
     setTimeAllocation('');
   };
 
-  useEffect(() => {
-    const todayKey = new Date().toISOString().split('T')[0];
-    const todayTasks = events[todayKey] || [];
-    const incompleteTasks = todayTasks.filter(task => !task.completed);
-
-    if (incompleteTasks.length > 0) {
-      addNotification(`You have ${incompleteTasks.length} tasks pending today!`, [
-        {
-          label: 'View Tasks',
-          onClick: () => window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'smooth'
-          })
-        }
-      ]);
-    }
-  }, [events, addNotification]);
-
   const calculateTotalXP = useCallback(() => {
     const progressXP = Object.values(progress).reduce((sum, p) => sum + p, 0);
-    let tasksXP = 0;
     const todayKey = new Date().toISOString().split('T')[0];
-    const todayTasks = events[todayKey] || [];
-    tasksXP = todayTasks.filter(task => task.completed).length * 10;
+    const tasksXP = (events[todayKey] || []).filter(t => t.completed).length * 10;
     return progressXP + tasksXP;
   }, [progress, events]);
 
@@ -952,67 +756,16 @@ const Dashboard = () => {
     { id: 4, title: 'Task Champion', description: 'Completed 5 tasks in a day', earned: false },
   ];
 
-  const generateCoachSuggestions = useCallback(() => {
-    const suggestions = [];
-    const todayKey = new Date().toISOString().split('T')[0];
-    const todayTasks = events[todayKey] || [];
-    const completedTasks = todayTasks.filter(task => task.completed).length;
-    const totalTasks = todayTasks.length;
-
-    if (streak >= 7) {
-      suggestions.push({ text: "Amazing job maintaining a 7+ day streak! Try adding a new challenging habit to level up.", icon: "🌟" });
-    } else if (streak < 3 && streak > 0) {
-      suggestions.push({ text: "You're building a streak! Keep it up for 3 more days to solidify this habit.", icon: "🔥" });
-    } else if (streak === 0) {
-      suggestions.push({ text: "Start small today with one easy task to kick off your streak!", icon: "🚀" });
-    }
-
-    if (totalTasks > 0 && completedTasks / totalTasks < 0.5) {
-      suggestions.push({ text: "Try breaking your tasks into smaller steps to boost completion rates.", icon: "📝" });
-    } else if (completedTasks === totalTasks && totalTasks > 0) {
-      suggestions.push({ text: "Perfect day! Consider adding a bonus task to stretch your potential.", icon: "🏆" });
-    }
-
-    if (totalXP >= 100 && totalXP < 200) {
-      suggestions.push({ text: "You're making great progress! Focus on consistency to hit 200 XP soon.", icon: "📈" });
-    } else if (totalXP < 50) {
-      suggestions.push({ text: "Every step counts! Complete a task now to earn 10 XP and get rolling.", icon: "✨" });
-    }
-
-    suggestions.push({ text: "Review your habits weekly to adjust goals and stay motivated!", icon: "🗓️" });
-    setCoachSuggestions(suggestions);
-  }, [streak, events, totalXP]);
-
-  useEffect(() => {
-    generateCoachSuggestions();
-  }, [generateCoachSuggestions]);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   const fetchUserProgress = useCallback(async () => {
-    try {
-      setLoading(true);
-      const userProgress = await fakeFetchUserData();
-      setChartData(userProgress.map((item, index) => ({
-        progress: getCategoryProgress(item.date) || item.progress,
-      })));
-    } catch (error) {
-      console.error('Error fetching user progress:', error);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    const userProgress = await fakeFetchUserData();
+    setChartData(userProgress.map(item => ({ day: item.date, progress: getCategoryProgress(item.date) || item.progress })));
+    setLoading(false);
   }, [getCategoryProgress]);
 
   const fetchLeaderboard = useCallback(async () => {
-    try {
-      const leaderboardData = await fakeFetchLeaderboardData();
-      setLeaderboard(leaderboardData);
-    } catch (error) {
-      console.error('Error fetching leaderboard data:', error);
-    }
+    const leaderboardData = await fakeFetchLeaderboardData();
+    setLeaderboard(leaderboardData);
   }, []);
 
   useEffect(() => {
@@ -1021,7 +774,20 @@ const Dashboard = () => {
     const streakValue = getStreak();
     setLocalStreak(streakValue);
     setStreak(streakValue);
-  }, [fetchLeaderboard, fetchUserProgress, getStreak, setStreak]);
+
+    // Sync habits with events
+    const todayKey = new Date().toISOString().split('T')[0];
+    habits.forEach(habit => {
+      if (isHabitDueToday(habit) && !events[todayKey]?.some(e => e.id === habit.id)) {
+        addEvent(todayKey, {
+          id: habit.id,
+          title: habit.name,
+          completed: habit.completedDates.includes(todayKey),
+          isHabit: true,
+        });
+      }
+    });
+  }, [fetchLeaderboard, fetchUserProgress, getStreak, setStreak, habits, events, addEvent]);
 
   useEffect(() => {
     if (user && !leaderboard.some(entry => entry.name === user.name)) {
@@ -1031,33 +797,21 @@ const Dashboard = () => {
 
   const sortedLeaderboard = [...leaderboard].sort((a, b) => b.xp - a.xp);
 
-  useEffect(() => {
-    if (showInput && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [showInput]);
-
   const fakeFetchUserData = async () => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 6);
     return new Promise(resolve => {
       setTimeout(() => {
-        resolve(
-          Array.from({ length: 7 }, (_, i) => ({
-            date: new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            progress: Math.floor(Math.random() * 10),
-          }))
-        );
+        resolve(Array.from({ length: 7 }, (_, i) => ({
+          date: new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          progress: Math.floor(Math.random() * 30),
+        })));
       }, 1000);
     });
   };
 
   const fakeFetchLeaderboardData = async () => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve([]);
-      }, 1000);
-    });
+    return new Promise(resolve => setTimeout(() => resolve([]), 1000));
   };
 
   const addHabit = () => setShowInput(true);
@@ -1065,11 +819,7 @@ const Dashboard = () => {
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && newHabit.trim()) {
       const todayKey = new Date().toISOString().split('T')[0];
-      addEvent(todayKey, {
-        id: Date.now(),
-        title: newHabit.trim(),
-        completed: false
-      });
+      addEvent(todayKey, { id: Date.now(), title: newHabit.trim(), completed: false, isHabit: false });
       setNewHabit('');
       setShowInput(false);
     }
@@ -1078,9 +828,7 @@ const Dashboard = () => {
   const toggleEdit = (taskId) => {
     const todayKey = new Date().toISOString().split('T')[0];
     const task = events[todayKey]?.find(t => t.id === taskId);
-    if (task) {
-      updateEvent(todayKey, taskId, { isEditing: !task.isEditing });
-    }
+    if (task) updateEvent(todayKey, taskId, { isEditing: !task.isEditing });
   };
 
   const deleteTask = (taskId) => {
@@ -1091,7 +839,7 @@ const Dashboard = () => {
   const getLineColor = (progress) => {
     if (progress < 40) return '#ff6b6b';
     if (progress < 70) return '#feca57';
-    return '#1dd1a1';
+    return '#00FFC6';
   };
 
   const renderChart = () => {
@@ -1100,10 +848,10 @@ const Dashboard = () => {
         return (
           <ResponsiveContainer width="100%" height={150}>
             <BarChart data={chartData}>
-              <XAxis dataKey="day" stroke={theme.colors.text} />
+              <XAxis dataKey="day" stroke="#B8FFF9" />
               <YAxis hide />
               <Tooltip />
-              <Bar dataKey="progress" fill={theme.colors.accent} />
+              <Bar dataKey="progress" fill="#00FFC6" />
             </BarChart>
           </ResponsiveContainer>
         );
@@ -1111,13 +859,13 @@ const Dashboard = () => {
         return (
           <ResponsiveContainer width="100%" height={150}>
             <LineChart data={chartData}>
-              <XAxis dataKey="day" stroke={theme.colors.text} />
+              <XAxis dataKey="day" stroke="#B8FFF9" />
               <YAxis hide />
               <Tooltip />
               <Line
                 type="monotone"
                 dataKey="progress"
-                stroke={chartData.length ? getLineColor(chartData[chartData.length - 1]?.progress) : theme.colors.accent}
+                stroke={chartData.length ? getLineColor(chartData[chartData.length - 1]?.progress) : '#00FFC6'}
                 strokeWidth={2}
               />
             </LineChart>
@@ -1129,22 +877,41 @@ const Dashboard = () => {
   const todayKey = new Date().toISOString().split('T')[0];
   const todayTasks = events[todayKey] || [];
 
+  const generateStars = (count) => {
+    const stars = [];
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        id: i,
+        size: Math.random() * 3 + 1,
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        opacity: Math.random() * 0.7 + 0.3,
+        duration: Math.random() * 15 + 10,
+        delay: Math.random() * 10,
+        glow: Math.random() > 0.8 ? 3 : 1,
+      });
+    }
+    return stars;
+  };
+
+  const stars = generateStars(100);
+
   return (
     <DashboardContainer>
-      <Background>
-        <GradientOverlay />
-        <Scenery />
-        <Star size="20px" style={{ top: '10%', left: '10%' }} duration="4s" delay="0.5s" />
-        <Star size="15px" style={{ top: '25%', left: '25%' }} duration="3s" delay="1s" />
-        <Star size="25px" style={{ top: '15%', right: '30%' }} duration="5s" delay="0.2s" />
-        <Rocket><RocketTrail /></Rocket>
-        <AchievementBadge />
-        <ProgressCircle />
-        <XPOrb style={{ top: '65%', left: '15%' }} duration="6s" delay="0.2s" />
-        <XPOrb style={{ top: '30%', right: '25%' }} duration="5s" delay="1.2s" />
-        <XPOrb style={{ top: '75%', right: '30%' }} duration="7s" delay="0.5s" />
-        <XPOrb style={{ top: '45%', left: '60%' }} duration="5.5s" delay="1.5s" />
-      </Background>
+      <StarBackground>
+        {stars.map(star => (
+          <Star
+            key={star.id}
+            size={star.size}
+            top={star.top}
+            left={star.left}
+            opacity={star.opacity}
+            duration={star.duration}
+            delay={star.delay}
+            glow={star.glow}
+          />
+        ))}
+      </StarBackground>
 
       <NotificationContainer>
         {notifications.map(notification => (
@@ -1164,13 +931,12 @@ const Dashboard = () => {
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
-          <NavItem className="active">Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/breakthrough-game')}>Mini Games</NavItem>
-          <NavItem onClick={() => navigate('/track')}>Calender tracker</NavItem>
-          <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
-          <NavItem onClick={() => navigate('/shop')}>Shop</NavItem>
-          <NavItem onClick={() => navigate('/review')}>Review</NavItem>
-
+          <NavItem className="active">👾 Dashboard</NavItem>
+          <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Mini Games</NavItem>
+          <NavItem onClick={() => navigate('/track')}>📅 Calendar Tracker</NavItem>
+          <NavItem onClick={() => navigate('/new-habit')}>✨ Habit Creation</NavItem>
+          <NavItem onClick={() => navigate('/shop')}>🛒 Shop</NavItem>
+          <NavItem onClick={() => navigate('/review')}>📊 Review</NavItem>
         </NavList>
       </Sidebar>
 
@@ -1180,7 +946,7 @@ const Dashboard = () => {
             <h1>Welcome{user?.name ? `, ${user.name}` : ''}! 👋</h1>
             <LevelBadge>Level {currentLevel} - {totalXP} XP</LevelBadge>
           </UserGreeting>
-          <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+          <LogoutButton onClick={() => { logout(); navigate('/login'); }}>Logout</LogoutButton>
         </Header>
 
         <GridContainer>
@@ -1235,20 +1001,20 @@ const Dashboard = () => {
                 onChange={(e) => setTimeAllocation(e.target.value)}
               />
               <Button onClick={saveTimeAllocation}>Save Time</Button>
-              <Button onClick={() => setSelectedTask(null)} style={{ marginLeft: '0.5rem', background: theme.colors.secondary }}>
+              <Button onClick={() => setSelectedTask(null)} style={{ marginLeft: '0.5rem', background: 'linear-gradient(90deg, #00FFC6, #4A90E2)' }}>
                 Cancel
               </Button>
             </TimeAllocationModal>
           )}
 
-<Card>
+          <Card>
             <h2>Today's Tasks</h2>
             <TaskList>
               {todayTasks.map((task) => (
                 <Task key={task.id}>
                   <TaskCheckbox
                     completed={task.completed}
-                    onClick={() => handleTaskCompletion(task.id, !task.completed)}
+                    onClick={() => handleTaskCompletion(task.id, !task.completed, task.isHabit)}
                   />
                   {task.isEditing ? (
                     <EditInput
@@ -1256,16 +1022,11 @@ const Dashboard = () => {
                       value={task.title}
                       onChange={(e) => updateEvent(todayKey, task.id, { title: e.target.value })}
                       onBlur={() => toggleEdit(task.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") toggleEdit(task.id);
-                      }}
+                      onKeyDown={(e) => { if (e.key === "Enter") toggleEdit(task.id); }}
                     />
                   ) : (
-                    <TaskText
-                      completed={task.completed}
-                      onDoubleClick={() => toggleEdit(task.id)}
-                    >
-                      {task.title}
+                    <TaskText completed={task.completed} onDoubleClick={() => toggleEdit(task.id)}>
+                      {task.title} {task.isHabit ? `(${habits.find(h => h.id === task.id)?.frequency})` : ''}
                     </TaskText>
                   )}
                   <DeleteButton onClick={() => deleteTask(task.id)}>Delete</DeleteButton>
@@ -1288,16 +1049,17 @@ const Dashboard = () => {
           </Card>
         </GridContainer>
       </MainContent>
-      <AIChat 
-  user={user} 
-  tasks={todayTasks} 
-  onTaskUpdate={handleTaskCompletion}
-  onAddTaskWithDate={(date, task) => {
-    const dateKey = date.toISOString().split('T')[0];
-    addEvent(dateKey, task);
-  }}
-/>
+      <AIChat
+        user={user}
+        tasks={todayTasks}
+        onTaskUpdate={handleTaskCompletion}
+        onAddTaskWithDate={(date, task) => {
+          const dateKey = date.toISOString().split('T')[0];
+          addEvent(dateKey, task);
+        }}
+      />
     </DashboardContainer>
   );
 };
+
 export default Dashboard;

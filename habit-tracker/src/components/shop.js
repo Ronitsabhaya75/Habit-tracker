@@ -980,14 +980,14 @@ const Shop = () => {
       <SidebarContainer>
         <SidebarTitle>HabitQuest</SidebarTitle>
         <NavList>
-          <NavItem onClick={() => navigate('/dashboard')}>Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/breakthrough-game')}>Mini Games</NavItem>
-          <NavItem onClick={() => navigate('/track')}>Calendar tracker</NavItem>
-          <NavItem onClick={() => navigate('/NewHabit')}>Habit Creation</NavItem>
-          <NavItem className="active">Shop</NavItem>
-          <NavItem onClick={() => navigate('/review')}>Review</NavItem>
+          <NavItem onClick={() => navigate('/dashboard')}>👾 Dashboard</NavItem>
+          <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Mini Games</NavItem>
+          <NavItem onClick={() => navigate('/track')}>📅 Calendar tracker</NavItem>
+          <NavItem onClick={() => navigate('/new-habit')}>✨ Habit Creation</NavItem>
+          <NavItem className="active">🛒 Shop</NavItem>
+          <NavItem onClick={() => navigate('/review')}>📊 Review</NavItem>
         </NavList>
-      </SidebarContainer>
+        </SidebarContainer>
 
       <ShopContent>
         <Header>
