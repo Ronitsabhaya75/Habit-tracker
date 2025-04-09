@@ -1,9 +1,38 @@
+/*
+  HabitQuizGame Component
+
+  This interactive game tests the user’s knowledge about habit-building
+  through a multi-round quiz format with XP rewards and cosmic-themed visuals.
+
+  Key Features
+  - 3 quiz rounds, each with randomized habit-based questions
+  - XP system that tracks performance across rounds
+  - SpinWheel bonus XP popup before each round
+  - Summary screen after each round and final results
+
+  Gameplay
+  - Multiple choice questions with visual feedback
+  - XP earned for each correct answer (stored in localStorage)
+  - Incorrect answers do not penalize XP but show feedback
+  - Progress bar shows current question and XP earned
+
+  UI/UX
+  - Styled with glowing space-themed animations and gradients
+  - Responsive layout using styled-components
+  - Modal-based transitions and confirmation prompts
+
+  Context
+  - Integrates with useHabit context to update overall XP
+  - Navigation support to return to dashboard after gameplay
+*/
+
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import SpinWheelPopup from './SpinWheelPopup';
 import { useHabit } from '../../context/HabitContext';
 import { useNavigate } from 'react-router-dom';
 
+// Space-themed color palette used throughout the component for consistent styling
 const spaceTheme = {
   deepSpace: '#0E1A40',
   deepSpaceGradient: 'linear-gradient(135deg, #0E1A40 0%, #13294B 100%)',
@@ -18,36 +47,42 @@ const spaceTheme = {
   glassOverlay: 'rgba(30, 39, 73, 0.8)'
 };
 
+//Creates a gentle floating effect with slight rotation
 const floatAnimation = keyframes`
   0% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-15px) rotate(2deg); }
   100% { transform: translateY(0) rotate(0deg); }
 `;
 
+//Simulates a glowing star pulsing in and out
 const starGlow = keyframes`
   0% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
   50% { opacity: 1; filter: blur(0px); transform: scale(1.1); }
   100% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
 `;
 
+//Pulses an element with glowing effect and scaling
 const pulseGlow = keyframes`
   0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
   50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
   100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
 `;
 
+//Applies a glowing pulse to text via text-shadow
 const glowPulse = keyframes`
   0% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
   50% { text-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
   100% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
 `;
 
+//Smooth pop-in effect with scaling and fade-in const warping keyframes
 const warping = keyframes`
   0% { transform: scale(0.8); opacity: 0; }
   50% { transform: scale(1.05); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 `;
 
+// Main game container with cosmic background and vertical layout
 const GameContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -61,6 +96,7 @@ const GameContainer = styled.div`
   overflow: hidden;
 `;
 
+// Decorative radial gradient overlay to enhance space ambiance
 const BackgroundOverlay = styled.div`
   position: absolute;
   width: 100%;
@@ -70,6 +106,7 @@ const BackgroundOverlay = styled.div`
   z-index: 1;
 `;
 
+// Animated star element with glow, size, color, and movement props
 const Star = styled.div`
   position: absolute;
   width: ${props => props.size || '15px'};
@@ -92,12 +129,14 @@ const Star = styled.div`
   }
 `;
 
+// Header wrapper containing game title and subtitle
 const GameHeader = styled.div`
   margin-bottom: 1rem;
   text-align: center;
   z-index: 10;
 `;
 
+// Main glowing animated title for the quiz
 const GameTitle = styled.h1`
   font-size: 1.8rem;
   color: ${spaceTheme.accentGlow};
@@ -108,6 +147,7 @@ const GameTitle = styled.h1`
   margin-bottom: 0.25rem;
 `;
 
+// Subtitle with descriptive guidance for the user
 const GameSubtitle = styled.p`
   font-size: 0.9rem;
   max-width: 600px;
@@ -116,6 +156,7 @@ const GameSubtitle = styled.p`
   opacity: 0.9;
 `;
 
+// Card container for displaying each quiz question
 const QuestionCard = styled.div`
   background: rgba(14, 26, 64, 0.8);
   backdrop-filter: blur(8px);
@@ -130,6 +171,7 @@ const QuestionCard = styled.div`
   animation: ${css`${warping} 0.5s ease-out`};
 `;
 
+// Title for each question, styled with glow effect
 const QuestionHeader = styled.h2`
   font-size: 1.3rem;
   color: ${spaceTheme.accentGlow};
@@ -138,6 +180,7 @@ const QuestionHeader = styled.h2`
   text-shadow: 0 0 5px ${spaceTheme.accentGlow};
 `;
 
+// Actual question text shown above the answer options
 const QuestionText = styled.p`
   font-size: 1.1rem;
   font-weight: 500;
@@ -145,6 +188,7 @@ const QuestionText = styled.p`
   color: ${spaceTheme.textPrimary};
 `;
 
+// Answer button with dynamic styling for correct incorrect and default states
 const OptionButton = styled.button`
   display: block;
   width: 100%;
@@ -185,6 +229,7 @@ const OptionButton = styled.button`
   }
 `;
 
+// Container showing XP and current question number
 const ProgressInfo = styled.div`
   display: flex;
   justify-content: space-between;
@@ -194,6 +239,7 @@ const ProgressInfo = styled.div`
   padding: 0.3rem 0;
 `;
 
+// XP display with star icon and styled highlight
 const XPCounter = styled.div`
   font-size: 0.95rem;
   font-weight: 600;
@@ -207,11 +253,13 @@ const XPCounter = styled.div`
   }
 `;
 
+// Displays current question number with subtle styling
 const QuestionCounter = styled.div`
   font-size: 0.85rem;
   opacity: 0.8;
 `;
 
+// Card container for round summary and feedback
 const SummaryCard = styled.div`
   background: rgba(14, 26, 64, 0.8);
   backdrop-filter: blur(8px);
@@ -226,6 +274,7 @@ const SummaryCard = styled.div`
   animation: ${css`${warping} 0.5s ease-out`};
 `;
 
+// Title showing round completion with glowing effect
 const SummaryTitle = styled.h2`
   font-size: 1.5rem;
   color: ${spaceTheme.accentGlow};
@@ -234,12 +283,14 @@ const SummaryTitle = styled.h2`
   text-shadow: 0 0 10px ${spaceTheme.accentGlow};
 `;
 
+// Text lines showing performance and XP earned
 const SummaryText = styled.p`
   font-size: 1rem;
   margin: 0.5rem 0;
   color: ${spaceTheme.textPrimary};
 `;
 
+// Emoji-based feedback for performance level
 const ResultEmoji = styled.h3`
   font-size: 1.4rem;
   margin: 1rem 0;
@@ -255,6 +306,7 @@ const ButtonsContainer = styled.div`
   margin-top: 1.25rem;
 `;
 
+// Reusable button styled for primary and secondary actions
 const Button = styled.button`
   background: ${props => props.primary ? spaceTheme.actionButton : spaceTheme.actionButtonAlt};
   color: ${spaceTheme.deepSpace};
@@ -280,6 +332,7 @@ const Button = styled.button`
   }
 `;
 
+// Container for welcome message and start button layout
 const WelcomeContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -291,6 +344,7 @@ const WelcomeContainer = styled.div`
   margin-top: 1rem;
 `;
 
+// Main animated title in the welcome screen
 const WelcomeTitle = styled.h1`
   font-size: 2rem;
   color: ${spaceTheme.accentGlow};
@@ -301,6 +355,7 @@ const WelcomeTitle = styled.h1`
   margin-bottom: 1rem;
 `;
 
+// Description paragraph under welcome title
 const WelcomeDescription = styled.p`
   font-size: 1rem;
   max-width: 600px;
@@ -309,6 +364,7 @@ const WelcomeDescription = styled.p`
   line-height: 1.5;
 `;
 
+// Full-screen overlay for modals like confirmation and spin wheel
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -323,6 +379,7 @@ const ModalOverlay = styled.div`
   z-index: 1000;
 `;
 
+// Modal content box with padding and glowing border
 const ModalContent = styled.div`
   background: ${spaceTheme.deepSpaceGradient};
   border-radius: 12px;
@@ -356,6 +413,7 @@ const NavButtons = styled.div`
   max-width: 600px;
 `;
 
+// Navigation button with gradient glow and responsive hover animation
 const NavButton = styled.button`
   background: linear-gradient(to right, ${spaceTheme.actionButton}, ${spaceTheme.accentGlow});
   color: ${spaceTheme.deepSpace};
@@ -483,6 +541,7 @@ const HabitQuizGame = () => {
     }
   }, [started, showSpinWheel, initialSpinDone]);
 
+  // Loads a randomized set of questions for the current round and resets game state
   const loadQuestions = () => {
     const questionCount = Math.floor(Math.random() * 3) + 6;
     const shuffled = [...fullQuestionSet].sort(() => 0.5 - Math.random());
@@ -532,6 +591,7 @@ const HabitQuizGame = () => {
     return "💡 Keep practicing!";
   };
 
+  // Moves to the next round or shows final summary after round 3
   const handleNextRound = () => {
     setTotalCorrect(prev => prev + correctCount);
     if (roundNumber < 3) {
@@ -542,6 +602,7 @@ const HabitQuizGame = () => {
     }
   };
 
+  // Resets all game state to restart the quiz from round 1
   const handleReplay = () => {
     setRoundNumber(1);
     setXP(0);
@@ -552,6 +613,7 @@ const HabitQuizGame = () => {
     setShowSpinWheel(true);
   };
 
+  // Adds bonus XP from SpinWheel and updates storage and progress
   const handleXPReward = (reward) => {
     const newXP = xp + reward;
     setXP(newXP);

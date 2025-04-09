@@ -1,8 +1,44 @@
+/*
+  WordScramblerGame Component
+
+  This interactive game challenges users to guess words in two formats:
+  scrambled letters and missing letters.
+
+  Features:
+  - Two game modes: Scrambled and Missing Letters
+  - XP tracking for each mode and combined total
+  - Dynamic animations and styled-components with cosmic theme
+  - 3 rounds per game with 5 questions each
+
+  Scrambled Mode:
+  - Words are randomly scrambled letter-by-letter
+  - User must type the original word correctly
+
+  Missing Letters Mode:
+  - Every second letter is hidden with an underscore
+  - User must fill in the missing characters
+
+  Functionality:
+  - XP is awarded for correct answers and saved in localStorage
+  - Incorrect guesses allow up to 3 attempts
+  - Each round ends with animated round message
+  - Definition of the word is shown after correct or failed attempt
+
+  Styling:
+  - Cosmic space-theme with animated stars and glowing UI
+  - Responsive layout using styled-components
+
+  Context:
+  - Uses useHabit to sync XP with global progress system
+  - Navigation back to dashboard and Breakthrough Game included
+*/
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes, css } from 'styled-components';
 import { useHabit } from '../../context/HabitContext';
 
+// Space-themed color palette used throughout the component for consistent styling
 const spaceTheme = {
   deepSpace: '#0E1A40',
   deepSpaceGradient: 'linear-gradient(135deg, #0E1A40 0%, #13294B 100%)',
@@ -17,43 +53,49 @@ const spaceTheme = {
   glassOverlay: 'rgba(30, 39, 73, 0.8)'
 };
 
+//Creates a gentle floating effect with slight rotation
 const floatAnimation = keyframes`
   0% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-15px) rotate(2deg); }
   100% { transform: translateY(0) rotate(0deg); }
 `;
 
+//Simulates a glowing star pulsing in and out
 const starGlow = keyframes`
   0% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
   50% { opacity: 1; filter: blur(0px); transform: scale(1.1); }
   100% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
 `;
 
+//Pulses an element with glowing effect and scaling
 const pulseGlow = keyframes`
   0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
   50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
   100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
 `;
 
+//Applies a glowing pulse to text via text-shadow
 const glowPulse = keyframes`
   0% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
   50% { text-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
   100% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
 `;
 
+//Smooth pop-in effect with scaling and fade-in const warping keyframes
 const warping = keyframes`
   0% { transform: scale(0.8); opacity: 0; }
   50% { transform: scale(1.05); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 `;
 
+// Animation for glowing text using accent gold theme
 const textGlow = keyframes`
   0% { text-shadow: 0 0 5px ${spaceTheme.accentGold}, 0 0 10px ${spaceTheme.accentGold}; }
   50% { text-shadow: 0 0 15px ${spaceTheme.accentGold}, 0 0 25px ${spaceTheme.accentGold}; }
   100% { text-shadow: 0 0 5px ${spaceTheme.accentGold}, 0 0 10px ${spaceTheme.accentGold}; }
 `;
 
-
+// Main container for the game layout with space background and centered content
 const GameContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -67,6 +109,7 @@ const GameContainer = styled.div`
   font-family: 'Montserrat', sans-serif;
 `;
 
+// Background overlay with radial gradients for subtle glowing effect
 const BackgroundOverlay = styled.div`
   position: absolute;
   width: 100%;
@@ -76,6 +119,7 @@ const BackgroundOverlay = styled.div`
   z-index: 1;
 `;
 
+// Glowing animated star element with optional size color and timing
 const Star = styled.div`
   position: absolute;
   width: ${props => props.size || '15px'};
@@ -98,6 +142,7 @@ const Star = styled.div`
   }
 `;
 
+// Header section that contains the game title and XP display
 const GameHeader = styled.div`
   text-align: center;
   margin-bottom: 1rem;
@@ -105,6 +150,7 @@ const GameHeader = styled.div`
   z-index: 10;
 `;
 
+// Main game title with glowing text and neon animation
 const GameTitle = styled.h1`
   font-size: 1.8rem;
   color: ${spaceTheme.accentGlow};
@@ -115,6 +161,7 @@ const GameTitle = styled.h1`
   margin-bottom: 0.25rem;
 `;
 
+// XP tracker display showing current mode XP and styled with glowing border
 const XPDisplay = styled.div`
   font-size: 0.9rem;
   margin: 0.5rem 0;
@@ -127,6 +174,7 @@ const XPDisplay = styled.div`
   border: 1px solid rgba(50, 255, 192, 0.3);
 `;
 
+// Container for mode switch buttons Scrambled and Missing Letters
 const TabContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -134,6 +182,7 @@ const TabContainer = styled.div`
   margin: 0.75rem 0;
 `;
 
+// Tab button with active glow and hover animation
 const TabButton = styled.button`
   background: ${props => props.active ? 'rgba(50, 255, 192, 0.3)' : 'rgba(28, 42, 74, 0.6)'};
   color: ${spaceTheme.textPrimary};
@@ -154,6 +203,7 @@ const TabButton = styled.button`
   }
 `;
 
+// Main game content card with blur background and animated entry
 const GameCard = styled.div`
   background: rgba(14, 26, 64, 0.8);
   backdrop-filter: blur(8px);
@@ -168,6 +218,7 @@ const GameCard = styled.div`
   animation: ${css`${warping} 0.5s ease-out`};
 `;
 
+// Displays current round question and attempt info with styled border
 const ProgressBar = styled.div`
   background: rgba(28, 42, 74, 0.6);
   color: ${spaceTheme.textPrimary};
@@ -195,6 +246,7 @@ const WordDisplay = styled.div`
   letter-spacing: 3px;
 `;
 
+// Input field for user guesses with center alignment and glowing focus effect
 const InputField = styled.input`
   padding: 0.7rem 1rem;
   font-size: 1rem;
@@ -220,6 +272,7 @@ const InputField = styled.input`
   }
 `;
 
+// Reusable button with styles for primary warning and danger states
 const Button = styled.button`
   background: ${props => props.primary ? spaceTheme.actionButton :
               props.danger ? spaceTheme.actionButtonAlt :
@@ -249,6 +302,7 @@ const Button = styled.button`
   }
 `;
 
+// Group container for aligning multiple buttons in a row or wrapped layout
 const ButtonGroup = styled.div`
   display: flex;
   justify-content: center;
@@ -293,6 +347,7 @@ const RoundMessage = styled.div`
   padding: 1.5rem 0;
 `;
 
+// Container for navigation buttons with centered layout and spacing
 const NavButtons = styled.div`
   display: flex;
   justify-content: center;
@@ -304,6 +359,7 @@ const NavButtons = styled.div`
   max-width: 600px;
 `;
 
+// Navigation button with gradient background and glow hover effects
 const NavButton = styled.button`
   background: linear-gradient(to right, ${spaceTheme.actionButton}, ${spaceTheme.accentGlow});
   color: ${spaceTheme.deepSpace};
@@ -469,6 +525,7 @@ const WordScramblerGame = () => {
     navigate('/breakthrough-game');
   };
 
+  // Handles answer checking updates XP and limits attempts
   const handleCheck = () => {
     if (maxAttemptsReached) return;
 
@@ -497,6 +554,7 @@ const WordScramblerGame = () => {
     }
   };
 
+  // Advances to the next question or shows round completion
   const handleNext = () => {
     const nextIndex = index + 1;
     if (nextIndex % questionsPerRound === 0 && nextIndex < totalQuestions) {
@@ -512,6 +570,7 @@ const WordScramblerGame = () => {
     }
   };
 
+  // Moves game state to the next question and resets round data
   const moveToNextQuestion = (nextIndex) => {
     if (nextIndex < totalQuestions) {
       setIndex(nextIndex);
