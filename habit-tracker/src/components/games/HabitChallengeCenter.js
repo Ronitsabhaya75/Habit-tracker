@@ -1,8 +1,38 @@
+/**
+ * HabitChallengeCenter Component
+ *
+ * This component serves as the central hub for the habit-building game experience.
+ * It allows users to complete hourly and weekly habit challenges to gain XP and level up.
+ *
+ * Key Features:
+ * - Two interactive modes: Hourly Habits and Weekly Challenges.
+ * - XP tracking across both modes with total accumulation.
+ * - Visual level system with animated XP progress bar.
+ * - Dynamic habit generation using curated lists.
+ * - Styled-components for consistent cosmic theme styling.
+ *
+ * UI Highlights:
+ * - Custom animations for XP, stars, and habit completion.
+ * - Motivational messages based on difficulty level.
+ * - Badges earned based on current user level.
+ *
+ * Logic Highlights:
+ * - XP gain logic based on difficulty selection.
+ * - Habit completion tracking stored in component state.
+ * - Randomized habit generation with thematic emojis.
+ * - Completion feedback with animated notifications.
+ *
+ * Integration:
+ * - Uses HabitContext to sync XP with global app state.
+ * - Navigates to other games or dashboard via React Router.
+ */
+
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { useHabit } from '../../context/HabitContext';
 import { useNavigate } from 'react-router-dom';
 
+// Space-themed color palette used throughout the component for consistent styling
 const spaceTheme = {
   deepSpace: '#0E1A40',
   deepSpaceGradient: 'linear-gradient(135deg, #0E1A40 0%, #13294B 100%)',
@@ -17,30 +47,35 @@ const spaceTheme = {
   glassOverlay: 'rgba(30, 39, 73, 0.8)'
 };
 
+//Creates a gentle floating effect with slight rotation
 const floatAnimation = keyframes`
   0% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-15px) rotate(2deg); }
   100% { transform: translateY(0) rotate(0deg); }
 `;
 
+//Simulates a glowing star pulsing in and out
 const starGlow = keyframes`
   0% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
   50% { opacity: 1; filter: blur(0px); transform: scale(1.1); }
   100% { opacity: 0.6; filter: blur(1px); transform: scale(0.9); }
 `;
 
+//Pulses an element with glowing effect and scaling
 const pulseGlow = keyframes`
   0% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
   50% { transform: scale(1.05); opacity: 0.8; box-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
   100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 10px ${spaceTheme.accentGlow}; }
 `;
 
+//Applies a glowing pulse to text via text-shadow
 const glowPulse = keyframes`
   0% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
   50% { text-shadow: 0 0 20px ${spaceTheme.accentGlow}, 0 0 30px ${spaceTheme.accentGlow}; }
   100% { text-shadow: 0 0 5px ${spaceTheme.accentGlow}, 0 0 10px ${spaceTheme.accentGlow}; }
 `;
 
+//Smooth pop-in effect with scaling and fade-in const warping keyframes
 const warping = keyframes`
   0% { transform: scale(0.8); opacity: 0; }
   50% { transform: scale(1.05); opacity: 1; }
@@ -67,6 +102,7 @@ const fadeOut = keyframes`
   }
 `;
 
+//Main wrapper for the habit challenge with cosmic background and layout styling
 const GameContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -90,6 +126,7 @@ const BackgroundOverlay = styled.div`
   z-index: 1;
 `;
 
+// Styled star element with glow animation and customizable size, color, and delay
 const Star = styled.div`
   position: absolute;
   width: ${props => props.size || '20px'};
@@ -119,6 +156,7 @@ const GameHeader = styled.div`
   width: 100%;
 `;
 
+// Title with glowing animation to emphasize the game’s name
 const GameTitle = styled.h1`
   font-size: 1.8rem;
   color: ${spaceTheme.accentGlow};
@@ -129,6 +167,7 @@ const GameTitle = styled.h1`
   margin-bottom: 0.25rem;
 `;
 
+// Subtitle for brief game instructions or motivational message
 const GameSubtitle = styled.p`
   font-size: 0.9rem;
   max-width: 600px;
@@ -152,6 +191,7 @@ const StatsContainer = styled.div`
   max-width: 700px;
 `;
 
+// Individual stat block inside the stats container
 const StatItem = styled.div`
   display: flex;
   flex-direction: column;
@@ -175,6 +215,7 @@ const StatLabel = styled.div`
   margin-top: 0.15rem;
 `;
 
+// Tab switcher container for toggling between hourly and weekly views
 const Tabs = styled.div`
   display: flex;
   gap: 0.5rem;
@@ -218,6 +259,7 @@ const HabitGrid = styled.div`
   z-index: 10;
 `;
 
+// Styled habit card with animated entry and colored accent bar
 const HabitCard = styled.div`
   background: rgba(14, 26, 64, 0.8);
   backdrop-filter: blur(8px);
@@ -237,7 +279,7 @@ const HabitCard = styled.div`
     left: 0;
     width: 4px;
     height: 100%;
-    background: ${({ color }) => color || spaceTheme.accentGlow}; /* Restored colorful sidebar */
+    background: ${({ color }) => color || spaceTheme.accentGlow};
     box-shadow: 0 0 10px ${({ color }) => color || spaceTheme.accentGlow};
   }
 
@@ -247,22 +289,25 @@ const HabitCard = styled.div`
   }
 `;
 
+// Title inside habit card with optional color and emoji
 const HabitTitle = styled.h3`
   display: flex;
   align-items: center;
   margin-bottom: 0.75rem;
-  color: ${({ color }) => color || spaceTheme.accentGlow}; /* Colorful text but no animation */
+  color: ${({ color }) => color || spaceTheme.accentGlow};
   font-size: 0.9rem;
-  font-family: 'Montserrat', sans-serif; /* Normal font, not heading font */
+  font-family: 'Montserrat', sans-serif;
   font-weight: normal;
-  text-shadow: none; /* Removed text shadow animation */
+  text-shadow: none;
 `;
 
+// Emoji displayed next to habit title for visual appeal
 const HabitEmoji = styled.span`
   font-size: 1.1rem;
   margin-right: 0.5rem;
 `;
 
+// Difficulty button with dynamic styling based on selection and level
 const Button = styled.button`
   margin: 0.25rem 0.15rem;
   background: ${({ selected, difficulty }) =>
@@ -307,6 +352,7 @@ const Button = styled.button`
   }
 `;
 
+// Message box that shows feedback based on habit difficulty
 const MessageBox = styled.div`
   margin-top: 0.75rem;
   padding: 0.6rem;
@@ -325,6 +371,7 @@ const MessageBox = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.2);
 `;
 
+// Call-to-action button to generate a new set of habits
 const CompleteSetButton = styled.button`
   margin-top: 1.25rem;
   background: linear-gradient(to right, ${spaceTheme.accentGlow}, ${spaceTheme.actionButton});
@@ -412,6 +459,7 @@ const LevelInfo = styled.div`
   }
 `;
 
+// XP bar container with dark background and rounded corners
 const XPBar = styled.div`
   background: rgba(28, 42, 74, 0.6);
   border-radius: 20px;
@@ -425,6 +473,7 @@ const XPBar = styled.div`
   z-index: 10;
 `;
 
+// XP progress fill with gradient and animated width based on earned XP
 const XPProgress = styled.div`
   background: linear-gradient(90deg, ${spaceTheme.accentGlow}, ${spaceTheme.actionButton});
   height: 100%;
@@ -446,6 +495,7 @@ const XPProgress = styled.div`
   }
 `;
 
+// Container for displaying unlocked badges in a flexible grid
 const BadgeList = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -455,6 +505,7 @@ const BadgeList = styled.div`
   justify-content: center;
 `;
 
+// Individual badge styled with glow, emoji, and color based on level
 const Badge = styled.span`
   background: ${props => props.color || spaceTheme.accentGlow};
   color: ${spaceTheme.deepSpace};
@@ -483,6 +534,7 @@ const ResetXPButtons = styled.div`
   z-index: 10;
 `;
 
+// Button to reset all XP values with pink accent styling
 const ResetButton = styled.button`
   padding: 0.4rem 1rem;
   background: rgba(255, 93, 160, 0.3);
@@ -507,6 +559,7 @@ const ResetButton = styled.button`
   }
 `;
 
+// Wrapper for navigation buttons like Home and Breakthrough Game
 const NavigationButtons = styled.div`
   display: flex;
   justify-content: center;
@@ -544,6 +597,7 @@ const NavigationButton = styled.button`
   }
 `;
 
+// Weekly progress bar showing days and highlighting active/completed ones
 const WeeklyProgress = styled.div`
   width: 100%;
   max-width: 600px;
@@ -560,6 +614,7 @@ const WeeklyProgress = styled.div`
   z-index: 10;
 `;
 
+// Circular progress indicators representing each day of the weekly challenge
 const ProgressCircle = styled.div`
   width: 30px;
   height: 30px;
@@ -586,6 +641,7 @@ const ProgressCircle = styled.div`
   }
 `;
 
+// Daily habit card with animated entry, glowing status bar, and completion badge
 const DayCard = styled.div`
   background: rgba(14, 26, 64, 0.8);
   backdrop-filter: blur(8px);
@@ -636,6 +692,7 @@ const DayCard = styled.div`
   }
 `;
 
+// Title for the current day’s habit section with styled underline effect
 const DayTitle = styled.h3`
   color: ${spaceTheme.actionButton};
   margin-bottom: 1rem;
@@ -665,6 +722,7 @@ const HabitOptionsContainer = styled.div`
   margin-top: 1rem;
 `;
 
+// Individual habit option card with dynamic color and icons based on status
 const HabitOption = styled.div`
   background: ${({ status }) =>
     status === 'checked'
@@ -715,6 +773,7 @@ const HabitOption = styled.div`
   }
 `;
 
+// Styled habit text inside the habit option with conditional glow
 const HabitText = styled.div`
   font-weight: bold;
   font-size: 0.9rem;
@@ -728,6 +787,7 @@ const HabitText = styled.div`
     'none'};
 `;
 
+// Button to move to the next day in weekly challenge flow
 const NextDayButton = styled.button`
   margin-top: 1.5rem;
   background: linear-gradient(to right, ${spaceTheme.accentGold}, ${spaceTheme.highlightAlt});
@@ -754,6 +814,7 @@ const NextDayButton = styled.button`
   }
 `;
 
+// Floating XP notification that appears after completing habits
 const XPNotification = styled.div`
   position: fixed;
   top: 20px;
@@ -848,6 +909,7 @@ const feedbackMessages = {
   ]
 };
 
+// Returns a message based on total XP earned to encourage the user
 const getCompletionMessage = (xp) => {
   if (xp >= 90) return "Legendary Performance!";
   if (xp >= 70) return "Stellar Achievement!";
@@ -855,6 +917,7 @@ const getCompletionMessage = (xp) => {
   return "Galactic Progress!";
 };
 
+// Generates a randomized 7-day weekly habit plan with emojis
 const getWeeklyHabits = () => {
   const shuffled = [...allWeeklyHabits].sort(() => 0.5 - Math.random());
   const weeklySet = [];
@@ -873,11 +936,13 @@ const getWeeklyHabits = () => {
   return weeklySet;
 };
 
+// Returns 10 shuffled hourly habits for the current session
 const getHourlyHabits = () => {
   const shuffled = [...allHourlyHabits].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, 10);
 };
 
+// Returns badge objects for all levels less than or equal to current level
 const getBadges = (level) => {
   const badgeMap = {
     1: { title: "Starter", color: spaceTheme.actionButton },
@@ -896,6 +961,7 @@ const getBadges = (level) => {
     .map(([_, data]) => data);
 };
 
+// Utility to get the weekday name from an index (0-6)
 const getDayName = (index) => {
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   return days[index];
@@ -967,6 +1033,7 @@ const HabitChallengeCenter = () => {
     setTab(newTab);
   };
 
+  // Handles marking an hourly habit as complete and awards XP based on difficulty
   const handleHabitCompletion = (index, difficulty) => {
     if (completedHourly[index]) return;
 
@@ -1039,16 +1106,19 @@ const HabitChallengeCenter = () => {
     setTotalXP(0);
   };
 
+  // Calculates the overall weekly completion percentage across all days
   const getTotalWeekCompletion = () => {
     const totalHabits = weeklyHabits.reduce((acc, day) => acc + day.length, 0);
     const completedHabits = completedWeekly.reduce((acc, day) => acc + day.length, 0);
     return Math.round((completedHabits / totalHabits) * 100);
   };
 
+  // Returns the completion percentage for a specific day in the weekly challenge
   const getDayCompletion = (dayIndex) => {
     return Math.round((completedWeekly[dayIndex].length / weeklyHabits[dayIndex].length) * 100);
   };
 
+  // Moves to the next active day and rewards a small XP bonus
   const handleNextDay = () => {
     const next = activeDay + 1;
     if (next <= 6) {
