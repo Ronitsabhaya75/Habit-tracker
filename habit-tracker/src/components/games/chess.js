@@ -1,3 +1,32 @@
+/*
+* Cosmic Chess - Space-Themed Chess Game
+* 
+* Description:
+* A fully functional React chess implementation with a deep space/cosmic aesthetic.
+* This game allows players to play against a computer opponent where the player
+* controls the white pieces and the computer controls the black pieces.
+* 
+* Key Features:
+* - Complete chess rules with all standard pieces and moves
+* - Player (white) vs Computer (black) gameplay
+* - Space-themed styling with cosmic visual elements
+* - Interactive chessboard with highlighted valid moves
+* - Visual indicators for selected pieces and last move
+* - Particle effects and animations for piece movement and captures
+* - Score tracking with points for capturing pieces
+* - Move history display in algebraic notation
+* - Win streak counter and player ranking system
+* - Game over modal with victory/defeat messaging
+* - Computer AI with strategic move evaluation
+* 
+* Technical Implementation:
+* - React functional components with hooks for state management
+* - Styled-components for CSS-in-JS styling
+* - Custom animations (float, glow, pulse, warp effects)
+* - Effect hooks for animation and game progression
+* - Refs for animation management
+*/
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styled, { keyframes, css, createGlobalStyle } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
