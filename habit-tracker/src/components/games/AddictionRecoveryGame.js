@@ -3,7 +3,7 @@ import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useHabit } from '../../context/HabitContext';
 
-// Global style to ensure proper rendering
+// updated Global style to ensure proper rendering
 const GlobalStyle = createGlobalStyle`
   body {
     margin: 0;
