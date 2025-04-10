@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { theme } from '../../theme'; // Ensure this path is correct
-import { useHabit } from '../../context/HabitContext'; // Ensure this path is correct
+import { useHabit } from '../../context/HabitContext';
 
-// Global styles to ensure app background
+// Global style to ensure proper rendering
 const GlobalStyle = createGlobalStyle`
   body {
-    background: ${theme.colors.background};
-    color: ${theme.colors.text};
     margin: 0;
     padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   }
 `;
 
@@ -27,86 +25,198 @@ const starGlow = keyframes`
   100% { opacity: 0.6; filter: blur(1px); }
 `;
 
+const progressAnimation = keyframes`
+  0% { width: 0; }
+  100% { width: 100%; }
+`;
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
 // Styled Components
-const GameWrapper = styled.div`
+const PageBackground = styled.div`
+  background: linear-gradient(to bottom, #0d323d, #1a2a38);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  color: #e0f2f1;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  z-index: 1;
+  
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 20%),
+                      radial-gradient(circle at 85% 60%, rgba(255, 255, 255, 0.03) 0%, transparent 30%);
+    z-index: -1;
+  }
+`;
+
+const Star = styled.div`
+  position: absolute;
+  width: ${props => props.size || '2px'};
+  height: ${props => props.size || '2px'};
+  background-color: white;
+  border-radius: 50%;
+  top: ${props => props.top || '10%'};
+  left: ${props => props.left || '10%'};
+  animation: ${starGlow} ${props => props.duration || '3s'} infinite ease-in-out;
+  z-index: 1;
+`;
+
+const GameContainer = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 2rem;
-  background: ${theme.colors.glassWhite};
-  border-radius: 12px;
+  position: relative;
+  z-index: 2;
+`;
+
+const GameWrapper = styled.div`
+  background: rgba(26, 42, 56, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2rem;
   margin-top: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: ${fadeIn} 0.5s ease-out;
 `;
 
 const Button = styled.button`
-  background: ${props => props.color || theme.colors.accent};
-  color: white;
+  background: ${props => props.color || '#4ecca3'};
+  color: #0d323d;
   border: none;
   padding: 1rem 2rem;
-  border-radius: 8px;
+  border-radius: 50px;
   cursor: pointer;
   font-weight: 600;
   margin: 0.5rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    background: ${props => props.hoverColor || '#5ddbaf'};
   }
+  
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
   }
 `;
 
 const BackButton = styled(Button)`
-  background: ${theme.colors.secondary};
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0f2f1;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
   padding: 0.75rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+`;
+
+const PageTitle = styled.h1`
+  font-size: 2.5rem;
+  text-align: center;
+  margin-top: 0;
+  color: #e0f2f1;
+  text-shadow: 0 0 10px rgba(78, 204, 163, 0.5);
+  font-weight: 700;
+`;
+
+const PageSubtitle = styled.p`
+  text-align: center;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  opacity: 0.8;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #e0f2f1;
 `;
 
 const MoodTracker = styled.div`
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin: 1rem 0;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
 `;
 
 const MoodButton = styled.button`
-  font-size: 2rem;
+  font-size: 2.2rem;
   background: none;
   border: none;
   cursor: pointer;
-  transition: transform 0.2s;
-  padding: 0.5rem;
+  transition: all 0.3s;
+  padding: 1rem;
   border-radius: 50%;
+  
   &:hover {
-    transform: scale(1.2);
+    transform: scale(1.2) translateY(-5px);
+    background: rgba(255, 255, 255, 0.1);
   }
+  
   &.selected {
-    background: ${theme.colors.glassWhite};
+    background: rgba(78, 204, 163, 0.2);
+    box-shadow: 0 0 15px rgba(78, 204, 163, 0.5);
+    transform: scale(1.2);
   }
 `;
 
 const GameSection = styled.div`
   margin: 2rem 0;
   padding: 1.5rem;
-  background: ${theme.colors.glassWhite};
-  border-radius: 12px;
+  background: rgba(13, 50, 61, 0.6);
+  border-radius: 16px;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(13, 50, 61, 0.8);
+    transform: translateY(-5px);
+  }
+  
+  h3 {
+    color: #4ecca3;
+    font-size: 1.5rem;
+    margin-top: 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
 `;
 
 const ActivityCard = styled.div`
-  background: ${theme.colors.glassWhite};
+  background: rgba(26, 42, 56, 0.7);
   border-radius: 12px;
   padding: 1.5rem;
   margin: 1rem 0;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  
   &:hover {
-    transform: translateY(-2px);
-    background: ${theme.colors.borderWhite};
+    transform: translateY(-5px) scale(1.02);
+    background: rgba(26, 42, 56, 0.9);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   }
+  
   &.completed {
-    border: 2px solid ${theme.colors.accent};
+    border: 2px solid #4ecca3;
     position: relative;
     
     &:after {
@@ -114,77 +224,194 @@ const ActivityCard = styled.div`
       position: absolute;
       top: 10px;
       right: 10px;
-      background: ${theme.colors.accent};
-      color: white;
-      width: 24px;
-      height: 24px;
+      background: #4ecca3;
+      color: #0d323d;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
+      box-shadow: 0 0 10px rgba(78, 204, 163, 0.5);
     }
+  }
+  
+  h4 {
+    margin-top: 0;
+    color: #e0f2f1;
+    font-size: 1.2rem;
+  }
+  
+  p {
+    opacity: 0.8;
+    color: #e0f2f1;
   }
 `;
 
 const ProgressGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin: 1rem 0;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin: 1.5rem 0;
 `;
 
 const StatCard = styled.div`
-  background: ${theme.colors.glassWhite};
-  padding: 1rem;
-  border-radius: 8px;
+  background: rgba(26, 42, 56, 0.7);
+  padding: 1.5rem;
+  border-radius: 12px;
   text-align: center;
-  h4 { margin: 0; opacity: 0.8; }
-  .value { font-size: 1.5rem; font-weight: bold; color: ${theme.colors.accent}; margin: 0.5rem 0; }
+  transition: all 0.3s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  
+  &:hover {
+    background: rgba(26, 42, 56, 0.9);
+    transform: translateY(-5px);
+  }
+  
+  h4 {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 1rem;
+    color: #e0f2f1;
+  }
+  
+  .value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #4ecca3;
+    margin: 1rem 0;
+    text-shadow: 0 0 10px rgba(78, 204, 163, 0.3);
+  }
+  
+  .subtitle {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    color: #e0f2f1;
+  }
 `;
 
 const JournalEntry = styled.div`
-  background: ${theme.colors.glassWhite};
-  padding: 1rem;
-  border-radius: 8px;
+  background: rgba(26, 42, 56, 0.7);
+  padding: 1.5rem;
+  border-radius: 12px;
   margin: 1rem 0;
-  .timestamp { font-size: 0.8rem; opacity: 0.7; }
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s;
+  
+  &:hover {
+    background: rgba(26, 42, 56, 0.9);
+  }
+  
+  .timestamp {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-bottom: 0.5rem;
+    color: #e0f2f1;
+  }
+
+  p {
+    color: #e0f2f1;
+  }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
-  background: ${theme.colors.glassWhite};
-  border: 1px solid ${theme.colors.borderWhite};
-  border-radius: 8px;
+  background: rgba(13, 50, 61, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
   padding: 1rem;
-  color: ${theme.colors.text};
-  min-height: 100px;
+  color: #e0f2f1;
+  min-height: 120px;
   margin: 1rem 0;
   resize: vertical;
-  &:focus { outline: none; border-color: ${theme.colors.accent}; }
+  font-family: inherit;
+  
+  &:focus {
+    outline: none;
+    border-color: #4ecca3;
+    box-shadow: 0 0 10px rgba(78, 204, 163, 0.3);
+  }
+  
+  &::placeholder {
+    color: rgba(224, 242, 241, 0.5);
+  }
 `;
 
 const Badge = styled.div`
   display: inline-block;
   padding: 0.5rem 1rem;
-  border-radius: 20px;
-  background: ${props => props.color || theme.colors.accent};
-  color: white;
+  border-radius: 50px;
+  background: ${props => props.color || '#4ecca3'};
+  color: #0d323d;
   margin: 0.5rem;
   font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: ${fadeIn} 0.5s ease-out;
 `;
 
 const MeditationTimer = styled.div`
   text-align: center;
   margin: 2rem 0;
-  .countdown { font-size: 3rem; font-weight: bold; color: ${theme.colors.accent}; margin: 1rem 0; }
-  .message { font-size: 1.2rem; margin: 1rem 0; opacity: 0.8; }
+  
+  .countdown {
+    font-size: 3.5rem;
+    font-weight: bold;
+    color: #4ecca3;
+    margin: 1.5rem 0;
+    text-shadow: 0 0 15px rgba(78, 204, 163, 0.5);
+  }
+  
+  .message {
+    font-size: 1.2rem;
+    margin: 1.5rem 0;
+    line-height: 1.6;
+    color: #e0f2f1;
+  }
+`;
+
+const ProgressBar = styled.div`
+  width: 100%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin: 1rem 0;
+  overflow: hidden;
+  
+  .fill {
+    background: linear-gradient(90deg, #4ecca3, #6be9c1);
+    height: 100%;
+    border-radius: 12px;
+    width: ${props => props.percentage || '0%'};
+    animation: ${progressAnimation} 1.5s ease-out;
+    box-shadow: 0 0 10px rgba(78, 204, 163, 0.5);
+  }
 `;
 
 const guidedActivities = [
-  { id: 'meditation', title: '5-Minute Mindfulness Meditation', description: 'Stay present and focused.', duration: 300, points: 10, guidance: ['Find a comfortable position', 'Take deep breaths', 'Focus on your breath', 'Let thoughts pass', 'Notice body sensations'] },
-  { id: 'breathing', title: 'Deep Breathing Exercise', description: 'Practice 4-7-8 breathing.', duration: 180, points: 5, guidance: ['Inhale for 4s', 'Hold for 7s', 'Exhale for 8s', 'Repeat cycle'] },
-  { id: 'gratitude', title: 'Gratitude Journal', description: "Write three things you're grateful for.", points: 5, guidance: ['Reflect on a positive event', 'Consider helpful people', 'Note a personal strength'] },
+  { 
+    id: 'meditation', 
+    title: '5-Minute Mindfulness Meditation', 
+    description: 'Stay present and focused on your breath to calm your mind and reduce cravings.', 
+    duration: 300, 
+    points: 10, 
+    guidance: ['Find a comfortable position', 'Take deep breaths', 'Focus on your breath', 'Let thoughts pass', 'Notice body sensations'] 
+  },
+  { 
+    id: 'breathing', 
+    title: 'Deep Breathing Exercise', 
+    description: 'Practice 4-7-8 breathing technique to relieve stress and anxiety.', 
+    duration: 180, 
+    points: 5, 
+    guidance: ['Inhale for 4s', 'Hold for 7s', 'Exhale for 8s', 'Repeat cycle'] 
+  },
+  { 
+    id: 'gratitude', 
+    title: 'Gratitude Journal', 
+    description: "Write three things you're grateful for today to shift focus to positivity.", 
+    points: 5, 
+    guidance: ['Reflect on a positive event', 'Consider helpful people', 'Note a personal strength'] 
+  },
 ];
 
 const AddictionRecoveryGame = () => {
@@ -203,6 +430,24 @@ const AddictionRecoveryGame = () => {
   const [achievements, setAchievements] = useState([]);
   const [showGuidance, setShowGuidance] = useState(false);
   const [currentGuidanceStep, setCurrentGuidanceStep] = useState(0);
+  const [showMotivation, setShowMotivation] = useState(false);
+  
+  // Generate random stars
+  const generateStars = (count) => {
+    const stars = [];
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        id: i,
+        size: `${Math.random() * 3 + 1}px`,
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        duration: `${Math.random() * 3 + 2}s`,
+      });
+    }
+    return stars;
+  };
+  
+  const stars = generateStars(50);
 
   const handleBackClick = () => {
     navigate('/breakthrough-game');
@@ -213,6 +458,8 @@ const AddictionRecoveryGame = () => {
     if (lastCompletionDate !== today) {
       setCurrentStreak(prev => prev + 1);
       setLastCompletionDate(today);
+      setShowMotivation(true);
+      setTimeout(() => setShowMotivation(false), 5000);
     }
   }, [lastCompletionDate]);
 
@@ -325,137 +572,190 @@ const AddictionRecoveryGame = () => {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Get motivational quotes
+  const getMotivationalQuote = () => {
+    const quotes = [
+      "Every day is a new opportunity to grow stronger.",
+      "Progress is progress, no matter how small.",
+      "You are stronger than your cravings.",
+      "Focus on today. Just today.",
+      "Recovery is not a race. You're right where you need to be.",
+      "Your potential is endless. Keep going.",
+      "Small steps lead to big changes."
+    ];
+    return quotes[Math.floor(Math.random() * quotes.length)];
+  };
+
   return (
     <>
       <GlobalStyle />
-      <GameWrapper>
-        <BackButton onClick={handleBackClick}>
-          ← Back to Breakthrough Game
-        </BackButton>
-
-        <h2>Addiction Recovery Journey</h2>
-        <ProgressGrid>
-          <StatCard>
-            <h4>Clean Time</h4>
-            <div className="value">{formatTime(timeElapsed)}</div>
-            <Button color={timerActive ? "#f44336" : "#4CAF50"} onClick={() => setTimerActive(!timerActive)}>
-              {timerActive ? "Pause Timer" : "Start/Resume Timer"}
-            </Button>
-          </StatCard>
-          <StatCard>
-            <h4>Current Streak</h4>
-            <div className="value">{currentStreak} days</div>
-            <div>Keep going strong!</div>
-          </StatCard>
-          <StatCard>
-            <h4>Total Points</h4>
-            <div className="value">{getCategoryProgress('addiction')}</div>
-            <div>Points earned</div>
-          </StatCard>
-        </ProgressGrid>
-
-        <GameSection>
-          <h3>How are you feeling today?</h3>
-          <MoodTracker>
-            <MoodButton className={selectedMood === 'great' ? 'selected' : ''} onClick={() => setSelectedMood('great')}>😊</MoodButton>
-            <MoodButton className={selectedMood === 'good' ? 'selected' : ''} onClick={() => setSelectedMood('good')}>🙂</MoodButton>
-            <MoodButton className={selectedMood === 'neutral' ? 'selected' : ''} onClick={() => setSelectedMood('neutral')}>😐</MoodButton>
-            <MoodButton className={selectedMood === 'struggling' ? 'selected' : ''} onClick={() => setSelectedMood('struggling')}>😟</MoodButton>
-          </MoodTracker>
-        </GameSection>
-
-        <GameSection>
-          <h3>Guided Activities</h3>
-          {activityInProgress ? (
-            <MeditationTimer>
-              <div className="countdown">{formatTime(activityTimer)}</div>
-              <div className="message">
-                {activityTimer > 0 ? (
-                  showGuidance ? (
-                    <>
-                      <p>{activityInProgress.guidance?.[currentGuidanceStep]}</p>
-                      <Button onClick={() => setShowGuidance(false)}>Hide Guidance</Button>
-                    </>
-                  ) : (
-                    <Button onClick={() => setShowGuidance(true)}>Show Guidance</Button>
-                  )
-                ) : (
-                  "Activity Complete! 🎉"
-                )}
-              </div>
-            </MeditationTimer>
-          ) : (
-            guidedActivities.map(activity => (
-              <ActivityCard
-                key={activity.id}
-                onClick={() => startActivity(activity)}
-                className={completedChallenges.includes(activity.id) ? 'completed' : ''}
-              >
-                <h4>{activity.title}</h4>
-                <p>{activity.description}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>+{activity.points} points</span>
-                  {activity.duration && <span>{Math.floor(activity.duration / 60)} minutes</span>}
-                </div>
-              </ActivityCard>
-            ))
-          )}
-        </GameSection>
-
-        <GameSection>
-          <h3>Recovery Journal</h3>
-          <TextArea
-            value={currentJournalEntry}
-            onChange={(e) => setCurrentJournalEntry(e.target.value)}
-            placeholder="Write about your journey, feelings, or challenges..."
+      <PageBackground>
+        {stars.map(star => (
+          <Star 
+            key={star.id} 
+            size={star.size} 
+            top={star.top} 
+            left={star.left} 
+            duration={star.duration} 
           />
-          <Button onClick={addJournalEntry}>Save Entry (+5 points)</Button>
-          {journalEntries.map((entry, index) => (
-            <JournalEntry key={index}>
-              <div className="timestamp">
-                {new Date(entry.timestamp).toLocaleString()}
-                {entry.mood && (
-                  <span style={{ marginLeft: '1rem' }}>
-                    {entry.mood === 'great' ? '😊' : entry.mood === 'good' ? '🙂' : entry.mood === 'neutral' ? '😐' : '😟'}
-                  </span>
-                )}
+        ))}
+        
+        <GameContainer>
+          <GameWrapper>
+            <BackButton onClick={handleBackClick}>
+              ← Back to Breakthrough Game
+            </BackButton>
+
+            <PageTitle>Cosmic Recovery Journey</PageTitle>
+            <PageSubtitle>Navigate through the universe of recovery, collect achievements, and build a constellation of healthy habits.</PageSubtitle>
+
+            {showMotivation && (
+              <div style={{
+                position: 'fixed',
+                top: '20px',
+                right: '20px',
+                background: 'rgba(78, 204, 163, 0.2)',
+                backdropFilter: 'blur(10px)',
+                padding: '15px',
+                borderRadius: '10px',
+                boxShadow: '0 0 20px rgba(78, 204, 163, 0.5)',
+                zIndex: 1000,
+                animation: `${fadeIn} 0.5s ease-out`,
+                maxWidth: '300px',
+                border: '1px solid rgba(78, 204, 163, 0.5)'
+              }}>
+                <h4 style={{ margin: '0 0 8px 0', color: '#4ecca3' }}>✨ New Day Completed!</h4>
+                <p style={{ margin: '0', color: '#e0f2f1' }}>{getMotivationalQuote()}</p>
               </div>
-              <p>{entry.text}</p>
-            </JournalEntry>
-          ))}
-        </GameSection>
+            )}
 
-        <GameSection>
-          <h3>Recent Achievements</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {achievements.map((achievement, index) => (
-              <Badge
-                key={index}
-                color={achievement.type === 'hourly' ? '#4CAF50' : achievement.type === 'daily' ? '#2196F3' : achievement.type === 'activity' ? '#9C27B0' : theme.colors.accent}
-              >
-                {achievement.type === 'activity' ? achievement.activity : achievement.type === 'hourly' ? 'Hour Complete' : achievement.type === 'daily' ? 'Day Complete' : 'Achievement'} (+{achievement.points} pts)
-              </Badge>
-            ))}
-          </div>
-        </GameSection>
+            <ProgressGrid>
+              <StatCard>
+                <h4>CLEAN TIME TRACKER</h4>
+                <div className="value">{formatTime(timeElapsed)}</div>
+                <Button color={timerActive ? "#e74c3c" : "#4ecca3"} hoverColor={timerActive ? "#c0392b" : "#5ddbaf"} onClick={() => setTimerActive(!timerActive)}>
+                  {timerActive ? "Pause Timer" : "Start/Resume Timer"}
+                </Button>
+              </StatCard>
+              <StatCard>
+                <h4>CURRENT STREAK</h4>
+                <div className="value">{currentStreak} days</div>
+                <div className="subtitle">Each day is a new star in your constellation</div>
+              </StatCard>
+              <StatCard>
+                <h4>COSMIC POINTS</h4>
+                <div className="value">{getCategoryProgress('addiction')}</div>
+                <ProgressBar percentage={`${Math.min(100, getCategoryProgress('addiction') / 3)}%`}>
+                  <div className="fill"></div>
+                </ProgressBar>
+                <div className="subtitle">Points earned towards your next level</div>
+              </StatCard>
+            </ProgressGrid>
 
-        {selectedMood === 'struggling' && (
-          <GameSection style={{ background: 'rgba(244, 67, 54, 0.1)' }}>
-            <h3>Need Support?</h3>
-            <p>Remember, it's okay to ask for help. Here are some resources:</p>
-            <ul>
-              <li>Call your support buddy</li>
-              <li>Practice deep breathing exercises</li>
-              <li>Use the urge surfing technique</li>
-              <li>Contact your counselor or support group</li>
-            </ul>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-              <Button color="#f44336">Emergency Contact</Button>
-              <Button onClick={() => startActivity(guidedActivities[1])}>Start Breathing Exercise</Button>
-            </div>
-          </GameSection>
-        )}
-      </GameWrapper>
+            <GameSection>
+              <h3>How are you navigating today?</h3>
+              <MoodTracker>
+                <MoodButton className={selectedMood === 'great' ? 'selected' : ''} onClick={() => setSelectedMood('great')}>😊</MoodButton>
+                <MoodButton className={selectedMood === 'good' ? 'selected' : ''} onClick={() => setSelectedMood('good')}>🙂</MoodButton>
+                <MoodButton className={selectedMood === 'neutral' ? 'selected' : ''} onClick={() => setSelectedMood('neutral')}>😐</MoodButton>
+                <MoodButton className={selectedMood === 'struggling' ? 'selected' : ''} onClick={() => setSelectedMood('struggling')}>😟</MoodButton>
+              </MoodTracker>
+            </GameSection>
+
+            <GameSection>
+              <h3>Guided Activities</h3>
+              {activityInProgress ? (
+                <MeditationTimer>
+                  <div className="countdown">{formatTime(activityTimer)}</div>
+                  <div className="message">
+                    {activityTimer > 0 ? (
+                      showGuidance ? (
+                        <>
+                          <p>{activityInProgress.guidance?.[currentGuidanceStep]}</p>
+                          <Button onClick={() => setShowGuidance(false)}>Hide Guidance</Button>
+                        </>
+                      ) : (
+                        <Button onClick={() => setShowGuidance(true)}>Show Guidance</Button>
+                      )
+                    ) : (
+                      "Activity Complete! 🎉 You've earned cosmic points!"
+                    )}
+                  </div>
+                </MeditationTimer>
+              ) : (
+                guidedActivities.map(activity => (
+                  <ActivityCard
+                    key={activity.id}
+                    onClick={() => startActivity(activity)}
+                    className={completedChallenges.includes(activity.id) ? 'completed' : ''}
+                  >
+                    <h4>{activity.title}</h4>
+                    <p>{activity.description}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#4ecca3', fontWeight: 'bold' }}>+{activity.points} cosmic points</span>
+                      {activity.duration && <span style={{ color: '#e0f2f1' }}>{Math.floor(activity.duration / 60)} minutes</span>}
+                    </div>
+                  </ActivityCard>
+                ))
+              )}
+            </GameSection>
+
+            <GameSection>
+              <h3>Star Journal</h3>
+              <TextArea
+                value={currentJournalEntry}
+                onChange={(e) => setCurrentJournalEntry(e.target.value)}
+                placeholder="Record your journey through the cosmos of recovery. What challenges did you overcome today? What brought you strength?"
+              />
+              <Button onClick={addJournalEntry}>Save Entry (+5 cosmic points)</Button>
+              {journalEntries.map((entry, index) => (
+                <JournalEntry key={index}>
+                  <div className="timestamp">
+                    {new Date(entry.timestamp).toLocaleString()}
+                    {entry.mood && (
+                      <span style={{ marginLeft: '1rem' }}>
+                        {entry.mood === 'great' ? '😊' : entry.mood === 'good' ? '🙂' : entry.mood === 'neutral' ? '😐' : '😟'}
+                      </span>
+                    )}
+                  </div>
+                  <p>{entry.text}</p>
+                </JournalEntry>
+              ))}
+            </GameSection>
+
+            <GameSection>
+              <h3>Recent Achievements</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {achievements.map((achievement, index) => (
+                  <Badge
+                    key={index}
+                    color={achievement.type === 'hourly' ? '#3498db' : achievement.type === 'daily' ? '#2ecc71' : achievement.type === 'activity' ? '#9b59b6' : '#4ecca3'}
+                  >
+                    {achievement.type === 'activity' ? achievement.activity : achievement.type === 'hourly' ? 'Hour Complete' : achievement.type === 'daily' ? 'Day Complete' : 'Achievement'} (+{achievement.points} pts)
+                  </Badge>
+                ))}
+              </div>
+            </GameSection>
+
+            {selectedMood === 'struggling' && (
+              <GameSection style={{ background: 'rgba(231, 76, 60, 0.2)', border: '1px solid rgba(231, 76, 60, 0.3)' }}>
+                <h3 style={{ color: '#e74c3c' }}>Need Support?</h3>
+                <p style={{ color: '#e0f2f1' }}>It's okay to navigate through difficult nebulae. Here are some resources to help you through:</p>
+                <ul style={{ lineHeight: '1.8', color: '#e0f2f1' }}>
+                  <li>Reach out to your support constellation (friends, family, sponsor)</li>
+                  <li>Practice the deep breathing exercise to calm your mind</li>
+                  <li>Use the urge surfing technique - observe the craving wave rise and fall</li>
+                  <li>Contact your counselor or support group for additional guidance</li>
+                </ul>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+                  <Button color="#e74c3c" hoverColor="#c0392b">Emergency Contact</Button>
+                  <Button onClick={() => startActivity(guidedActivities[1])}>Start Breathing Exercise</Button>
+                </div>
+              </GameSection>
+            )}
+          </GameWrapper>
+        </GameContainer>
+      </PageBackground>
     </>
   );
 };
