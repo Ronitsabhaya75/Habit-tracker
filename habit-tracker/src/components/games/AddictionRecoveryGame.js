@@ -1,3 +1,39 @@
+/*
+ * Cosmic Recovery Journey - Addiction Recovery Game Component
+ * 
+ * Description:
+ * This React component creates an interactive, gamified experience for tracking
+ * addiction recovery progress. It uses a space/cosmos theme to provide users with
+ * a visually engaging interface for maintaining sobriety, completing wellness
+ * activities, and journaling their progress.
+ * 
+ * Features:
+ * - Clean Time Tracker: Records continuous sobriety time with start/pause functionality
+ * - Streak Counter: Tracks consecutive days of engagement
+ * - Mood Tracking: Allows users to record daily emotional states
+ * - Guided Activities: Interactive wellness exercises including:
+ *   • Mindfulness meditation with timer
+ *   • Deep breathing exercises
+ *   • Gratitude journaling
+ * - Progress System: Earns "cosmic points" for completing activities and milestones
+ * - Journal: Records thoughts and reflections with timestamp and mood indicators
+ * - Achievement Badges: Visual rewards for completing various activities
+ * - Support Resources: Provides specialized resources when user indicates struggling
+ * - Persistent Storage: Saves all progress data to localStorage
+ * 
+ * Technical Implementation:
+ * - Built with React hooks (useState, useEffect, useCallback)
+ * - Styled-components for all UI elements with animations
+ * - Integration with React Router for navigation
+ * - Context API usage via HabitContext for progress tracking
+ * - Responsive design with modern UI styling
+ * - Interactive timers with guidance steps for activities
+ * - Star background animation effect
+ * 
+ * This component is part of a larger "Breakthrough Game" application focused on
+ * habit formation and personal development.
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
