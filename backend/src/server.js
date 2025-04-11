@@ -22,6 +22,9 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // Routes
+app.use('/', (req, res) => {
+  res.json({ message: 'Welcome to the Golden Warriors API!' });
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/users', userRoutes);
