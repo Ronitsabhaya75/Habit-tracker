@@ -338,7 +338,6 @@ const NewHabit = () => {
           />
         ))}
       </Background>
-
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
@@ -349,7 +348,6 @@ const NewHabit = () => {
           <NavItem onClick={() => navigate('/review')}>📊 Review</NavItem>
         </NavList>
       </Sidebar>
-
       <MainContent>
         <FormContainer>
           <FormTitle>Create New Habit</FormTitle>

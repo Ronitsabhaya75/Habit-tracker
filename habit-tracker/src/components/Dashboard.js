@@ -219,6 +219,7 @@ import { Paper, Typography, Button, IconButton, TextField, Box, Grid, CircularPr
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Check as CheckIcon, Close as CloseIcon } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 
+// Styled components
 const DashboardContainer = styled.div`
   padding: 20px;
   max-width: 1200px;
@@ -417,6 +418,25 @@ const Dashboard = () => {
       </Box>
     );
   }
+
+  const generateStars = (count) => {
+    const stars = [];
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        id: i,
+        size: Math.random() * 3 + 1,
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        opacity: Math.random() * 0.7 + 0.3,
+        duration: Math.random() * 15 + 10,
+        delay: Math.random() * 10,
+        glow: Math.random() > 0.8 ? 3 : 1,
+      });
+    }
+    return stars;
+  };
+
+  const stars = generateStars(100);
 
   return (
     <DashboardContainer>
