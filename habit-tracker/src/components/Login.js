@@ -4,6 +4,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPasswor
 import styled, { keyframes, createGlobalStyle, css } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 // Add Global Style to remove default margins and paddings
 const GlobalStyle = createGlobalStyle`
@@ -505,10 +506,11 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const navigate = useNavigate();
+  const { refreshUserData } = useAuth();
   
   // Handle email/password login
   const handleSubmit = async (e) => {
@@ -529,6 +531,7 @@ const Login = () => {
 
       // Perform actual login
       await signInWithEmailAndPassword(auth, email, password);
+      await refreshUserData();
       
       // On success
       setProgress(50);
@@ -575,7 +578,8 @@ const Login = () => {
       setProgress(20);
       setProgressMessage('Connecting with Google...');
       
-      const result = await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
+      await refreshUserData();
       
       setProgress(60);
       setProgressMessage('Preparing your dashboard...');

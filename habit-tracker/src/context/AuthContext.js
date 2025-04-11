@@ -1,32 +1,59 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth } from '../components/firebase';
+import { verifyToken, getUserProfile } from '../api/api';
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    localStorage.getItem('isLoggedIn') === 'true'
-  );
-  const [user, setUser] = useState({ name: 'Guest' }); // Added user object for Dashboard compatibility
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
 
-  const login = (userData) => {
-    setIsAuthenticated(true);
-    setUser(userData || { name: 'User' });
-    localStorage.setItem('isLoggedIn', 'true');
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Verify token with backend
+          const { user: backendUser } = await verifyToken();
+          setUser(backendUser);
+        } catch (error) {
+          console.error('Error verifying token:', error);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const refreshUserData = async () => {
+    if (auth.currentUser) {
+      try {
+        const { user: backendUser } = await getUserProfile();
+        setUser(backendUser);
+      } catch (error) {
+        console.error('Error refreshing user data:', error);
+      }
+    }
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
-    localStorage.removeItem('isLoggedIn');
+  const value = {
+    user,
+    loading,
+    refreshUserData
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => useContext(AuthContext);
 
 export default AuthContext;

@@ -3,6 +3,8 @@ import styled, { keyframes, css } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useHabit } from '../context/HabitContext';
 import { useEventContext } from '../context/EventContext';
+import { createHabit } from '../api/api';
+import { useAuth } from '../context/AuthContext';
 
 // Theme
 const dashboardTheme = {
@@ -231,72 +233,38 @@ const RadioInput = styled.input`
 `;
 
 const NewHabit = () => {
-  const [name, setName] = useState('');
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [frequency, setFrequency] = useState('daily');
-  const [isTask, setIsTask] = useState(false);
-  const [taskFrequency, setTaskFrequency] = useState('daily');
-  const [taskStartDate, setTaskStartDate] = useState('');
-  const { addHabit } = useHabit();
-  const { addEvent } = useEventContext();
+  const [daysOfWeek, setDaysOfWeek] = useState([]);
+  const [timeOfDay, setTimeOfDay] = useState('anytime');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { refreshUserData } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    
-    // Add the habit
-    const newHabit = {
-      name,
-      description,
-      frequency,
-      isTask,
-      taskFrequency: isTask ? taskFrequency : undefined,
-      taskStartDate: isTask ? taskStartDate : undefined
-    };
-    
-    addHabit(newHabit);
-    
-    // If it's a task, add it to the calendar
-    if (isTask) {
-      const startDate = taskStartDate ? new Date(taskStartDate) : new Date();
-      const taskId = Date.now();
-      
-      // Add the initial task
-      const dateKey = startDate.toISOString().split('T')[0];
-      addEvent(dateKey, {
-        id: taskId,
-        title: name,
-        description: description,
-        completed: false,
-        isHabitTask: true,
-        habitId: taskId, // Using taskId as habitId for now
-        frequency: taskFrequency
+    try {
+      await createHabit({
+        title,
+        description,
+        frequency,
+        daysOfWeek,
+        timeOfDay
       });
-      
-      // For weekly/biweekly tasks, add future occurrences
-      if (taskFrequency === 'weekly' || taskFrequency === 'biweekly') {
-        const daysToAdd = taskFrequency === 'weekly' ? 7 : 14;
-        const futureDate = new Date(startDate);
-        
-        // Add 4 future occurrences (can be adjusted)
-        for (let i = 0; i < 4; i++) {
-          futureDate.setDate(futureDate.getDate() + daysToAdd);
-          const futureDateKey = futureDate.toISOString().split('T')[0];
-          addEvent(futureDateKey, {
-            id: taskId + i + 1, // Unique ID for each occurrence
-            title: name,
-            description: description,
-            completed: false,
-            isHabitTask: true,
-            habitId: taskId,
-            frequency: taskFrequency
-          });
-        }
-      }
+      await refreshUserData();
+      navigate('/dashboard');
+    } catch (error) {
+      setError(error.message);
     }
-    
-    navigate('/dashboard');
+  };
+
+  const handleDayToggle = (day) => {
+    setDaysOfWeek(prev =>
+      prev.includes(day)
+        ? prev.filter(d => d !== day)
+        : [...prev, day]
+    );
   };
 
   const generateStars = (count) => {
@@ -348,14 +316,14 @@ const NewHabit = () => {
       <MainContent>
         <FormContainer>
           <FormTitle>Create New Habit</FormTitle>
+          {error && <div className="error-message">{error}</div>}
           <form onSubmit={handleSubmit}>
             <FormGroup>
-              <Label>Habit Name</Label>
+              <Label>Title</Label>
               <Input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Hydration"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 required
               />
             </FormGroup>
@@ -364,7 +332,6 @@ const NewHabit = () => {
               <TextArea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g., Drink 8 glasses of water daily"
               />
             </FormGroup>
             <FormGroup>
@@ -372,51 +339,39 @@ const NewHabit = () => {
               <Select value={frequency} onChange={(e) => setFrequency(e.target.value)}>
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
-                <option value="biweekly">Biweekly</option>
+                <option value="monthly">Monthly</option>
               </Select>
             </FormGroup>
             
-            <FormGroup>
-              <OptionRow>
-                <RadioInput 
-                  type="checkbox" 
-                  id="isTask" 
-                  checked={isTask} 
-                  onChange={(e) => setIsTask(e.target.checked)} 
-                />
-                <OptionLabel htmlFor="isTask">This is a special task (appears in calendar)</OptionLabel>
-              </OptionRow>
-              
-              {isTask && (
-                <TaskOptions>
-                  <FormGroup>
-                    <Label>Task Frequency</Label>
-                    <Select 
-                      value={taskFrequency} 
-                      onChange={(e) => setTaskFrequency(e.target.value)}
+            {frequency === 'weekly' && (
+              <FormGroup>
+                <Label>Days of Week</Label>
+                <div className="days-grid">
+                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                    <button
+                      key={day}
+                      type="button"
+                      className={`day-button ${daysOfWeek.includes(day) ? 'selected' : ''}`}
+                      onClick={() => handleDayToggle(day)}
                     >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="biweekly">Biweekly</option>
-                    </Select>
-                  </FormGroup>
-                  <FormGroup>
-                    <Label>Start Date</Label>
-                    <Input
-                      type="date"
-                      value={taskStartDate}
-                      onChange={(e) => setTaskStartDate(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                    />
-                  </FormGroup>
-                  <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-                    Note: Special tasks give 30 XP when completed but deduct 15 XP if missed.
-                  </p>
-                </TaskOptions>
-              )}
+                      {day.charAt(0).toUpperCase() + day.slice(1, 3)}
+                    </button>
+                  ))}
+                </div>
+              </FormGroup>
+            )}
+            
+            <FormGroup>
+              <Label>Time of Day</Label>
+              <Select value={timeOfDay} onChange={(e) => setTimeOfDay(e.target.value)}>
+                <option value="morning">Morning</option>
+                <option value="afternoon">Afternoon</option>
+                <option value="evening">Evening</option>
+                <option value="anytime">Anytime</option>
+              </Select>
             </FormGroup>
             
-            <SubmitButton type="submit">Add Habit</SubmitButton>
+            <SubmitButton type="submit">Create Habit</SubmitButton>
           </form>
         </FormContainer>
       </MainContent>

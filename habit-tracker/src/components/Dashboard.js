@@ -211,9 +211,10 @@ import { theme } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { useHabit } from '../context/HabitContext';
 import { useEventContext } from '../context/EventContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AIChat from '../components/AIChat';
+import { getHabits, completeHabit } from '../api/api';
 
 // Animation keyframes (borrowed from Shop)
 const pulse = keyframes`
@@ -660,7 +661,7 @@ const TimeInput = styled.input`
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUserData } = useAuth();
   const { habits, progress, completeHabit, getStreak, getCategoryProgress, setStreak, updateProgress } = useHabit();
   const { events, addEvent, updateEvent, deleteEvent, toggleEventCompletion } = useEventContext();
 
@@ -895,6 +896,34 @@ const Dashboard = () => {
   };
 
   const stars = generateStars(100);
+
+  useEffect(() => {
+    const fetchHabits = async () => {
+      try {
+        const data = await getHabits();
+        setHabits(data);
+      } catch (error) {
+        console.error('Error fetching habits:', error);
+      }
+    };
+
+    fetchHabits();
+  }, []);
+
+  const handleCompleteHabit = async (habitId) => {
+    try {
+      await completeHabit(habitId);
+      await refreshUserData();
+      const updatedHabits = await getHabits();
+      setHabits(updatedHabits);
+    } catch (error) {
+      console.error('Error completing habit:', error);
+    }
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <DashboardContainer>

@@ -1,230 +1,106 @@
 // src/api/api.js
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+import { auth } from '../components/firebase';
 
-// Helper function for handling responses
-const handleResponse = async (response) => {
-  const data = await response.json();
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
+// Helper function to get the current user's token
+const getToken = async () => {
+  const user = auth.currentUser;
+  if (!user) return null;
+  return await user.getIdToken();
+};
+
+// Helper function for making API requests
+const makeRequest = async (endpoint, options = {}) => {
+  const token = await getToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  };
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
   if (!response.ok) {
-    throw new Error(data.message || 'Something went wrong');
+    const error = await response.json();
+    throw new Error(error.message || 'Something went wrong');
   }
-  return data;
+
+  return response.json();
 };
 
 // Auth API
-export const authAPI = {
-  login: async (email, password) => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include',
-    });
-    return handleResponse(response);
-  },
-
-  logout: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-    return handleResponse(response);
-  },
-
-  register: async (userData) => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    });
-    return handleResponse(response);
-  },
+export const verifyToken = async () => {
+  const token = await getToken();
+  return makeRequest('/auth/verify', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  });
 };
 
-// User API
-export const userAPI = {
-  getProfile: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-      credentials: 'include',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-    return handleResponse(response);
-  },
-
-  updateProfile: async (userData) => {
-    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify(userData),
-    });
-    return handleResponse(response);
-  },
+export const getUserProfile = async () => {
+  const token = await getToken();
+  return makeRequest(`/auth/profile?token=${token}`);
 };
 
 // Habits API
-export const habitAPI = {
-  getAllHabits: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/habits`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      credentials: 'include',
-    });
-    return handleResponse(response);
-  },
-
-  createHabit: async (habitData) => {
-    const response = await fetch(`${API_BASE_URL}/api/habits`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify(habitData),
-    });
-    return handleResponse(response);
-  },
-
-  updateHabit: async (habitId, habitData) => {
-    const response = await fetch(`${API_BASE_URL}/api/habits/${habitId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify(habitData),
-    });
-    return handleResponse(response);
-  },
-
-  deleteHabit: async (habitId) => {
-    const response = await fetch(`${API_BASE_URL}/api/habits/${habitId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-    return handleResponse(response);
-  },
+export const getHabits = async () => {
+  return makeRequest('/habits');
 };
 
-// Tasks API
-export const taskAPI = {
-  getTasksByDate: async (date) => {
-    const response = await fetch(`${API_BASE_URL}/api/tasks?date=${date}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      credentials: 'include',
-    });
-    return handleResponse(response);
-  },
-
-  createTask: async (taskData) => {
-    const response = await fetch(`${API_BASE_URL}/api/tasks`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify(taskData),
-    });
-    return handleResponse(response);
-  },
-
-  updateTask: async (taskId, taskData) => {
-    const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify(taskData),
-    });
-    return handleResponse(response);
-  },
-
-  deleteTask: async (taskId) => {
-    const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-    return handleResponse(response);
-  },
-
-  toggleTaskCompletion: async (taskId, completed) => {
-    const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}/completion`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify({ completed }),
-    });
-    return handleResponse(response);
-  },
+export const createHabit = async (habitData) => {
+  return makeRequest('/habits', {
+    method: 'POST',
+    body: JSON.stringify(habitData),
+  });
 };
 
-// Progress API
-export const progressAPI = {
-  getProgress: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/progress`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      credentials: 'include',
-    });
-    return handleResponse(response);
-  },
-
-  getLeaderboard: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/progress/leaderboard`, {
-      credentials: 'include',
-    });
-    return handleResponse(response);
-  },
-
-  updateProgress: async (category, points) => {
-    const response = await fetch(`${API_BASE_URL}/api/progress`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify({ category, points }),
-    });
-    return handleResponse(response);
-  },
+export const updateHabit = async (id, habitData) => {
+  return makeRequest(`/habits/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(habitData),
+  });
 };
 
-// Analytics API
-export const analyticsAPI = {
-  getHabitAnalytics: async (habitId) => {
-    const response = await fetch(`${API_BASE_URL}/api/analytics/habits/${habitId}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-    return handleResponse(response);
-  },
+export const deleteHabit = async (id) => {
+  return makeRequest(`/habits/${id}`, {
+    method: 'DELETE',
+  });
+};
 
-  getUserAnalytics: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/analytics/user`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-    return handleResponse(response);
-  },
+export const completeHabit = async (id) => {
+  return makeRequest(`/habits/${id}/complete`, {
+    method: 'POST',
+  });
+};
+
+// Shop API
+export const getShopItems = async () => {
+  return makeRequest('/shop');
+};
+
+export const purchaseItem = async (itemId) => {
+  return makeRequest(`/shop/purchase/${itemId}`, {
+    method: 'POST',
+  });
+};
+
+export const getInventory = async () => {
+  return makeRequest('/shop/inventory');
+};
+
+// Games API
+export const completeGame = async (gameType, score) => {
+  return makeRequest('/games/complete', {
+    method: 'POST',
+    body: JSON.stringify({ gameType, score }),
+  });
+};
+
+export const getGameStats = async () => {
+  return makeRequest('/games/stats');
 };
