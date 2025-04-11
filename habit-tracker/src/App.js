@@ -20,75 +20,83 @@ import Chess from './components/games/chess';
 import HabitQuizGame from './components/games/HabitQuizGame';
 import WordScramblerGame from './components/games/WordScramblerGame';
 import PacmanGame from './components/games/pacman/PacmanGame';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from './theme';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/new-habit"
-              element={
-                <ProtectedRoute>
-                  <NewHabit />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/track"
-              element={
-                <ProtectedRoute>
-                  <Track />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/shop"
-              element={
-                <ProtectedRoute>
-                  <Shop />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/breakthrough"
-              element={
-                <ProtectedRoute>
-                  <BreakthroughGame />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ai-chat"
-              element={
-                <ProtectedRoute>
-                  <AIChat />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/review" element={<DashboardReview />} />
-            <Route path="/chess" element={<Chess />} />
-            <Route path="/word-scrambler" element={<WordScramblerGame />} />
-            <Route path="/habit-quiz" element={<HabitQuizGame />} />
-            <Route path="/habit-challenge" element={<HabitChallengeDashboard />} />
-            <Route path="/pacman" element={<PacmanGame />} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+      <AuthProvider>
+        <HabitProvider>
+          <EventProvider>
+            <Router>
+              <div className="App">
+                <Navbar />
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/new-habit"
+                    element={
+                      <ProtectedRoute>
+                        <NewHabit />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/track"
+                    element={
+                      <ProtectedRoute>
+                        <Track />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/shop"
+                    element={
+                      <ProtectedRoute>
+                        <Shop />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/breakthrough"
+                    element={
+                      <ProtectedRoute>
+                        <BreakthroughGame />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/ai-chat"
+                    element={
+                      <ProtectedRoute>
+                        <AIChat />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/review" element={<DashboardReview />} />
+                  <Route path="/chess" element={<Chess />} />
+                  <Route path="/word-scrambler" element={<WordScramblerGame />} />
+                  <Route path="/habit-quiz" element={<HabitQuizGame />} />
+                  <Route path="/habit-challenge" element={<HabitChallengeDashboard />} />
+                  <Route path="/pacman" element={<PacmanGame />} />
+                </Routes>
+              </div>
+            </Router>
+          </EventProvider>
+        </HabitProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

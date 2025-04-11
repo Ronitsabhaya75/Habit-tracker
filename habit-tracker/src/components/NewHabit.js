@@ -3,8 +3,9 @@ import styled, { keyframes, css } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useHabit } from '../context/HabitContext';
 import { useEventContext } from '../context/EventContext';
-import { createHabit } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { habitAPI } from '../api/api';
+import { toast } from 'react-toastify';
 
 // Theme
 const dashboardTheme = {
@@ -198,73 +199,103 @@ const SubmitButton = styled.button`
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 0 10px rgba(0, 255, 198, 0.3);
+  
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.5);
+    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.3);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
   }
 `;
 
-const TaskOptions = styled.div`
-  margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(11, 26, 44, 0.6);
-  border-radius: 8px;
-  border: 1px solid ${dashboardTheme.borderGlow};
-`;
-
-const OptionRow = styled.div`
+const DaySelector = styled.div`
   display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
 `;
 
-const OptionLabel = styled.label`
-  margin-left: 0.5rem;
+const DayButton = styled.button`
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid ${dashboardTheme.borderGlow};
+  background: ${props => props.selected ? dashboardTheme.buttonGradient : 'transparent'};
+  color: ${dashboardTheme.textPrimary};
   cursor: pointer;
-`;
-
-const RadioInput = styled.input`
-  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: rgba(0, 255, 198, 0.1);
+  }
 `;
 
 const NewHabit = () => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [frequency, setFrequency] = useState('daily');
-  const [daysOfWeek, setDaysOfWeek] = useState([]);
-  const [timeOfDay, setTimeOfDay] = useState('anytime');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { refreshUserData } = useAuth();
+  const { currentUser } = useAuth();
+  const { setHabits } = useHabit();
+  const { addEvent } = useEventContext();
+
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    frequency: 'daily',
+    selectedDays: [],
+    reminder: '',
+    goal: '',
+  });
+
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
-      await createHabit({
-        title,
-        description,
-        frequency,
-        daysOfWeek,
-        timeOfDay
+      const newHabit = await habitAPI.createHabit({
+        name: formData.name,
+        description: formData.description,
+        frequency: formData.frequency,
+        days: formData.selectedDays,
+        reminder: formData.reminder,
+        goal: formData.goal,
       });
-      await refreshUserData();
+
+      setHabits(prevHabits => [...prevHabits, newHabit]);
+      
+      // Add to today's events
+      const todayKey = new Date().toISOString().split('T')[0];
+      addEvent(todayKey, {
+        id: newHabit._id,
+        title: newHabit.name,
+        completed: false,
+        isHabit: true,
+      });
+
+      toast.success('Habit created successfully!');
       navigate('/dashboard');
     } catch (error) {
-      setError(error.message);
+      console.error('Error creating habit:', error);
+      toast.error('Failed to create habit');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDayToggle = (day) => {
-    setDaysOfWeek(prev =>
-      prev.includes(day)
-        ? prev.filter(d => d !== day)
-        : [...prev, day]
-    );
+    setFormData(prev => ({
+      ...prev,
+      selectedDays: prev.selectedDays.includes(day)
+        ? prev.selectedDays.filter(d => d !== day)
+        : [...prev.selectedDays, day],
+    }));
   };
 
   const generateStars = (count) => {
@@ -286,6 +317,11 @@ const NewHabit = () => {
 
   const stars = generateStars(100);
 
+  if (!currentUser) {
+    navigate('/login');
+    return null;
+  }
+
   return (
     <Container>
       <Background>
@@ -302,76 +338,94 @@ const NewHabit = () => {
           />
         ))}
       </Background>
+
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem onClick={() => navigate('/dashboard')}>👾 Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Mini Games</NavItem>
           <NavItem onClick={() => navigate('/track')}>📅 Calendar Tracker</NavItem>
-          <NavItem className="active">✨ Habit Creation</NavItem>
+          <NavItem className="active">✨ New Habit</NavItem>
           <NavItem onClick={() => navigate('/shop')}>🛒 Shop</NavItem>
           <NavItem onClick={() => navigate('/review')}>📊 Review</NavItem>
         </NavList>
       </Sidebar>
+
       <MainContent>
         <FormContainer>
           <FormTitle>Create New Habit</FormTitle>
-          {error && <div className="error-message">{error}</div>}
           <form onSubmit={handleSubmit}>
             <FormGroup>
-              <Label>Title</Label>
+              <Label>Habit Name</Label>
               <Input
                 type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter habit name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
               />
             </FormGroup>
+
             <FormGroup>
               <Label>Description</Label>
               <TextArea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe your habit..."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
             </FormGroup>
+
             <FormGroup>
               <Label>Frequency</Label>
-              <Select value={frequency} onChange={(e) => setFrequency(e.target.value)}>
+              <Select
+                value={formData.frequency}
+                onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+              >
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
+                <option value="custom">Custom</option>
               </Select>
             </FormGroup>
-            
-            {frequency === 'weekly' && (
+
+            {formData.frequency === 'custom' && (
               <FormGroup>
-                <Label>Days of Week</Label>
-                <div className="days-grid">
-                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                    <button
+                <Label>Select Days</Label>
+                <DaySelector>
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    <DayButton
                       key={day}
-                      type="button"
-                      className={`day-button ${daysOfWeek.includes(day) ? 'selected' : ''}`}
+                      selected={formData.selectedDays.includes(day)}
                       onClick={() => handleDayToggle(day)}
+                      type="button"
                     >
-                      {day.charAt(0).toUpperCase() + day.slice(1, 3)}
-                    </button>
+                      {day}
+                    </DayButton>
                   ))}
-                </div>
+                </DaySelector>
               </FormGroup>
             )}
-            
+
             <FormGroup>
-              <Label>Time of Day</Label>
-              <Select value={timeOfDay} onChange={(e) => setTimeOfDay(e.target.value)}>
-                <option value="morning">Morning</option>
-                <option value="afternoon">Afternoon</option>
-                <option value="evening">Evening</option>
-                <option value="anytime">Anytime</option>
-              </Select>
+              <Label>Reminder Time (Optional)</Label>
+              <Input
+                type="time"
+                value={formData.reminder}
+                onChange={(e) => setFormData({ ...formData, reminder: e.target.value })}
+              />
             </FormGroup>
-            
-            <SubmitButton type="submit">Create Habit</SubmitButton>
+
+            <FormGroup>
+              <Label>Goal (Optional)</Label>
+              <Input
+                type="text"
+                placeholder="Set a goal for this habit"
+                value={formData.goal}
+                onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
+              />
+            </FormGroup>
+
+            <SubmitButton type="submit" disabled={loading}>
+              {loading ? 'Creating...' : 'Create Habit'}
+            </SubmitButton>
           </form>
         </FormContainer>
       </MainContent>
