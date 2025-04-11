@@ -3,6 +3,9 @@ import styled, { keyframes, css } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useHabit } from '../context/HabitContext';
 import { useEventContext } from '../context/EventContext';
+import { useAuth } from '../context/AuthContext';
+import { habitAPI } from '../api/api';
+import { toast } from 'react-toastify';
 
 // Theme
 const dashboardTheme = {
@@ -196,107 +199,103 @@ const SubmitButton = styled.button`
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 0 10px rgba(0, 255, 198, 0.3);
+  
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.5);
+    box-shadow: 0 6px 15px rgba(0, 255, 198, 0.3);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
   }
 `;
 
-const TaskOptions = styled.div`
-  margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(11, 26, 44, 0.6);
-  border-radius: 8px;
-  border: 1px solid ${dashboardTheme.borderGlow};
-`;
-
-const OptionRow = styled.div`
+const DaySelector = styled.div`
   display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
 `;
 
-const OptionLabel = styled.label`
-  margin-left: 0.5rem;
+const DayButton = styled.button`
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid ${dashboardTheme.borderGlow};
+  background: ${props => props.selected ? dashboardTheme.buttonGradient : 'transparent'};
+  color: ${dashboardTheme.textPrimary};
   cursor: pointer;
-`;
-
-const RadioInput = styled.input`
-  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: rgba(0, 255, 198, 0.1);
+  }
 `;
 
 const NewHabit = () => {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [frequency, setFrequency] = useState('daily');
-  const [isTask, setIsTask] = useState(false);
-  const [taskFrequency, setTaskFrequency] = useState('daily');
-  const [taskStartDate, setTaskStartDate] = useState('');
-  const { addHabit } = useHabit();
-  const { addEvent } = useEventContext();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const { setHabits } = useHabit();
+  const { addEvent } = useEventContext();
 
-  const handleSubmit = (e) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    frequency: 'daily',
+    selectedDays: [],
+    reminder: '',
+    goal: '',
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    
-    // Add the habit
-    const newHabit = {
-      name,
-      description,
-      frequency,
-      isTask,
-      taskFrequency: isTask ? taskFrequency : undefined,
-      taskStartDate: isTask ? taskStartDate : undefined
-    };
-    
-    addHabit(newHabit);
-    
-    // If it's a task, add it to the calendar
-    if (isTask) {
-      const startDate = taskStartDate ? new Date(taskStartDate) : new Date();
-      const taskId = Date.now();
-      
-      // Add the initial task
-      const dateKey = startDate.toISOString().split('T')[0];
-      addEvent(dateKey, {
-        id: taskId,
-        title: name,
-        description: description,
-        completed: false,
-        isHabitTask: true,
-        habitId: taskId, // Using taskId as habitId for now
-        frequency: taskFrequency
+    setLoading(true);
+
+    try {
+      const newHabit = await habitAPI.createHabit({
+        name: formData.name,
+        description: formData.description,
+        frequency: formData.frequency,
+        days: formData.selectedDays,
+        reminder: formData.reminder,
+        goal: formData.goal,
       });
+
+      setHabits(prevHabits => [...prevHabits, newHabit]);
       
-      // For weekly/biweekly tasks, add future occurrences
-      if (taskFrequency === 'weekly' || taskFrequency === 'biweekly') {
-        const daysToAdd = taskFrequency === 'weekly' ? 7 : 14;
-        const futureDate = new Date(startDate);
-        
-        // Add 4 future occurrences (can be adjusted)
-        for (let i = 0; i < 4; i++) {
-          futureDate.setDate(futureDate.getDate() + daysToAdd);
-          const futureDateKey = futureDate.toISOString().split('T')[0];
-          addEvent(futureDateKey, {
-            id: taskId + i + 1, // Unique ID for each occurrence
-            title: name,
-            description: description,
-            completed: false,
-            isHabitTask: true,
-            habitId: taskId,
-            frequency: taskFrequency
-          });
-        }
-      }
+      // Add to today's events
+      const todayKey = new Date().toISOString().split('T')[0];
+      addEvent(todayKey, {
+        id: newHabit._id,
+        title: newHabit.name,
+        completed: false,
+        isHabit: true,
+      });
+
+      toast.success('Habit created successfully!');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error creating habit:', error);
+      toast.error('Failed to create habit');
+    } finally {
+      setLoading(false);
     }
-    
-    navigate('/dashboard');
+  };
+
+  const handleDayToggle = (day) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedDays: prev.selectedDays.includes(day)
+        ? prev.selectedDays.filter(d => d !== day)
+        : [...prev.selectedDays, day],
+    }));
   };
 
   const generateStars = (count) => {
@@ -318,6 +317,11 @@ const NewHabit = () => {
 
   const stars = generateStars(100);
 
+  if (!currentUser) {
+    navigate('/login');
+    return null;
+  }
+
   return (
     <Container>
       <Background>
@@ -334,17 +338,18 @@ const NewHabit = () => {
           />
         ))}
       </Background>
+
       <Sidebar>
         <h2>HabitQuest</h2>
         <NavList>
           <NavItem onClick={() => navigate('/dashboard')}>👾 Dashboard</NavItem>
-          <NavItem onClick={() => navigate('/breakthrough-game')}>🎮 Mini Games</NavItem>
           <NavItem onClick={() => navigate('/track')}>📅 Calendar Tracker</NavItem>
-          <NavItem className="active">✨ Habit Creation</NavItem>
+          <NavItem className="active">✨ New Habit</NavItem>
           <NavItem onClick={() => navigate('/shop')}>🛒 Shop</NavItem>
           <NavItem onClick={() => navigate('/review')}>📊 Review</NavItem>
         </NavList>
       </Sidebar>
+
       <MainContent>
         <FormContainer>
           <FormTitle>Create New Habit</FormTitle>
@@ -353,70 +358,74 @@ const NewHabit = () => {
               <Label>Habit Name</Label>
               <Input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Hydration"
+                placeholder="Enter habit name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
               />
             </FormGroup>
+
             <FormGroup>
               <Label>Description</Label>
               <TextArea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g., Drink 8 glasses of water daily"
+                placeholder="Describe your habit..."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
             </FormGroup>
+
             <FormGroup>
               <Label>Frequency</Label>
-              <Select value={frequency} onChange={(e) => setFrequency(e.target.value)}>
+              <Select
+                value={formData.frequency}
+                onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+              >
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
-                <option value="biweekly">Biweekly</option>
+                <option value="custom">Custom</option>
               </Select>
             </FormGroup>
-            
-            <FormGroup>
-              <OptionRow>
-                <RadioInput 
-                  type="checkbox" 
-                  id="isTask" 
-                  checked={isTask} 
-                  onChange={(e) => setIsTask(e.target.checked)} 
-                />
-                <OptionLabel htmlFor="isTask">This is a special task (appears in calendar)</OptionLabel>
-              </OptionRow>
-              
-              {isTask && (
-                <TaskOptions>
-                  <FormGroup>
-                    <Label>Task Frequency</Label>
-                    <Select 
-                      value={taskFrequency} 
-                      onChange={(e) => setTaskFrequency(e.target.value)}
+
+            {formData.frequency === 'custom' && (
+              <FormGroup>
+                <Label>Select Days</Label>
+                <DaySelector>
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    <DayButton
+                      key={day}
+                      selected={formData.selectedDays.includes(day)}
+                      onClick={() => handleDayToggle(day)}
+                      type="button"
                     >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="biweekly">Biweekly</option>
-                    </Select>
-                  </FormGroup>
-                  <FormGroup>
-                    <Label>Start Date</Label>
-                    <Input
-                      type="date"
-                      value={taskStartDate}
-                      onChange={(e) => setTaskStartDate(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                    />
-                  </FormGroup>
-                  <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-                    Note: Special tasks give 30 XP when completed but deduct 15 XP if missed.
-                  </p>
-                </TaskOptions>
-              )}
+                      {day}
+                    </DayButton>
+                  ))}
+                </DaySelector>
+              </FormGroup>
+            )}
+
+            <FormGroup>
+              <Label>Reminder Time (Optional)</Label>
+              <Input
+                type="time"
+                value={formData.reminder}
+                onChange={(e) => setFormData({ ...formData, reminder: e.target.value })}
+              />
             </FormGroup>
-            
-            <SubmitButton type="submit">Add Habit</SubmitButton>
+
+            <FormGroup>
+              <Label>Goal (Optional)</Label>
+              <Input
+                type="text"
+                placeholder="Set a goal for this habit"
+                value={formData.goal}
+                onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
+              />
+            </FormGroup>
+
+            <SubmitButton type="submit" disabled={loading}>
+              {loading ? 'Creating...' : 'Create Habit'}
+            </SubmitButton>
           </form>
         </FormContainer>
       </MainContent>
