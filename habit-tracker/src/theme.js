@@ -1,4 +1,4 @@
-export const theme = {
+const theme = {
   colors: {
     primaryGradient: 'linear-gradient(135deg, #4F46E5 0%, #8B5CF6 100%)',
     secondary: '#10B981',
@@ -12,3 +12,5 @@ export const theme = {
     card: '0 4px 6px rgba(0, 0, 0, 0.1)', // Updated to match usage
   },
 };
+
+export default theme;

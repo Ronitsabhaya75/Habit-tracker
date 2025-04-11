@@ -2,7 +2,7 @@
 
 import { auth } from '../components/firebase';
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
 
 // Helper function to get the current user's token
 const getToken = async () => {
@@ -22,75 +22,52 @@ const handleResponse = async (response) => {
 
 // Helper function for making API requests
 const makeRequest = async (endpoint, options = {}) => {
-  const token = await getToken();
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
+  try {
+    const token = await getToken();
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-    credentials: 'include',
-  });
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+      credentials: 'include',
+    });
 
-  return handleResponse(response);
+    if (response.status === 401) {
+      // Token expired or invalid, try to refresh
+      const newToken = await auth.currentUser?.getIdToken(true);
+      if (newToken) {
+        headers.Authorization = `Bearer ${newToken}`;
+        const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...options,
+          headers,
+          credentials: 'include',
+        });
+        return handleResponse(retryResponse);
+      }
+    }
+
+    return handleResponse(response);
+  } catch (error) {
+    console.error('API request failed:', error);
+    throw error;
+  }
 };
 
 // Auth API
 export const authAPI = {
-  login: async (email, password) => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include',
-    });
-    return handleResponse(response);
-  },
-
-  logout: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-    return handleResponse(response);
-  },
-
-  register: async (userData) => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    });
-    return handleResponse(response);
-  },
-
-  verifyToken: async () => {
-    const token = await getToken();
+  verifyToken: async (token, username) => {
     return makeRequest('/api/auth/verify', {
       method: 'POST',
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, username }),
     });
   },
-};
 
-// User API
-export const userAPI = {
-  getProfile: async () => {
-    return makeRequest('/api/users/me');
-  },
-
-  updateProfile: async (userData) => {
-    return makeRequest('/api/users/me', {
-      method: 'PUT',
-      body: JSON.stringify(userData),
-    });
+  getProfile: async (token) => {
+    return makeRequest(`/api/auth/profile?token=${token}`);
   },
 };
 

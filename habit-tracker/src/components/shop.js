@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '../theme';
+import theme from '../theme';
 import { useHabit } from '../context/HabitContext';
 import { useNavigate } from 'react-router-dom';
 

@@ -28,7 +28,7 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { theme } from '../theme';
+import theme from '../theme';
 import AuthContext from '../context/AuthContext';
 
 // **ANIMATIONS**

@@ -14,20 +14,26 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true
+  origin: ['https://golden-warriors.netlify.app', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 app.use(express.json());
 app.use(morgan('dev'));
 
 // Routes
-app.use('/', (req, res) => {
-  res.json({ message: 'Welcome to the Golden Warriors API!' });
-});
 app.use('/api/auth', authRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/shop', shopRoutes);
+
+// Root route should be last
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to the Golden Warriors API!' });
+});
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)

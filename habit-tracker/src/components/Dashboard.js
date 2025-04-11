@@ -212,7 +212,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { useAuth } from '../context/AuthContext';
 import { useHabit } from '../context/HabitContext';
 import { useEventContext } from '../context/EventContext';
-import { habitAPI, userAPI, gamesAPI } from '../api/api';
+import { habitAPI, authAPI, gamesAPI } from '../api/api';
 import AIChat from './AIChat';
 import { motion } from 'framer-motion';
 import { Paper, Typography, Button, IconButton, TextField, Box, Grid, CircularProgress } from '@mui/material';
@@ -299,7 +299,7 @@ const Dashboard = () => {
 
   const fetchUserStats = useCallback(async () => {
     try {
-      const userStats = await userAPI.getProfile();
+      const userStats = await authAPI.getProfile();
       setStats(prev => ({
         ...prev,
         streak: userStats.streak || 0,

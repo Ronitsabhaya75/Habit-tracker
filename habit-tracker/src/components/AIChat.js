@@ -123,7 +123,7 @@ that requires an AI-powered habit coaching and task management interface.
 
 import React, { useState, useRef, useEffect } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '../theme';
+import theme from '../theme';
 import { useEventContext } from '../context/EventContext';
 // Keyframe animations remain unchanged
 const slideIn = keyframes`

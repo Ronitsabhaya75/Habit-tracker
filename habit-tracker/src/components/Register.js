@@ -5,7 +5,7 @@ import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, sign
 import { auth } from '../components/firebase';
 import styled, { keyframes, css, createGlobalStyle } from 'styled-components';
 import { useNavigate, Link } from 'react-router-dom';
-import { theme } from '../theme';
+import theme from '../theme';
 import AuthContext from '../context/AuthContext';
 
 // Global style with consistent fonts - Always dark modes

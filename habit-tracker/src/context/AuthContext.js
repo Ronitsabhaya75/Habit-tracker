@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '../components/firebase';
-import { verifyToken, getUserProfile } from '../api/api';
+import { authAPI } from '../api/api';
 
 const AuthContext = createContext();
 
@@ -16,8 +16,9 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Verify token with backend
-          const { user: backendUser } = await verifyToken();
+          // Get the token and verify with backend
+          const token = await firebaseUser.getIdToken();
+          const { user: backendUser } = await authAPI.verifyToken(token);
           setUser(backendUser);
         } catch (error) {
           console.error('Error verifying token:', error);
@@ -35,7 +36,8 @@ export const AuthProvider = ({ children }) => {
   const refreshUserData = async () => {
     if (auth.currentUser) {
       try {
-        const { user: backendUser } = await getUserProfile();
+        const token = await auth.currentUser.getIdToken();
+        const { user: backendUser } = await authAPI.getProfile(token);
         setUser(backendUser);
       } catch (error) {
         console.error('Error refreshing user data:', error);

@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "styled-components"; // Import ThemeProvider
 import { AuthProvider } from './context/AuthContext'; // Ensure this path is correct
-import { theme } from './theme'; // Import your theme
+import theme from './theme'; // Import your theme
 import App from "./App";
 
 // AuthInitializer Component

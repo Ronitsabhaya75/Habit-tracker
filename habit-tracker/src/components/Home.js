@@ -40,7 +40,7 @@ Stats Section: Community metrics with animations
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import styled, { keyframes, css, createGlobalStyle } from 'styled-components';
 import { Link } from 'react-router-dom';
-import { theme } from '../theme';
+import theme from '../theme';
 
 // Global style to remove white margins
 const GlobalStyle = createGlobalStyle`
