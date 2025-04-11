@@ -5,9 +5,9 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "client": "cd golden-warriors-new/habit-tracker && npm start",
-    "build": "cd golden-warriors-new/habit-tracker && npm run build",
+    "start": "node habit-trackerB/server.js",
+    "client": "cd habit-tracker && npm start",
+    "build": "cd habit-tracker && npm run build",
     "dev": "concurrently \"npm start\" \"npm run client\""
   },
   "keywords": [],
