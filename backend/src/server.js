@@ -5,7 +5,6 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import habitRoutes from './routes/habits.js';
-import userRoutes from './routes/users.js';
 import gameRoutes from './routes/games.js';
 import shopRoutes from './routes/shop.js';
 
@@ -27,7 +26,6 @@ app.use('/', (req, res) => {
 });
 app.use('/api/auth', authRoutes);
 app.use('/api/habits', habitRoutes);
-app.use('/api/users', userRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/shop', shopRoutes);
 
