@@ -14,15 +14,19 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['https://golden-warriors.netlify.app', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: true, // Allow all origins in development
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   credentials: true,
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
+  maxAge: 3600
 }));
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Handle preflight requests for all routes
+app.options('*', cors());
 
 // Routes
 app.use('/api/auth', authRoutes);
